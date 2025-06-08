@@ -1,0 +1,250 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-cogs text-primary me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'definitions:production_stage_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        بيانات مرحلة الإنتاج
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- المعلومات الأساسية -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    المعلومات الأساسية
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.code.id_for_label }}" class="form-label">{{ form.code.label }}</label>
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                    <div class="text-danger small">{{ form.code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.sequence_number.id_for_label }}" class="form-label">{{ form.sequence_number.label }}</label>
+                                {{ form.sequence_number }}
+                                {% if form.sequence_number.errors %}
+                                    <div class="text-danger small">{{ form.sequence_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.stage_type.id_for_label }}" class="form-label">{{ form.stage_type.label }}</label>
+                                {{ form.stage_type }}
+                                {% if form.stage_type.errors %}
+                                    <div class="text-danger small">{{ form.stage_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- الموقع والمعدات -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    الموقع والمعدات
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.location.id_for_label }}" class="form-label">{{ form.location.label }}</label>
+                                {{ form.location }}
+                                {% if form.location.errors %}
+                                    <div class="text-danger small">{{ form.location.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.required_equipment.id_for_label }}" class="form-label">{{ form.required_equipment.label }}</label>
+                                {{ form.required_equipment }}
+                                {% if form.required_equipment.errors %}
+                                    <div class="text-danger small">{{ form.required_equipment.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- الوقت والتكلفة -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-clock me-1"></i>
+                                    الوقت والتكلفة
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.estimated_duration_hours.id_for_label }}" class="form-label">{{ form.estimated_duration_hours.label }}</label>
+                                {{ form.estimated_duration_hours }}
+                                {% if form.estimated_duration_hours.errors %}
+                                    <div class="text-danger small">{{ form.estimated_duration_hours.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.setup_time_hours.id_for_label }}" class="form-label">{{ form.setup_time_hours.label }}</label>
+                                {{ form.setup_time_hours }}
+                                {% if form.setup_time_hours.errors %}
+                                    <div class="text-danger small">{{ form.setup_time_hours.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.labor_cost_per_hour.id_for_label }}" class="form-label">{{ form.labor_cost_per_hour.label }}</label>
+                                {{ form.labor_cost_per_hour }}
+                                {% if form.labor_cost_per_hour.errors %}
+                                    <div class="text-danger small">{{ form.labor_cost_per_hour.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.overhead_cost_per_hour.id_for_label }}" class="form-label">{{ form.overhead_cost_per_hour.label }}</label>
+                                {{ form.overhead_cost_per_hour }}
+                                {% if form.overhead_cost_per_hour.errors %}
+                                    <div class="text-danger small">{{ form.overhead_cost_per_hour.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- المسؤوليات -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-user-tie me-1"></i>
+                                    المسؤوليات
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.responsible_user.id_for_label }}" class="form-label">{{ form.responsible_user.label }}</label>
+                                {{ form.responsible_user }}
+                                {% if form.responsible_user.errors %}
+                                    <div class="text-danger small">{{ form.responsible_user.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.cost_center.id_for_label }}" class="form-label">{{ form.cost_center.label }}</label>
+                                {{ form.cost_center }}
+                                {% if form.cost_center.errors %}
+                                    <div class="text-danger small">{{ form.cost_center.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- الإعدادات -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-cog me-1"></i>
+                                    الإعدادات
+                                </h6>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.requires_approval }}
+                                    <label class="form-check-label" for="{{ form.requires_approval.id_for_label }}">
+                                        {{ form.requires_approval.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.requires_quality_check }}
+                                    <label class="form-check-label" for="{{ form.requires_quality_check.id_for_label }}">
+                                        {{ form.requires_quality_check.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.is_critical }}
+                                    <label class="form-check-label" for="{{ form.is_critical.id_for_label }}">
+                                        {{ form.is_critical.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.can_run_parallel }}
+                                    <label class="form-check-label" for="{{ form.can_run_parallel.id_for_label }}">
+                                        {{ form.can_run_parallel.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- معايير الجودة -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-award me-1"></i>
+                                    معايير الجودة
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.quality_standards.id_for_label }}" class="form-label">{{ form.quality_standards.label }}</label>
+                                {{ form.quality_standards }}
+                                {% if form.quality_standards.errors %}
+                                    <div class="text-danger small">{{ form.quality_standards.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.acceptance_criteria.id_for_label }}" class="form-label">{{ form.acceptance_criteria.label }}</label>
+                                {{ form.acceptance_criteria }}
+                                {% if form.acceptance_criteria.errors %}
+                                    <div class="text-danger small">{{ form.acceptance_criteria.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- أزرار الحفظ -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'definitions:production_stage_list' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i>
+                                        إلغاء
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>
+                                        {{ action }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

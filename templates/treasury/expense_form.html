@@ -1,0 +1,248 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-minus-circle text-danger me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'treasury:expense_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <!-- معلومات المصروف الأساسية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات المصروف الأساسية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.expense_number.id_for_label }}" class="form-label">{{ form.expense_number.label }}</label>
+                                {{ form.expense_number }}
+                                {% if form.expense_number.errors %}
+                                    <div class="text-danger small">{{ form.expense_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date.id_for_label }}" class="form-label">{{ form.date.label }}</label>
+                                {{ form.date }}
+                                {% if form.date.errors %}
+                                    <div class="text-danger small">{{ form.date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.treasury.id_for_label }}" class="form-label">{{ form.treasury.label }}</label>
+                                {{ form.treasury }}
+                                {% if form.treasury.errors %}
+                                    <div class="text-danger small">{{ form.treasury.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.expense_type.id_for_label }}" class="form-label">{{ form.expense_type.label }}</label>
+                                {{ form.expense_type }}
+                                {% if form.expense_type.errors %}
+                                    <div class="text-danger small">{{ form.expense_type.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <a href="{% url 'treasury:expense_type_create' %}" target="_blank" class="text-decoration-none">
+                                        <i class="fas fa-plus me-1"></i>
+                                        إضافة نوع مصروف جديد
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }}</label>
+                                {{ form.amount }}
+                                {% if form.amount.errors %}
+                                    <div class="text-danger small">{{ form.amount.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.beneficiary.id_for_label }}" class="form-label">{{ form.beneficiary.label }}</label>
+                                {{ form.beneficiary }}
+                                {% if form.beneficiary.errors %}
+                                    <div class="text-danger small">{{ form.beneficiary.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ملاحظات إضافية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-sticky-note me-2"></i>
+                            ملاحظات إضافية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات مهمة -->
+                <div class="card mb-4">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            معلومات مهمة حول المصروفات
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="alert alert-danger">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-minus-circle me-2"></i>
+                                        أنواع المصروفات
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>مصروفات تشغيلية (رواتب، إيجار، كهرباء)</li>
+                                        <li>مصروفات إدارية (قرطاسية، اتصالات)</li>
+                                        <li>مصروفات تسويقية (إعلانات، عمولات)</li>
+                                        <li>مصروفات أخرى (صيانة، نقل)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-warning">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-file-alt me-2"></i>
+                                        توثيق المصروفات
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>تحديد المستفيد من المصروف بدقة</li>
+                                        <li>كتابة وصف واضح للمصروف</li>
+                                        <li>الاحتفاظ بالفواتير والمستندات</li>
+                                        <li>تصنيف المصروف حسب النوع</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الحفظ -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'treasury:expense_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-save me-1"></i>
+                                {{ action }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديد تاريخ اليوم افتراضياً
+    const dateField = document.querySelector('input[type="date"][name="date"]');
+    if (dateField && !dateField.value) {
+        dateField.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // تحقق من صحة النموذج
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const amount = parseFloat(document.querySelector('input[name="amount"]').value);
+            const expenseType = document.querySelector('select[name="expense_type"]').value;
+            const treasury = document.querySelector('select[name="treasury"]').value;
+            const description = document.querySelector('input[name="description"]').value.trim();
+            const beneficiary = document.querySelector('input[name="beneficiary"]').value.trim();
+            
+            if (!amount || amount <= 0) {
+                e.preventDefault();
+                alert('يجب إدخال مبلغ صحيح');
+                return false;
+            }
+            
+            if (!expenseType) {
+                e.preventDefault();
+                alert('يجب اختيار نوع المصروف');
+                return false;
+            }
+            
+            if (!treasury) {
+                e.preventDefault();
+                alert('يجب اختيار الخزينة');
+                return false;
+            }
+            
+            if (!description) {
+                e.preventDefault();
+                alert('يجب إدخال بيان المصروف');
+                return false;
+            }
+            
+            if (!beneficiary) {
+                e.preventDefault();
+                alert('يجب تحديد المستفيد من المصروف');
+                return false;
+            }
+        });
+    }
+    
+    // تحديث البيان تلقائياً عند اختيار نوع المصروف
+    const expenseTypeField = document.querySelector('select[name="expense_type"]');
+    const descriptionField = document.querySelector('input[name="description"]');
+    
+    if (expenseTypeField && descriptionField) {
+        expenseTypeField.addEventListener('change', function() {
+            if (this.value && !descriptionField.value) {
+                const selectedOption = this.options[this.selectedIndex];
+                if (selectedOption.text) {
+                    descriptionField.value = selectedOption.text;
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

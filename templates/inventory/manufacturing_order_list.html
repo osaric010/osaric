@@ -1,0 +1,509 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-industry text-primary me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'inventory:manufacturing_order_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    إضافة أمر إنتاج جديد
+                </a>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="row mb-4">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                                    <i class="fas fa-list fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ total_orders }}</h4>
+                            <p class="card-text text-muted">إجمالي الأوامر</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-secondary bg-opacity-10 p-3">
+                                    <i class="fas fa-edit fa-2x text-secondary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ draft_orders }}</h4>
+                            <p class="card-text text-muted">مسودات</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                                    <i class="fas fa-check fa-2x text-info"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ approved_orders }}</h4>
+                            <p class="card-text text-muted">معتمدة</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                                    <i class="fas fa-cogs fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ in_production_orders }}</h4>
+                            <p class="card-text text-muted">قيد الإنتاج</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                                    <i class="fas fa-check-double fa-2x text-success"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ completed_orders }}</h4>
+                            <p class="card-text text-muted">مكتملة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- فلاتر البحث -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-2">
+                            {{ form.search.label_tag }}
+                            {{ form.search }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.warehouse.label_tag }}
+                            {{ form.warehouse }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.product_item.label_tag }}
+                            {{ form.product_item }}
+                        </div>
+                        <div class="col-md-1">
+                            {{ form.status.label_tag }}
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-1">
+                            {{ form.priority.label_tag }}
+                            {{ form.priority }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_from.label_tag }}
+                            {{ form.date_from }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_to.label_tag }}
+                            {{ form.date_to }}
+                        </div>
+                        <div class="col-12 d-flex justify-content-between align-items-center">
+                            <div class="form-check">
+                                {{ form.overdue_only }}
+                                <label class="form-check-label" for="{{ form.overdue_only.id_for_label }}">
+                                    {{ form.overdue_only.label }}
+                                </label>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-search me-1"></i>
+                                    بحث
+                                </button>
+                                <a href="{% url 'inventory:manufacturing_order_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>
+                                    إعادة تعيين
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- قائمة أوامر الإنتاج -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة أوامر الإنتاج
+                        <span class="badge bg-primary ms-2">{{ page_obj.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم الأمر</th>
+                                        <th>التاريخ</th>
+                                        <th>المنتج</th>
+                                        <th>الكمية المطلوبة</th>
+                                        <th>الكمية المنتجة</th>
+                                        <th>نسبة الإنجاز</th>
+                                        <th>الأولوية</th>
+                                        <th>تاريخ الإنجاز المتوقع</th>
+                                        <th>إجمالي التكلفة</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in page_obj %}
+                                        <tr {% if order.is_overdue %}class="table-warning"{% endif %}>
+                                            <td>
+                                                <strong>{{ order.order_number }}</strong>
+                                                {% if order.is_overdue %}
+                                                    <br><small class="text-danger">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                        متأخر
+                                                    </small>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ order.date|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <strong>{{ order.product_item.name }}</strong>
+                                                <br><small class="text-muted">{{ order.product_item.code }}</small>
+                                            </td>
+                                            <td>{{ order.quantity_to_produce|floatformat:3 }}</td>
+                                            <td>{{ order.quantity_produced|floatformat:3 }}</td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar 
+                                                        {% if order.completion_percentage == 100 %}bg-success
+                                                        {% elif order.completion_percentage >= 75 %}bg-info
+                                                        {% elif order.completion_percentage >= 50 %}bg-warning
+                                                        {% else %}bg-danger{% endif %}" 
+                                                        role="progressbar" 
+                                                        style="width: {{ order.completion_percentage }}%">
+                                                        {{ order.completion_percentage|floatformat:0 }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if order.priority == 'URGENT' %}
+                                                    <span class="badge bg-danger">{{ order.get_priority_display }}</span>
+                                                {% elif order.priority == 'HIGH' %}
+                                                    <span class="badge bg-warning">{{ order.get_priority_display }}</span>
+                                                {% elif order.priority == 'NORMAL' %}
+                                                    <span class="badge bg-info">{{ order.get_priority_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ order.get_priority_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if order.expected_completion_date %}
+                                                    {{ order.expected_completion_date|date:"d/m/Y" }}
+                                                    {% if order.days_until_completion is not None %}
+                                                        <br><small class="{% if order.days_until_completion < 0 %}text-danger{% elif order.days_until_completion <= 3 %}text-warning{% else %}text-muted{% endif %}">
+                                                            {% if order.days_until_completion < 0 %}
+                                                                متأخر {{ order.days_until_completion|add:"-1" }} يوم
+                                                            {% elif order.days_until_completion == 0 %}
+                                                                اليوم
+                                                            {% else %}
+                                                                {{ order.days_until_completion }} يوم متبقي
+                                                            {% endif %}
+                                                        </small>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <strong class="text-primary">{{ order.total_cost|floatformat:2 }} ر.س</strong>
+                                            </td>
+                                            <td>
+                                                {% if order.status == 'DRAFT' %}
+                                                    <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'APPROVED' %}
+                                                    <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'IN_PRODUCTION' %}
+                                                    <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'COMPLETED' %}
+                                                    <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'CANCELLED' %}
+                                                    <span class="badge bg-danger">{{ order.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'inventory:manufacturing_order_detail' order.pk %}" 
+                                                       class="btn btn-sm btn-outline-info" title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if order.status == 'DRAFT' %}
+                                                        <a href="{% url 'inventory:manufacturing_order_edit' order.pk %}" 
+                                                           class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                onclick="approveOrder({{ order.pk }})" title="اعتماد">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="deleteOrder({{ order.pk }}, '{{ order.order_number }}')" title="حذف">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% elif order.status == 'APPROVED' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                                onclick="startProduction({{ order.pk }})" title="بدء الإنتاج">
+                                                            <i class="fas fa-play"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                                onclick="cancelOrder({{ order.pk }})" title="إلغاء">
+                                                            <i class="fas fa-ban"></i>
+                                                        </button>
+                                                    {% elif order.status == 'IN_PRODUCTION' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                onclick="completeProduction({{ order.pk }})" title="إكمال الإنتاج">
+                                                            <i class="fas fa-check-double"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                                onclick="cancelOrder({{ order.pk }})" title="إلغاء">
+                                                            <i class="fas fa-ban"></i>
+                                                        </button>
+                                                    {% elif order.status == 'CANCELLED' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="deleteOrder({{ order.pk }}, '{{ order.order_number }}')" title="حذف">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-industry fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد أوامر إنتاج</h5>
+                            <p class="text-muted">ابدأ بإضافة أمر إنتاج جديد</p>
+                            <a href="{% url 'inventory:manufacturing_order_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة أمر إنتاج جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal لإكمال الإنتاج -->
+<div class="modal fade" id="completeProductionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إكمال الإنتاج</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="completeProductionForm">
+                    <div class="mb-3">
+                        <label for="quantityProduced" class="form-label">الكمية المنتجة:</label>
+                        <input type="number" class="form-control" id="quantityProduced" 
+                               step="0.001" min="0.001" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-success" onclick="submitCompleteProduction()">إكمال الإنتاج</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentOrderId = null;
+
+function approveOrder(orderId) {
+    if (confirm('هل تريد اعتماد هذا الأمر؟')) {
+        fetch(`/inventory/manufacturing-orders/${orderId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الاعتماد');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الاعتماد');
+        });
+    }
+}
+
+function startProduction(orderId) {
+    if (confirm('هل تريد بدء الإنتاج؟ سيتم خصم المواد الخام من المخزون.')) {
+        fetch(`/inventory/manufacturing-orders/${orderId}/start/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء بدء الإنتاج');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء بدء الإنتاج');
+        });
+    }
+}
+
+function completeProduction(orderId) {
+    currentOrderId = orderId;
+    const modal = new bootstrap.Modal(document.getElementById('completeProductionModal'));
+    modal.show();
+}
+
+function submitCompleteProduction() {
+    const quantity = document.getElementById('quantityProduced').value;
+    
+    if (!quantity || quantity <= 0) {
+        alert('يجب تحديد الكمية المنتجة');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('quantity_produced', quantity);
+    
+    fetch(`/inventory/manufacturing-orders/${currentOrderId}/complete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'حدث خطأ أثناء إكمال الإنتاج');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء إكمال الإنتاج');
+    });
+}
+
+function cancelOrder(orderId) {
+    if (confirm('هل تريد إلغاء هذا الأمر؟')) {
+        fetch(`/inventory/manufacturing-orders/${orderId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإلغاء');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإلغاء');
+        });
+    }
+}
+
+function deleteOrder(orderId, orderNumber) {
+    if (confirm(`هل أنت متأكد من حذف أمر الإنتاج "${orderNumber}"؟`)) {
+        fetch(`/inventory/manufacturing-orders/${orderId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+</script>
+{% endblock %}

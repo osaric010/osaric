@@ -1,0 +1,408 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-exchange-alt text-primary me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'inventory:warehouse_transfer_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    إضافة تحويل جديد
+                </a>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="row mb-4">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                                    <i class="fas fa-list fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ total_transfers }}</h4>
+                            <p class="card-text text-muted">إجمالي التحويلات</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-secondary bg-opacity-10 p-3">
+                                    <i class="fas fa-edit fa-2x text-secondary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ draft_transfers }}</h4>
+                            <p class="card-text text-muted">مسودات</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                                    <i class="fas fa-check fa-2x text-info"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ approved_transfers }}</h4>
+                            <p class="card-text text-muted">معتمدة</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                                    <i class="fas fa-truck fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ in_transit_transfers }}</h4>
+                            <p class="card-text text-muted">في الطريق</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                                    <i class="fas fa-check-double fa-2x text-success"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ completed_transfers }}</h4>
+                            <p class="card-text text-muted">مكتملة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- فلاتر البحث -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-2">
+                            {{ form.search.label_tag }}
+                            {{ form.search }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.from_warehouse.label_tag }}
+                            {{ form.from_warehouse }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.to_warehouse.label_tag }}
+                            {{ form.to_warehouse }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.status.label_tag }}
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_from.label_tag }}
+                            {{ form.date_from }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_to.label_tag }}
+                            {{ form.date_to }}
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search me-1"></i>
+                                بحث
+                            </button>
+                            <a href="{% url 'inventory:warehouse_transfer_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                إعادة تعيين
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- قائمة التحويلات -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة تحويلات المخازن
+                        <span class="badge bg-primary ms-2">{{ page_obj.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم التحويل</th>
+                                        <th>التاريخ</th>
+                                        <th>من مخزن</th>
+                                        <th>إلى مخزن</th>
+                                        <th>سبب التحويل</th>
+                                        <th>إجمالي القيمة</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transfer in page_obj %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ transfer.transfer_number }}</strong>
+                                            </td>
+                                            <td>{{ transfer.date|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <span class="badge bg-danger bg-opacity-10 text-danger">
+                                                    <i class="fas fa-arrow-left me-1"></i>
+                                                    {{ transfer.from_warehouse.name }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success bg-opacity-10 text-success">
+                                                    <i class="fas fa-arrow-right me-1"></i>
+                                                    {{ transfer.to_warehouse.name }}
+                                                </span>
+                                            </td>
+                                            <td>{{ transfer.transfer_reason|truncatechars:40 }}</td>
+                                            <td>
+                                                <strong class="text-primary">{{ transfer.total_estimated_value|floatformat:2 }} ر.س</strong>
+                                            </td>
+                                            <td>
+                                                {% if transfer.status == 'DRAFT' %}
+                                                    <span class="badge bg-secondary">{{ transfer.get_status_display }}</span>
+                                                {% elif transfer.status == 'APPROVED' %}
+                                                    <span class="badge bg-info">{{ transfer.get_status_display }}</span>
+                                                {% elif transfer.status == 'IN_TRANSIT' %}
+                                                    <span class="badge bg-warning">{{ transfer.get_status_display }}</span>
+                                                {% elif transfer.status == 'COMPLETED' %}
+                                                    <span class="badge bg-success">{{ transfer.get_status_display }}</span>
+                                                {% elif transfer.status == 'CANCELLED' %}
+                                                    <span class="badge bg-danger">{{ transfer.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'inventory:warehouse_transfer_detail' transfer.pk %}" 
+                                                       class="btn btn-sm btn-outline-info" title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if transfer.status == 'DRAFT' %}
+                                                        <a href="{% url 'inventory:warehouse_transfer_edit' transfer.pk %}" 
+                                                           class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                onclick="approveTransfer({{ transfer.pk }})" title="اعتماد">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="deleteTransfer({{ transfer.pk }}, '{{ transfer.transfer_number }}')" title="حذف">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% elif transfer.status == 'APPROVED' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                                onclick="shipTransfer({{ transfer.pk }})" title="شحن">
+                                                            <i class="fas fa-truck"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                                onclick="cancelTransfer({{ transfer.pk }})" title="إلغاء">
+                                                            <i class="fas fa-ban"></i>
+                                                        </button>
+                                                    {% elif transfer.status == 'IN_TRANSIT' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                onclick="receiveTransfer({{ transfer.pk }})" title="استلام">
+                                                            <i class="fas fa-check-double"></i>
+                                                        </button>
+                                                    {% elif transfer.status == 'CANCELLED' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="deleteTransfer({{ transfer.pk }}, '{{ transfer.transfer_number }}')" title="حذف">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد تحويلات بين المخازن</h5>
+                            <p class="text-muted">ابدأ بإضافة تحويل جديد</p>
+                            <a href="{% url 'inventory:warehouse_transfer_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة تحويل جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function approveTransfer(transferId) {
+    if (confirm('هل تريد اعتماد هذا التحويل؟')) {
+        fetch(`/inventory/warehouse-transfers/${transferId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الاعتماد');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الاعتماد');
+        });
+    }
+}
+
+function shipTransfer(transferId) {
+    if (confirm('هل تريد شحن هذا التحويل؟ سيتم خصم الكميات من المخزن المرسل.')) {
+        fetch(`/inventory/warehouse-transfers/${transferId}/ship/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الشحن');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الشحن');
+        });
+    }
+}
+
+function receiveTransfer(transferId) {
+    if (confirm('هل تريد استلام هذا التحويل؟ سيتم إضافة الكميات للمخزن المستقبل.')) {
+        fetch(`/inventory/warehouse-transfers/${transferId}/receive/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الاستلام');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الاستلام');
+        });
+    }
+}
+
+function cancelTransfer(transferId) {
+    if (confirm('هل تريد إلغاء هذا التحويل؟')) {
+        fetch(`/inventory/warehouse-transfers/${transferId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإلغاء');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإلغاء');
+        });
+    }
+}
+
+function deleteTransfer(transferId, transferNumber) {
+    if (confirm(`هل أنت متأكد من حذف التحويل "${transferNumber}"؟`)) {
+        fetch(`/inventory/warehouse-transfers/${transferId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+</script>
+{% endblock %}

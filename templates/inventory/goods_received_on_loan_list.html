@@ -1,0 +1,377 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-arrow-down text-info me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'inventory:goods_received_on_loan_create' %}" class="btn btn-info">
+                    <i class="fas fa-plus me-1"></i>
+                    إضافة سلفة جديدة
+                </a>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                                    <i class="fas fa-list fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ total_loans }}</h4>
+                            <p class="card-text text-muted">إجمالي السلف</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                                    <i class="fas fa-clock fa-2x text-info"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ active_loans }}</h4>
+                            <p class="card-text text-muted">سلف نشطة</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ overdue_loans }}</h4>
+                            <p class="card-text text-muted">سلف متأخرة</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                                    <i class="fas fa-check-double fa-2x text-success"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ returned_loans }}</h4>
+                            <p class="card-text text-muted">سلف مرتجعة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- فلاتر البحث -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            {{ form.search.label_tag }}
+                            {{ form.search }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.warehouse.label_tag }}
+                            {{ form.warehouse }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.status.label_tag }}
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_from.label_tag }}
+                            {{ form.date_from }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_to.label_tag }}
+                            {{ form.date_to }}
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <a href="{% url 'inventory:goods_received_on_loan_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.overdue_only }}
+                                <label class="form-check-label" for="{{ form.overdue_only.id_for_label }}">
+                                    {{ form.overdue_only.label }}
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- قائمة السلف -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة البضائع المضافة سلفة من الغير
+                        <span class="badge bg-info ms-2">{{ page_obj.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم السلفة</th>
+                                        <th>التاريخ</th>
+                                        <th>المخزن</th>
+                                        <th>المُقرض</th>
+                                        <th>سبب السلفة</th>
+                                        <th>تاريخ الإرجاع المتوقع</th>
+                                        <th>القيمة التقديرية</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for loan in page_obj %}
+                                        <tr {% if loan.is_overdue %}class="table-warning"{% endif %}>
+                                            <td>
+                                                <strong>{{ loan.loan_number }}</strong>
+                                            </td>
+                                            <td>{{ loan.date|date:"d/m/Y" }}</td>
+                                            <td>{{ loan.warehouse.name }}</td>
+                                            <td>
+                                                <strong>{{ loan.lender_name }}</strong>
+                                                {% if loan.lender_phone %}
+                                                    <br><small class="text-muted">{{ loan.lender_phone }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ loan.loan_reason|truncatechars:40 }}</td>
+                                            <td>
+                                                {% if loan.expected_return_date %}
+                                                    {{ loan.expected_return_date|date:"d/m/Y" }}
+                                                    {% if loan.is_overdue %}
+                                                        <br><span class="badge bg-danger">متأخرة</span>
+                                                    {% elif loan.days_until_return <= 7 and loan.days_until_return > 0 %}
+                                                        <br><span class="badge bg-warning">{{ loan.days_until_return }} أيام</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <strong class="text-info">{{ loan.total_estimated_value|floatformat:2 }} ر.س</strong>
+                                            </td>
+                                            <td>
+                                                {% if loan.status == 'RECEIVED' %}
+                                                    <span class="badge bg-info">{{ loan.get_status_display }}</span>
+                                                {% elif loan.status == 'PARTIAL_RETURNED' %}
+                                                    <span class="badge bg-warning">{{ loan.get_status_display }}</span>
+                                                {% elif loan.status == 'RETURNED' %}
+                                                    <span class="badge bg-success">{{ loan.get_status_display }}</span>
+                                                {% elif loan.status == 'OVERDUE' %}
+                                                    <span class="badge bg-danger">{{ loan.get_status_display }}</span>
+                                                {% elif loan.status == 'CANCELLED' %}
+                                                    <span class="badge bg-dark">{{ loan.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'inventory:goods_received_on_loan_detail' loan.pk %}" 
+                                                       class="btn btn-sm btn-outline-info" title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if loan.status == 'RECEIVED' %}
+                                                        <a href="{% url 'inventory:goods_received_on_loan_edit' loan.pk %}" 
+                                                           class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                onclick="returnLoan({{ loan.pk }})" title="إرجاع كامل">
+                                                            <i class="fas fa-undo"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                                onclick="partialReturnLoan({{ loan.pk }})" title="إرجاع جزئي">
+                                                            <i class="fas fa-undo-alt"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="deleteLoan({{ loan.pk }}, '{{ loan.loan_number }}')" title="حذف">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% elif loan.status == 'PARTIAL_RETURNED' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                onclick="returnLoan({{ loan.pk }})" title="إرجاع الباقي">
+                                                            <i class="fas fa-undo"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                    {% if loan.status in 'RECEIVED,PARTIAL_RETURNED' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                                onclick="cancelLoan({{ loan.pk }})" title="إلغاء">
+                                                            <i class="fas fa-ban"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-arrow-down fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد بضائع سلفة</h5>
+                            <p class="text-muted">ابدأ بإضافة سلفة بضاعة جديدة</p>
+                            <a href="{% url 'inventory:goods_received_on_loan_create' %}" class="btn btn-info">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة سلفة جديدة
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function returnLoan(loanId) {
+    if (confirm('هل تريد إرجاع هذه السلفة بالكامل؟')) {
+        fetch(`/inventory/goods-received-on-loan/${loanId}/return/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإرجاع');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإرجاع');
+        });
+    }
+}
+
+function partialReturnLoan(loanId) {
+    if (confirm('هل تريد تسجيل إرجاع جزئي لهذه السلفة؟')) {
+        fetch(`/inventory/goods-received-on-loan/${loanId}/partial-return/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإرجاع الجزئي');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإرجاع الجزئي');
+        });
+    }
+}
+
+function cancelLoan(loanId) {
+    if (confirm('هل تريد إلغاء هذه السلفة؟')) {
+        fetch(`/inventory/goods-received-on-loan/${loanId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإلغاء');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإلغاء');
+        });
+    }
+}
+
+function deleteLoan(loanId, loanNumber) {
+    if (confirm(`هل أنت متأكد من حذف سلفة البضاعة "${loanNumber}"؟`)) {
+        fetch(`/inventory/goods-received-on-loan/${loanId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+</script>
+{% endblock %}

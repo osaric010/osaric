@@ -1,0 +1,176 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-compress-arrows-alt text-info me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">دمج الحسابات الفرعية للأشخاص في حساب فرعي واحد</p>
+                </div>
+                <div>
+                    <a href="{% url 'accounting:merge_accounts' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-compress me-2"></i>
+                        بيانات دمج الحسابات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>تحذير:</strong> عملية دمج الحسابات لا يمكن التراجع عنها. تأكد من صحة البيانات قبل الحفظ.
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="merge_number" class="form-label">رقم عملية الدمج <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="merge_number" name="merge_number" 
+                                       value="{{ form_data.merge_number|default:'' }}" required>
+                                <div class="form-text">رقم فريد لعملية الدمج</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="merge_date" class="form-label">تاريخ الدمج <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="merge_date" name="merge_date" 
+                                       value="{{ form_data.merge_date|default:'' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="source_person" class="form-label">الشخص المصدر (سيتم دمجه) <span class="text-danger">*</span></label>
+                                <select class="form-select" id="source_person" name="source_person" required>
+                                    <option value="">اختر الشخص المصدر</option>
+                                    {% for person in persons %}
+                                    <option value="{{ person.id }}">
+                                        {{ person.name }} - {{ person.get_person_type_display }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">الشخص الذي سيتم دمج حسابه</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="target_person" class="form-label">الشخص الهدف (سيستقبل الدمج) <span class="text-danger">*</span></label>
+                                <select class="form-select" id="target_person" name="target_person" required>
+                                    <option value="">اختر الشخص الهدف</option>
+                                    {% for person in persons %}
+                                    <option value="{{ person.id }}">
+                                        {{ person.name }} - {{ person.get_person_type_display }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">الشخص الذي سيستقبل الرصيد المدمج</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="merged_balance" class="form-label">الرصيد المدمج <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="merged_balance" name="merged_balance" 
+                                           value="{{ form_data.merged_balance|default:'' }}" step="0.01" required>
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                                <div class="form-text">المبلغ الذي سيتم دمجه</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mt-4">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>ملاحظة:</strong> سيتم نقل الرصيد من الشخص المصدر إلى الشخص الهدف
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">وصف عملية الدمج <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required 
+                                      placeholder="وصف تفصيلي لسبب دمج الحسابات">{{ form_data.description|default:'' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2" 
+                                      placeholder="ملاحظات إضافية (اختياري)">{{ form_data.notes|default:'' }}</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'accounting:merge_accounts' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-info">
+                                <i class="fas fa-compress me-2"></i>
+                                تنفيذ الدمج
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate merge number if empty
+    const mergeNumberInput = document.getElementById('merge_number');
+    if (!mergeNumberInput.value) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const time = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+        mergeNumberInput.value = `MRG-${year}${month}${day}-${time}`;
+    }
+
+    // Set today's date if empty
+    const dateInput = document.getElementById('merge_date');
+    if (!dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+
+    // Prevent selecting the same person for both source and target
+    const sourcePersonSelect = document.getElementById('source_person');
+    const targetPersonSelect = document.getElementById('target_person');
+    
+    function validatePersonSelection() {
+        const sourceValue = sourcePersonSelect.value;
+        const targetValue = targetPersonSelect.value;
+        
+        if (sourceValue && targetValue && sourceValue === targetValue) {
+            alert('لا يمكن دمج الشخص مع نفسه');
+            targetPersonSelect.value = '';
+        }
+    }
+    
+    sourcePersonSelect.addEventListener('change', validatePersonSelection);
+    targetPersonSelect.addEventListener('change', validatePersonSelection);
+});
+</script>
+{% endblock %}

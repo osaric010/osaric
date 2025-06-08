@@ -1,0 +1,94 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-play-circle text-info me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'branches:home' %}">الفروع</a></li>
+                            <li class="breadcrumb-item active">القيد الافتتاحي</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <a href="{% url 'branches:opening_balance_add' %}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>
+                        إضافة قيد افتتاحي
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coming Soon -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-play-circle fa-4x text-info mb-4"></i>
+                    <h3 class="text-muted mb-3">القيد الافتتاحي رصيد أول المدة للفروع</h3>
+                    <p class="text-muted mb-4">
+                        هذه الصفحة تحت التطوير. ستتيح لك إدارة الأقياد الافتتاحية لأرصدة أول المدة للفروع
+                        بما يشمل النقدية، البنوك، المخزون، المدينون، والدائنون.
+                    </p>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <i class="fas fa-money-bill-wave fa-2x text-success mb-2"></i>
+                                    <h5>النقدية</h5>
+                                    <p class="text-muted small">أرصدة الخزائن النقدية</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <i class="fas fa-university fa-2x text-primary mb-2"></i>
+                                    <h5>البنوك</h5>
+                                    <p class="text-muted small">أرصدة الحسابات البنكية</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <i class="fas fa-boxes fa-2x text-warning mb-2"></i>
+                                    <h5>المخزون</h5>
+                                    <p class="text-muted small">أرصدة البضائع والمواد</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <i class="fas fa-users fa-2x text-info mb-2"></i>
+                                    <h5>المدينون والدائنون</h5>
+                                    <p class="text-muted small">أرصدة العملاء والموردين</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'branches:opening_balance_add' %}" class="btn btn-success btn-lg">
+                        <i class="fas fa-plus me-2"></i>
+                        إضافة قيد افتتاحي جديد
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% load currency_tags %}
+
+<span class="currency-display currency-{{ size }} text-{{ color }}">
+    {% if amount == 0 %}
+        <span class="currency-zero">{{ formatted_amount }}</span>
+    {% elif amount > 0 %}
+        <span class="currency-positive">{{ formatted_amount }}</span>
+    {% else %}
+        <span class="currency-negative">{{ formatted_amount }}</span>
+    {% endif %}
+</span>
+
+<style>
+.currency-display {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.currency-small {
+    font-size: 0.875rem;
+}
+
+.currency-normal {
+    font-size: 1rem;
+}
+
+.currency-large {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.currency-xlarge {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.currency-positive {
+    color: #198754 !important;
+}
+
+.currency-negative {
+    color: #dc3545 !important;
+}
+
+.currency-zero {
+    color: #6c757d !important;
+}
+</style>

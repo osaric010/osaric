@@ -1,0 +1,286 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-sitemap me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'definitions:item_location_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            إضافة موقع صنف جديد
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" 
+                           class="form-control" 
+                           name="search" 
+                           value="{{ search_query }}"
+                           placeholder="البحث في مواقع الأصناف">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="warehouse" class="form-select">
+                    <option value="">جميع المخازن</option>
+                    {% for warehouse in warehouses %}
+                        <option value="{{ warehouse.pk }}" {% if warehouse_filter == warehouse.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ warehouse.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="item" class="form-select">
+                    <option value="">جميع الأصناف</option>
+                    {% for item in items %}
+                        <option value="{{ item.pk }}" {% if item_filter == item.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ item.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="d-flex gap-1">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <a href="{% url 'definitions:item_location_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Item Locations Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            قائمة مواقع الأصناف
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الصنف</th>
+                            <th>المخزن</th>
+                            <th>الموقع</th>
+                            <th>نوع الموقع</th>
+                            <th>الأولوية</th>
+                            <th>الحد الأدنى</th>
+                            <th>الحد الأقصى</th>
+                            <th>افتراضي</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item_location in page_obj %}
+                        <tr>
+                            <td>
+                                <div>
+                                    <strong>{{ item_location.item.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ item_location.item.code }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ item_location.warehouse.name }}</span>
+                            </td>
+                            <td>
+                                <div>
+                                    {{ item_location.location.name }}
+                                    <br>
+                                    <small class="text-muted">{{ item_location.location.code }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                {% if item_location.location_type == 'PRIMARY' %}
+                                    <span class="badge bg-success">أساسي</span>
+                                {% elif item_location.location_type == 'SECONDARY' %}
+                                    <span class="badge bg-warning">ثانوي</span>
+                                {% elif item_location.location_type == 'OVERFLOW' %}
+                                    <span class="badge bg-info">فائض</span>
+                                {% elif item_location.location_type == 'PICKING' %}
+                                    <span class="badge bg-primary">انتقاء</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">احتياطي</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-dark">{{ item_location.priority }}</span>
+                            </td>
+                            <td>{{ item_location.min_quantity|floatformat:2 }}</td>
+                            <td>
+                                {% if item_location.max_quantity %}
+                                    {{ item_location.max_quantity|floatformat:2 }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item_location.is_default %}
+                                    <i class="fas fa-check text-success" title="افتراضي"></i>
+                                {% else %}
+                                    <i class="fas fa-times text-muted"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'definitions:item_location_edit' item_location.pk %}" 
+                                       class="btn btn-outline-primary" 
+                                       title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-outline-danger delete-btn" 
+                                            data-id="{{ item_location.pk }}"
+                                            data-name="{{ item_location.item.name }} - {{ item_location.location.name }}"
+                                            title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if warehouse_filter %}&warehouse={{ warehouse_filter }}{% endif %}{% if item_filter %}&item={{ item_filter }}{% endif %}">الأولى</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if warehouse_filter %}&warehouse={{ warehouse_filter }}{% endif %}{% if item_filter %}&item={{ item_filter }}{% endif %}">السابقة</a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">
+                                صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if warehouse_filter %}&warehouse={{ warehouse_filter }}{% endif %}{% if item_filter %}&item={{ item_filter }}{% endif %}">التالية</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if warehouse_filter %}&warehouse={{ warehouse_filter }}{% endif %}{% if item_filter %}&item={{ item_filter }}{% endif %}">الأخيرة</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-sitemap fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">لا توجد مواقع أصناف</h5>
+                <p class="text-muted">لم يتم العثور على أي مواقع أصناف مطابقة لمعايير البحث</p>
+                <a href="{% url 'definitions:item_location_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    إضافة موقع صنف جديد
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف موقع الصنف: <strong id="delete-item-name"></strong>؟</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    لا يمكن التراجع عن هذا الإجراء
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    const deleteItemName = document.getElementById('delete-item-name');
+    let deleteId = null;
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            deleteId = this.dataset.id;
+            deleteItemName.textContent = this.dataset.name;
+            deleteModal.show();
+        });
+    });
+
+    confirmDeleteBtn.addEventListener('click', function() {
+        if (deleteId) {
+            fetch(`/definitions/item-locations/${deleteId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('حدث خطأ أثناء الحذف');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الحذف');
+            });
+        }
+        deleteModal.hide();
+    });
+});
+</script>
+{% endblock %}

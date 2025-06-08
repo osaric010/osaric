@@ -1,0 +1,239 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-minus-circle text-danger me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'reports:warehouses_reports' %}">تقارير المخازن</a></li>
+                            <li class="breadcrumb-item active">أذون صرف النواقص التفصيلي</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">المخزن</label>
+                    <select name="warehouse_id" class="form-select">
+                        <option value="">جميع المخازن</option>
+                        {% for warehouse in warehouses %}
+                        <option value="{{ warehouse.id }}" {% if selected_warehouse == warehouse.id|stringformat:"s" %}selected{% endif %}>
+                            {{ warehouse.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>عرض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if decreases %}
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-lg-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_decreases }}</h4>
+                            <p class="mb-0">عدد أذون الصرف</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-minus-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_amount|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي قيمة الصرف</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_items }}</h4>
+                            <p class="mb-0">عدد الأصناف المصروفة</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Decreases -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                تفاصيل أذون صرف النواقص
+                <span class="badge bg-danger">{{ total_decreases }}</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>رقم الإذن</th>
+                            <th>التاريخ</th>
+                            <th>المخزن</th>
+                            <th>السبب</th>
+                            <th>إجمالي القيمة</th>
+                            <th>الحالة</th>
+                            <th>المعتمد من</th>
+                            <th>ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for decrease in decreases %}
+                        <tr>
+                            <td>
+                                <strong class="text-primary">{{ decrease.decrease_number|default:decrease.id }}</strong>
+                            </td>
+                            <td>{{ decrease.date|date:"Y-m-d" }}</td>
+                            <td>
+                                <strong>{{ decrease.warehouse.name }}</strong>
+                                {% if decrease.warehouse.location %}
+                                <small class="text-muted d-block">{{ decrease.warehouse.location }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if decrease.reason == 'DAMAGED' %}
+                                <span class="badge bg-danger">تالف</span>
+                                {% elif decrease.reason == 'EXPIRED' %}
+                                <span class="badge bg-warning">منتهي الصلاحية</span>
+                                {% elif decrease.reason == 'LOST' %}
+                                <span class="badge bg-secondary">مفقود</span>
+                                {% elif decrease.reason == 'ADJUSTMENT' %}
+                                <span class="badge bg-info">تسوية</span>
+                                {% elif decrease.reason == 'SAMPLE' %}
+                                <span class="badge bg-primary">عينة</span>
+                                {% else %}
+                                <span class="badge bg-dark">{{ decrease.reason }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-danger">{{ decrease.total_amount|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                {% if decrease.status == 'DRAFT' %}
+                                <span class="badge bg-secondary">مسودة</span>
+                                {% elif decrease.status == 'PENDING' %}
+                                <span class="badge bg-warning">معلق</span>
+                                {% elif decrease.status == 'APPROVED' %}
+                                <span class="badge bg-success">معتمد</span>
+                                {% elif decrease.status == 'CANCELLED' %}
+                                <span class="badge bg-danger">ملغي</span>
+                                {% else %}
+                                <span class="badge bg-primary">{{ decrease.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if decrease.approved_by %}
+                                <strong>{{ decrease.approved_by.get_full_name|default:decrease.approved_by.username }}</strong>
+                                {% if decrease.approved_date %}
+                                <small class="text-muted d-block">{{ decrease.approved_date|date:"Y-m-d" }}</small>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if decrease.notes %}
+                                <small class="text-muted">{{ decrease.notes|truncatechars:50 }}</small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="4">الإجمالي</th>
+                            <th class="text-danger">{{ total_amount|floatformat:2 }}</th>
+                            <th colspan="3"></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-minus-circle fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">لا توجد أذون صرف نواقص</h5>
+            <p class="text-muted">لا توجد أذون صرف نواقص في الفترة المحددة</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .btn, .breadcrumb, .card-header {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

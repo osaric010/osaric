@@ -1,0 +1,245 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-calendar-times text-danger me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">إدارة فترات الحسابات وإنهاء الفترة الحالية</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Period Info -->
+    {% if current_period %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card {% if current_period.is_closed %}border-danger{% else %}border-success{% endif %}">
+                <div class="card-header {% if current_period.is_closed %}bg-danger{% else %}bg-success{% endif %} text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar me-2"></i>
+                        الفترة المحاسبية الحالية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>اسم الفترة:</strong><br>
+                            {{ current_period.period_name }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>تاريخ البداية:</strong><br>
+                            {{ current_period.start_date|date:"Y-m-d" }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>تاريخ النهاية:</strong><br>
+                            {{ current_period.end_date|date:"Y-m-d" }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>الحالة:</strong><br>
+                            {% if current_period.is_closed %}
+                                <span class="badge bg-danger">مغلقة</span>
+                            {% else %}
+                                <span class="badge bg-success">مفتوحة</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if current_period.is_closed %}
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <strong>تاريخ الإغلاق:</strong><br>
+                            {{ current_period.closed_date|date:"Y-m-d H:i" }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>أغلق بواسطة:</strong><br>
+                            {{ current_period.closed_by.get_full_name|default:current_period.closed_by.username }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="row">
+        <!-- Close Current Period -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-danger h-100">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-times-circle me-2"></i>
+                        إنهاء الفترة الحالية
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if current_period and not current_period.is_closed %}
+                    <p class="card-text">إنهاء وإغلاق الفترة المحاسبية الحالية نهائياً</p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>تحذير:</strong> بعد إغلاق الفترة لن يمكن التعديل على أي عمليات بها
+                    </div>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#closePeriodModal">
+                            <i class="fas fa-times-circle me-2"></i>
+                            إنهاء الفترة الحالية
+                        </button>
+                    </div>
+                    {% elif current_period and current_period.is_closed %}
+                    <p class="card-text text-muted">الفترة الحالية مغلقة بالفعل</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        تم إغلاق الفترة في {{ current_period.closed_date|date:"Y-m-d H:i" }}
+                    </div>
+                    {% else %}
+                    <p class="card-text text-muted">لا توجد فترة محاسبية حالية</p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        يجب إنشاء فترة محاسبية أولاً
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Open New Period -->
+        <div class="col-lg-6 mb-4">
+            <div class="card border-success h-100">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        فتح فترة حسابات جديدة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">إنشاء وفتح فترة محاسبية جديدة</p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>ملاحظة:</strong> ستصبح الفترة الجديدة هي الفترة الحالية النشطة
+                    </div>
+                    <div class="d-grid">
+                        <a href="{% url 'accounting:period_closure_open_new' %}" class="btn btn-success">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            فتح فترة جديدة
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Period Closure Steps -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list-ol me-2"></i>
+                        خطوات إنهاء الفترة المحاسبية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary">قبل إنهاء الفترة:</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    التأكد من إدخال جميع العمليات
+                                </li>
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    مراجعة جميع القيود المحاسبية
+                                </li>
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    إعداد قائمة الدخل
+                                </li>
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    إعداد المركز المالي
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning">بعد إنهاء الفترة:</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                                    فتح فترة محاسبية جديدة
+                                </li>
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                                    ترحيل الأرصدة للفترة الجديدة
+                                </li>
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                                    إعداد القيد الافتتاحي الجديد
+                                </li>
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                                    بدء العمليات في الفترة الجديدة
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Close Period Modal -->
+<div class="modal fade" id="closePeriodModal" tabindex="-1" aria-labelledby="closePeriodModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="closePeriodModalLabel">
+                    <i class="fas fa-times-circle me-2"></i>
+                    تأكيد إنهاء الفترة
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>تحذير مهم:</strong> هذا الإجراء لا يمكن التراجع عنه!
+                </div>
+                <p>هل أنت متأكد من رغبتك في إنهاء الفترة المحاسبية الحالية؟</p>
+                {% if current_period %}
+                <ul>
+                    <li><strong>اسم الفترة:</strong> {{ current_period.period_name }}</li>
+                    <li><strong>الفترة:</strong> {{ current_period.start_date|date:"Y-m-d" }} إلى {{ current_period.end_date|date:"Y-m-d" }}</li>
+                </ul>
+                {% endif %}
+                <p class="text-muted">بعد الإنهاء لن يمكن إضافة أو تعديل أي عمليات في هذه الفترة.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>
+                    إلغاء
+                </button>
+                <form method="POST" action="{% url 'accounting:period_closure_close' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times-circle me-2"></i>
+                        نعم، إنهاء الفترة
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

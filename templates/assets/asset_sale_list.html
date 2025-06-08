@@ -1,0 +1,301 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-hand-holding-usd text-warning me-2"></i>
+                    {{ title }}
+                </h2>
+                <div>
+                    <a href="{% url 'assets:home' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للأصول
+                    </a>
+                    <a href="{% url 'assets:asset_sale_create' %}" class="btn btn-warning">
+                        <i class="fas fa-plus me-1"></i>
+                        إضافة بيع جديد
+                    </a>
+                </div>
+            </div>
+
+            <!-- فلاتر البحث -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="search" 
+                                       value="{{ search_query }}"
+                                       placeholder="البحث في مبيعات الأصول (رقم البيع، اسم الأصل، المشتري)">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search me-1"></i>
+                                    بحث
+                                </button>
+                                <a href="{% url 'assets:asset_sale_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>
+                                    مسح
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- قائمة مبيعات الأصول -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة مبيعات الأصول الثابتة
+                        {% if page_obj %}
+                            <span class="badge bg-warning ms-2">{{ page_obj.paginator.count }}</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم البيع</th>
+                                        <th>تاريخ البيع</th>
+                                        <th>الأصل</th>
+                                        <th>المشتري</th>
+                                        <th>سعر البيع</th>
+                                        <th>القيمة الدفترية</th>
+                                        <th>ربح/خسارة البيع</th>
+                                        <th>الخزينة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sale in page_obj %}
+                                        <tr>
+                                            <td><strong>{{ sale.sale_number }}</strong></td>
+                                            <td>{{ sale.sale_date|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ sale.asset.name }}</strong>
+                                                    <br><small class="text-muted">{{ sale.asset.asset_code }}</small>
+                                                </div>
+                                            </td>
+                                            <td>{{ sale.buyer }}</td>
+                                            <td>
+                                                <span class="text-warning fw-bold">
+                                                    {{ sale.sale_price|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-info">
+                                                    {{ sale.book_value_at_sale|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if sale.gain_loss_on_sale > 0 %}
+                                                    <span class="text-success fw-bold">
+                                                        <i class="fas fa-arrow-up me-1"></i>
+                                                        +{{ sale.gain_loss_on_sale|floatformat:2 }} ر.س
+                                                    </span>
+                                                    <br><small class="text-success">ربح</small>
+                                                {% elif sale.gain_loss_on_sale < 0 %}
+                                                    <span class="text-danger fw-bold">
+                                                        <i class="fas fa-arrow-down me-1"></i>
+                                                        {{ sale.gain_loss_on_sale|floatformat:2 }} ر.س
+                                                    </span>
+                                                    <br><small class="text-danger">خسارة</small>
+                                                {% else %}
+                                                    <span class="text-muted">
+                                                        <i class="fas fa-minus me-1"></i>
+                                                        0.00 ر.س
+                                                    </span>
+                                                    <br><small class="text-muted">متعادل</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ sale.treasury.name }}</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'assets:asset_sale_detail' sale.pk %}" 
+                                                       class="btn btn-outline-info" 
+                                                       title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'assets:asset_sale_edit' sale.pk %}" 
+                                                       class="btn btn-outline-primary" 
+                                                       title="تعديل">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" 
+                                                            class="btn btn-outline-danger delete-btn" 
+                                                            data-id="{{ sale.pk }}"
+                                                            data-name="{{ sale.sale_number }}"
+                                                            title="حذف">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    <button type="button" 
+                                                            class="btn btn-outline-secondary print-btn" 
+                                                            data-id="{{ sale.pk }}"
+                                                            title="طباعة">
+                                                        <i class="fas fa-print"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-hand-holding-usd fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد مبيعات أصول</h5>
+                            <p class="text-muted">لم يتم العثور على أي مبيعات أصول مطابقة لمعايير البحث</p>
+                            <a href="{% url 'assets:asset_sale_create' %}" class="btn btn-warning">
+                                <i class="fas fa-plus me-2"></i>
+                                إضافة بيع جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- معلومات إضافية -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات حول بيع الأصول الثابتة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-calculator me-2"></i>
+                                حساب ربح/خسارة البيع
+                            </h6>
+                            <ul class="mb-0">
+                                <li><strong>ربح البيع:</strong> سعر البيع > القيمة الدفترية</li>
+                                <li><strong>خسارة البيع:</strong> سعر البيع < القيمة الدفترية</li>
+                                <li><strong>القيمة الدفترية:</strong> تكلفة الشراء - مجمع الإهلاك</li>
+                                <li>يتم تسجيل الربح/الخسارة في الحسابات</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                نصائح مهمة
+                            </h6>
+                            <ul class="mb-0">
+                                <li>تأكد من صحة القيمة الدفترية وقت البيع</li>
+                                <li>احتفظ بعقد البيع وجميع المستندات</li>
+                                <li>سيتم تغيير حالة الأصل إلى "مباع"</li>
+                                <li>سيتم إضافة المبلغ للخزينة المحددة</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// حذف بيع أصل
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const saleId = this.getAttribute('data-id');
+            const saleNumber = this.getAttribute('data-name');
+            
+            if (confirm(`هل أنت متأكد من حذف بيع الأصل "${saleNumber}"؟`)) {
+                fetch(`/assets/sales/${saleId}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'حدث خطأ أثناء الحذف');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('حدث خطأ أثناء الحذف');
+                });
+            }
+        });
+    });
+
+    // طباعة بيع أصل
+    const printButtons = document.querySelectorAll('.print-btn');
+    printButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const saleId = this.getAttribute('data-id');
+            // يمكن إضافة رابط الطباعة هنا
+            alert('سيتم إضافة وظيفة الطباعة قريباً');
+        });
+    });
+});
+</script>
+{% endblock %}

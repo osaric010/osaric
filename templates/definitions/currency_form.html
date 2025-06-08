@@ -1,0 +1,287 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-coins me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'definitions:currency_list' %}">العملات</a></li>
+                <li class="breadcrumb-item active">{{ action }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if currency %}edit{% else %}plus{% endif %} me-2"></i>
+                    {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <!-- Currency Code -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">
+                                {{ form.code.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.code.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                رمز العملة مكون من 3 أحرف (مثل: USD, EUR, EGP)
+                            </div>
+                        </div>
+                        
+                        <!-- Currency Name -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                {{ form.name.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- Currency Symbol -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.symbol.id_for_label }}" class="form-label">
+                                {{ form.symbol.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.symbol }}
+                            {% if form.symbol.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.symbol.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                رمز العملة للعرض (مثل: $, €, ج.م)
+                            </div>
+                        </div>
+                        
+                        <!-- Exchange Rate -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.exchange_rate.id_for_label }}" class="form-label">
+                                {{ form.exchange_rate.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                {{ form.exchange_rate }}
+                                <span class="input-group-text">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </span>
+                            </div>
+                            {% if form.exchange_rate.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.exchange_rate.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                سعر الصرف مقابل العملة الأساسية
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Base Currency -->
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                {{ form.is_base_currency }}
+                                <label class="form-check-label" for="{{ form.is_base_currency.id_for_label }}">
+                                    {{ form.is_base_currency.label }}
+                                </label>
+                            </div>
+                            {% if form.is_base_currency.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.is_base_currency.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                العملة الأساسية هي العملة المرجعية للنظام (يمكن أن تكون واحدة فقط)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="row">
+                        <div class="col-12">
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>
+                                        {{ action }}
+                                    </button>
+                                    <a href="{% url 'definitions:currency_list' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-2"></i>
+                                        إلغاء
+                                    </a>
+                                </div>
+                                {% if currency %}
+                                    <button type="button" 
+                                            class="btn btn-outline-danger delete-btn" 
+                                            data-id="{{ currency.pk }}"
+                                            data-name="{{ currency.name }}">
+                                        <i class="fas fa-trash me-2"></i>
+                                        حذف
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {% if currency %}
+        <!-- Additional Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات إضافية
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>تاريخ الإنشاء:</strong> {{ currency.created_at|date:"d/m/Y H:i" }}</p>
+                        {% if currency.created_by %}
+                            <p><strong>أنشئ بواسطة:</strong> {{ currency.created_by.get_full_name|default:currency.created_by.username }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if currency.updated_at %}
+                            <p><strong>تاريخ التحديث:</strong> {{ currency.updated_at|date:"d/m/Y H:i" }}</p>
+                        {% endif %}
+                        {% if currency.updated_by %}
+                            <p><strong>حُدث بواسطة:</strong> {{ currency.updated_by.get_full_name|default:currency.updated_by.username }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if currency %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف العملة: <strong>{{ currency.name }}</strong>؟</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    لا يمكن التراجع عن هذا الإجراء
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-uppercase currency code
+    const codeField = document.getElementById('{{ form.code.id_for_label }}');
+    if (codeField) {
+        codeField.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+    
+    // Exchange rate validation
+    const exchangeRateField = document.getElementById('{{ form.exchange_rate.id_for_label }}');
+    if (exchangeRateField) {
+        exchangeRateField.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (value <= 0) {
+                this.setCustomValidity('سعر الصرف يجب أن يكون أكبر من صفر');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+    
+    {% if currency %}
+    // Delete functionality
+    const deleteBtn = document.querySelector('.delete-btn');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            deleteModal.show();
+        });
+    }
+
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            fetch(`/definitions/currencies/{{ currency.pk }}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{% url "definitions:currency_list" %}';
+                } else {
+                    alert('حدث خطأ أثناء الحذف');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الحذف');
+            });
+            deleteModal.hide();
+        });
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

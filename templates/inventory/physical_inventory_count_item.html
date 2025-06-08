@@ -1,0 +1,381 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.item-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.item-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 15px;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.item-placeholder {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    border: 3px dashed #adb5bd;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 2rem;
+}
+
+.count-input {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    border: 3px solid #007bff;
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+.count-input:focus {
+    border-color: #0056b3;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.system-quantity {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.difference-positive {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+}
+
+.difference-negative {
+    background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+    color: white;
+}
+
+.difference-zero {
+    background: linear-gradient(135deg, #6c757d 0%, #adb5bd 100%);
+    color: white;
+}
+
+.quick-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.quick-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 0.5rem;
+    border: 2px solid #007bff;
+    background: transparent;
+    color: #007bff;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.quick-btn:hover {
+    background: #007bff;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.barcode-scanner {
+    background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.notes-section {
+    background: #fff;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-clipboard-check text-primary me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        الجرد: <strong>{{ inventory.inventory_number }}</strong> | 
+                        المخزن: <strong>{{ inventory.warehouse.name }}</strong>
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'inventory:physical_inventory_count' inventory.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+
+            <!-- Item Information Card -->
+            <div class="item-card">
+                <div class="row align-items-center">
+                    <div class="col-md-3 text-center">
+                        {% if inventory_item.item.image %}
+                            <img src="{{ inventory_item.item.image.url }}" alt="{{ inventory_item.item.name }}" class="item-image">
+                        {% else %}
+                            <div class="item-placeholder">
+                                <i class="fas fa-box"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-9">
+                        <h3 class="mb-2">{{ inventory_item.item.name }}</h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1"><strong>كود الصنف:</strong> {{ inventory_item.item.code }}</p>
+                                <p class="mb-1"><strong>الوحدة:</strong> {{ inventory_item.item.unit.name }}</p>
+                                {% if inventory_item.item.category %}
+                                <p class="mb-1"><strong>الفئة:</strong> {{ inventory_item.item.category.name }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {% if inventory_item.item.barcode %}
+                                <p class="mb-1"><strong>الباركود:</strong> {{ inventory_item.item.barcode }}</p>
+                                {% endif %}
+                                <p class="mb-1"><strong>سعر التكلفة:</strong> {{ inventory_item.unit_cost|floatformat:2 }} ج.م</p>
+                                {% if inventory_item.item.description %}
+                                <p class="mb-1"><strong>الوصف:</strong> {{ inventory_item.item.description }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Count Form -->
+            <form method="post" id="countForm">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- System Quantity -->
+                    <div class="col-md-4 mb-4">
+                        <div class="system-quantity">
+                            <h6 class="mb-2">الكمية في النظام</h6>
+                            <h2 class="mb-0">{{ inventory_item.system_quantity|floatformat:3 }}</h2>
+                            <small>{{ inventory_item.item.unit.symbol }}</small>
+                        </div>
+                    </div>
+
+                    <!-- Count Input -->
+                    <div class="col-md-4 mb-4">
+                        <label for="{{ form.counted_quantity.id_for_label }}" class="form-label h6">
+                            الكمية المجردة *
+                        </label>
+                        <input type="number" 
+                               class="form-control count-input" 
+                               id="{{ form.counted_quantity.id_for_label }}"
+                               name="{{ form.counted_quantity.name }}"
+                               value="{{ form.counted_quantity.value|default:inventory_item.system_quantity }}"
+                               step="0.001" 
+                               required
+                               onchange="calculateDifference()">
+                        
+                        <!-- Quick Buttons -->
+                        <div class="quick-buttons">
+                            <button type="button" class="quick-btn" onclick="setQuantity(0)">صفر</button>
+                            <button type="button" class="quick-btn" onclick="setQuantity({{ inventory_item.system_quantity }})">نفس النظام</button>
+                            <button type="button" class="quick-btn" onclick="addToQuantity(1)">+1</button>
+                            <button type="button" class="quick-btn" onclick="addToQuantity(-1)">-1</button>
+                        </div>
+                        
+                        {% if form.counted_quantity.errors %}
+                            <div class="text-danger mt-2">
+                                {{ form.counted_quantity.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Difference Display -->
+                    <div class="col-md-4 mb-4">
+                        <div id="differenceDisplay" class="p-3 rounded-3 text-center difference-zero">
+                            <h6 class="mb-2">الفرق</h6>
+                            <h2 class="mb-0" id="differenceValue">0.000</h2>
+                            <small id="differenceUnit">{{ inventory_item.item.unit.symbol }}</small>
+                            <div class="mt-2">
+                                <small id="differenceAmount">0.00 ج.م</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Information -->
+                <div class="row">
+                    {% if inventory_item.item.track_expiry %}
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.expiry_date.id_for_label }}" class="form-label">تاريخ الانتهاء</label>
+                        {{ form.expiry_date }}
+                        {% if form.expiry_date.errors %}
+                            <div class="text-danger mt-1">{{ form.expiry_date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if inventory_item.item.track_serial %}
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.batch_number.id_for_label }}" class="form-label">رقم التشغيلة/المسلسل</label>
+                        {{ form.batch_number }}
+                        {% if form.batch_number.errors %}
+                            <div class="text-danger mt-1">{{ form.batch_number.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Notes Section -->
+                <div class="notes-section mb-4">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label h6">
+                        <i class="fas fa-sticky-note me-2"></i>
+                        ملاحظات الجرد
+                    </label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                        <div class="text-danger mt-2">{{ form.notes.errors.0 }}</div>
+                    {% endif %}
+                    <small class="form-text text-muted">
+                        يمكنك إضافة أي ملاحظات حول حالة الصنف أو سبب الفرق في الكمية
+                    </small>
+                </div>
+
+                <!-- Barcode Scanner -->
+                {% if inventory_item.item.barcode %}
+                <div class="text-center mb-4">
+                    <button type="button" class="btn barcode-scanner" onclick="scanBarcode()">
+                        <i class="fas fa-qrcode me-2"></i>
+                        مسح الباركود للتأكيد
+                    </button>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-end gap-3">
+                    <a href="{% url 'inventory:physical_inventory_count' inventory.pk %}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-times me-2"></i>
+                        إلغاء
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-save me-2"></i>
+                        حفظ الجرد
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const systemQuantity = {{ inventory_item.system_quantity }};
+const unitCost = {{ inventory_item.unit_cost }};
+
+function setQuantity(value) {
+    document.getElementById('{{ form.counted_quantity.id_for_label }}').value = value;
+    calculateDifference();
+}
+
+function addToQuantity(amount) {
+    const input = document.getElementById('{{ form.counted_quantity.id_for_label }}');
+    const currentValue = parseFloat(input.value) || 0;
+    input.value = Math.max(0, currentValue + amount);
+    calculateDifference();
+}
+
+function calculateDifference() {
+    const countedQuantity = parseFloat(document.getElementById('{{ form.counted_quantity.id_for_label }}').value) || 0;
+    const difference = countedQuantity - systemQuantity;
+    const differenceValue = Math.abs(difference);
+    const differenceAmount = difference * unitCost;
+    
+    // Update display
+    document.getElementById('differenceValue').textContent = difference.toFixed(3);
+    document.getElementById('differenceAmount').textContent = Math.abs(differenceAmount).toFixed(2) + ' ج.م';
+    
+    // Update styling
+    const display = document.getElementById('differenceDisplay');
+    display.className = 'p-3 rounded-3 text-center ';
+    
+    if (difference > 0) {
+        display.className += 'difference-positive';
+        document.getElementById('differenceValue').textContent = '+' + difference.toFixed(3);
+    } else if (difference < 0) {
+        display.className += 'difference-negative';
+    } else {
+        display.className += 'difference-zero';
+    }
+}
+
+function scanBarcode() {
+    // هنا يمكن إضافة كود مسح الباركود
+    alert('ميزة مسح الباركود ستكون متاحة قريباً');
+}
+
+// تحديد الكمية المجردة عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    calculateDifference();
+    
+    // التركيز على حقل الكمية
+    document.getElementById('{{ form.counted_quantity.id_for_label }}').focus();
+    document.getElementById('{{ form.counted_quantity.id_for_label }}').select();
+});
+
+// اختصارات لوحة المفاتيح
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.key === 'Enter') {
+        document.getElementById('countForm').submit();
+    }
+    
+    if (e.key === 'Escape') {
+        window.location.href = '{% url "inventory:physical_inventory_count" inventory.pk %}';
+    }
+});
+
+// تأكيد قبل المغادرة إذا تم تعديل البيانات
+let formChanged = false;
+document.getElementById('countForm').addEventListener('change', function() {
+    formChanged = true;
+});
+
+window.addEventListener('beforeunload', function(e) {
+    if (formChanged) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+document.getElementById('countForm').addEventListener('submit', function() {
+    formChanged = false;
+});
+</script>
+{% endblock %}

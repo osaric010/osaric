@@ -1,0 +1,213 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-file-alt text-info me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'reports:banks_reports' %}">تقارير البنوك</a></li>
+                            <li class="breadcrumb-item active">كشف حساب البنك</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">البنك</label>
+                    <select name="bank_id" class="form-select" required>
+                        <option value="">اختر البنك</option>
+                        {% for bank in banks %}
+                        <option value="{{ bank.id }}" {% if selected_bank == bank.id|stringformat:"s" %}selected{% endif %}>
+                            {{ bank.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>عرض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if bank %}
+    <!-- Bank Info -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-university me-2"></i>
+                معلومات البنك
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>اسم البنك:</strong> {{ bank.name }}</p>
+                    <p><strong>رقم الحساب:</strong> {{ bank.account_number|default:"-" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>العملة:</strong> {{ bank.currency.name|default:"-" }}</p>
+                    <p><strong>الفرع:</strong> {{ bank.branch|default:"-" }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-lg-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_deposits|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي الإيداعات</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_withdrawals|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي السحوبات</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card {% if balance > 0 %}bg-info{% elif balance < 0 %}bg-warning{% else %}bg-secondary{% endif %} text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ balance|floatformat:2 }}</h4>
+                            <p class="mb-0">الرصيد</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions -->
+    {% if transactions %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                معاملات البنك
+                <span class="badge bg-primary">{{ transactions.count }}</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>النوع</th>
+                            <th>المبلغ</th>
+                            <th>الوصف</th>
+                            <th>المرجع</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.transaction_date|date:"Y-m-d" }}</td>
+                            <td>
+                                {% if transaction.transaction_type == 'DEPOSIT' %}
+                                <span class="badge bg-success">إيداع</span>
+                                {% else %}
+                                <span class="badge bg-danger">سحب</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if transaction.transaction_type == 'DEPOSIT' %}
+                                <strong class="text-success">+{{ transaction.amount|floatformat:2 }}</strong>
+                                {% else %}
+                                <strong class="text-danger">-{{ transaction.amount|floatformat:2 }}</strong>
+                                {% endif %}
+                            </td>
+                            <td>{{ transaction.description|default:"-" }}</td>
+                            <td>{{ transaction.reference_number|default:"-" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-university fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">اختر بنك لعرض كشف الحساب</h5>
+            <p class="text-muted">يرجى اختيار بنك من القائمة أعلاه لعرض تفاصيل كشف الحساب</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .btn, .breadcrumb, .card-header {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

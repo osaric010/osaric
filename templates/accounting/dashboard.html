@@ -1,0 +1,567 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        transition: all 0.3s ease;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    
+    .function-card {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        border: 2px solid transparent;
+    }
+    
+    .function-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        text-decoration: none;
+    }
+    
+    .function-card.btn-outline-primary:hover {
+        border-color: #0d6efd;
+        background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+        color: white;
+    }
+    
+    .function-card.btn-outline-info:hover {
+        border-color: #0dcaf0;
+        background: linear-gradient(135deg, #0dcaf0 0%, #0d6efd 100%);
+        color: white;
+    }
+    
+    .function-card.btn-outline-success:hover {
+        border-color: #198754;
+        background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+        color: white;
+    }
+    
+    .function-card.btn-outline-warning:hover {
+        border-color: #ffc107;
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        color: white;
+    }
+    
+    .function-card.btn-outline-danger:hover {
+        border-color: #dc3545;
+        background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+        color: white;
+    }
+    
+    .section-header {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+    }
+    
+    .activity-item {
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+        transition: all 0.3s ease;
+    }
+    
+    .activity-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+    
+    .badge-large {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+    }
+    
+    .text-purple {
+        color: #6f42c1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0">
+                        <i class="fas fa-calculator text-purple me-3"></i>
+                        {{ title }}
+                    </h1>
+                    <p class="text-muted mb-0 mt-2">مركز إدارة جميع العمليات المحاسبية والمالية</p>
+                </div>
+                <div>
+                    {% if current_period %}
+                    <div class="badge bg-success fs-6 p-3">
+                        <i class="fas fa-calendar me-2"></i>
+                        الفترة الحالية: {{ current_period.period_name }}
+                    </div>
+                    {% else %}
+                    <div class="badge bg-warning fs-6 p-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        لا توجد فترة محاسبية حالية
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-gradient-primary text-white dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-0 fw-bold">{{ total_balance_transfers|default:0 }}</h3>
+                            <p class="mb-0 opacity-75">تحويلات الأرصدة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exchange-alt fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="opacity-75">
+                            <i class="fas fa-arrow-up me-1"></i>
+                            إجمالي العمليات
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-0 fw-bold">{{ total_journal_entries|default:0 }}</h3>
+                            <p class="mb-0 opacity-75">القيود المحاسبية</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-book fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="opacity-75">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            غير مرحل: {{ unposted_entries }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-0 fw-bold">{{ total_opening_balances|default:0 }}</h3>
+                            <p class="mb-0 opacity-75">القيود الافتتاحية</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-play-circle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="opacity-75">
+                            <i class="fas fa-cog me-1"></i>
+                            أرصدة افتتاحية
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-0 fw-bold">{{ total_profit_centers|default:0 }}</h3>
+                            <p class="mb-0 opacity-75">مراكز الربحية</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-bullseye fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="opacity-75">
+                            <i class="fas fa-chart-pie me-1"></i>
+                            مراكز نشطة
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-3">
+            <div class="card border-success dashboard-card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        ملخص مالي سريع
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-success">{{ total_debit|floatformat:0 }}</h4>
+                            <p class="text-muted mb-0">إجمالي المدين</p>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-primary">{{ total_credit|floatformat:0 }}</h4>
+                            <p class="text-muted mb-0">إجمالي الدائن</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <span class="badge bg-warning fs-6">{{ unbalanced_entries }}</span>
+                            <p class="text-muted mb-0 mt-1">قيود غير متوازنة</p>
+                        </div>
+                        <div class="col-6">
+                            <span class="badge bg-danger fs-6">{{ unposted_entries }}</span>
+                            <p class="text-muted mb-0 mt-1">قيود غير مرحلة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-3">
+            <div class="card border-info dashboard-card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar me-2"></i>
+                        معلومات الفترة المحاسبية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if current_period %}
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <strong>اسم الفترة:</strong> {{ current_period.period_name }}
+                        </div>
+                        <div class="col-6">
+                            <strong>تاريخ البداية:</strong><br>
+                            <span class="text-success">{{ current_period.start_date|date:"Y-m-d" }}</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>تاريخ النهاية:</strong><br>
+                            <span class="text-danger">{{ current_period.end_date|date:"Y-m-d" }}</span>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <strong>الحالة:</strong>
+                            {% if current_period.is_closed %}
+                                <span class="badge bg-danger">مغلقة</span>
+                            {% else %}
+                                <span class="badge bg-success">مفتوحة</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                        <p class="text-muted">لا توجد فترة محاسبية حالية</p>
+                        <a href="{% url 'accounting:period_closure_open_new' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>
+                            إنشاء فترة جديدة
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Functions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="text-secondary mb-3">
+                <i class="fas fa-th-large me-2"></i>
+                الوظائف الرئيسية
+            </h4>
+        </div>
+    </div>
+
+    <!-- تحويل رصيد بين الأشخاص -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-primary border-bottom border-primary pb-2 mb-3 section-header">
+                <i class="fas fa-exchange-alt me-2"></i>
+                تحويل رصيد بين الأشخاص
+            </h6>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{% url 'accounting:balance_transfer' %}" class="btn btn-outline-primary function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-list fa-2x mb-2"></i>
+                <span class="fw-bold">عرض تحويلات الأرصدة</span>
+                <small class="mt-1">عرض</small>
+            </a>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{% url 'accounting:balance_transfer_add' %}" class="btn btn-outline-primary function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-plus fa-2x mb-2"></i>
+                <span class="fw-bold">إضافة تحويل رصيد</span>
+                <small class="mt-1">جديد</small>
+            </a>
+        </div>
+    </div>
+
+    <!-- دمج الحسابات الفرعية -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-info border-bottom border-info pb-2 mb-3 section-header">
+                <i class="fas fa-compress-arrows-alt me-2"></i>
+                دمج الحسابات الفرعية
+            </h6>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{% url 'accounting:merge_accounts' %}" class="btn btn-outline-info function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-list fa-2x mb-2"></i>
+                <span class="fw-bold">عرض عمليات الدمج</span>
+                <small class="mt-1">عرض</small>
+            </a>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{% url 'accounting:merge_accounts_add' %}" class="btn btn-outline-info function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-compress fa-2x mb-2"></i>
+                <span class="fw-bold">دمج حسابات جديد</span>
+                <small class="mt-1">جديد</small>
+            </a>
+        </div>
+    </div>
+
+    <!-- القيود المحاسبية -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-success border-bottom border-success pb-2 mb-3 section-header">
+                <i class="fas fa-book me-2"></i>
+                القيود المحاسبية
+            </h6>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{% url 'accounting:journal_entries' %}" class="btn btn-outline-success function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-list fa-2x mb-2"></i>
+                <span class="fw-bold">عرض القيود المحاسبية</span>
+                <small class="mt-1">عرض</small>
+            </a>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{% url 'accounting:journal_entry_add' %}" class="btn btn-outline-success function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-plus fa-2x mb-2"></i>
+                <span class="fw-bold">إضافة قيد محاسبي</span>
+                <small class="mt-1">جديد</small>
+            </a>
+        </div>
+    </div>
+
+    <!-- القيد الافتتاحي -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-warning border-bottom border-warning pb-2 mb-3 section-header">
+                <i class="fas fa-play-circle me-2"></i>
+                القيد الافتتاحي
+            </h6>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{% url 'accounting:opening_balance' %}" class="btn btn-outline-warning function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-eye fa-2x mb-2"></i>
+                <span class="fw-bold">عرض القيد الافتتاحي</span>
+                <small class="mt-1">عرض</small>
+            </a>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{% url 'accounting:opening_balance_setup' %}" class="btn btn-outline-warning function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-cog fa-2x mb-2"></i>
+                <span class="fw-bold">إعداد القيد الافتتاحي</span>
+                <small class="mt-1">إعداد</small>
+            </a>
+        </div>
+    </div>
+
+    <!-- الحساب الختامي -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h6 class="text-danger border-bottom border-danger pb-2 mb-3 section-header">
+                <i class="fas fa-chart-pie me-2"></i>
+                الحساب الختامي
+            </h6>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'accounting:profit_centers' %}" class="btn btn-outline-danger function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-bullseye fa-2x mb-2"></i>
+                <span class="fw-bold">مراكز الربحية</span>
+                <small class="mt-1">تقرير</small>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'accounting:income_statement' %}" class="btn btn-outline-danger function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                <span class="fw-bold">قائمة الدخل</span>
+                <small class="mt-1">تقرير</small>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'accounting:balance_sheet' %}" class="btn btn-outline-danger function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-balance-scale fa-2x mb-2"></i>
+                <span class="fw-bold">المركز المالي</span>
+                <small class="mt-1">تقرير</small>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'accounting:profit_distribution' %}" class="btn btn-outline-danger function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-share-alt fa-2x mb-2"></i>
+                <span class="fw-bold">توزيع الأرباح</span>
+                <small class="mt-1">توزيع</small>
+            </a>
+        </div>
+        <div class="col-lg-12 col-md-12 mb-3">
+            <a href="{% url 'accounting:period_closure' %}" class="btn btn-outline-danger function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                <span class="fw-bold">إنهاء فترة الحسابات الحالية وفتح فترة جديدة</span>
+                <small class="mt-1">إنهاء</small>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        آخر تحويلات الأرصدة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_balance_transfers %}
+                        {% for transfer in recent_balance_transfers %}
+                        <div class="activity-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 text-primary">{{ transfer.transfer_number }}</h6>
+                                <p class="mb-1 fw-bold">{{ transfer.from_person.name }} → {{ transfer.to_person.name }}</p>
+                                <small class="text-muted">{{ transfer.transfer_date|date:"Y-m-d" }}</small>
+                            </div>
+                            <span class="badge bg-primary badge-large">{{ transfer.amount|floatformat:0 }}</span>
+                        </div>
+                        {% endfor %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'accounting:balance_transfer' %}" class="btn btn-outline-primary btn-sm">
+                                عرض الكل
+                            </a>
+                        </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-exchange-alt fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">لا توجد تحويلات أرصدة</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        آخر القيود المحاسبية
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_journal_entries %}
+                        {% for entry in recent_journal_entries %}
+                        <div class="activity-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 text-success">{{ entry.entry_number }}</h6>
+                                <p class="mb-1 fw-bold">{{ entry.description|truncatechars:30 }}</p>
+                                <small class="text-muted">{{ entry.entry_date|date:"Y-m-d" }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-success badge-large">{{ entry.total_debit|floatformat:0 }}</span>
+                                {% if not entry.is_posted %}
+                                <br><small class="text-warning">غير مرحل</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'accounting:journal_entries' %}" class="btn btn-outline-success btn-sm">
+                                عرض الكل
+                            </a>
+                        </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-book fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">لا توجد قيود محاسبية</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        آخر القيود الافتتاحية
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_opening_balances %}
+                        {% for balance in recent_opening_balances %}
+                        <div class="activity-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 text-warning">{{ balance.balance_number }}</h6>
+                                <p class="mb-1 fw-bold">{{ balance.get_balance_type_display }}</p>
+                                <small class="text-muted">{{ balance.balance_date|date:"Y-m-d" }}</small>
+                            </div>
+                            <span class="badge bg-warning badge-large">
+                                {% if balance.debit_amount %}{{ balance.debit_amount|floatformat:0 }}{% else %}{{ balance.credit_amount|floatformat:0 }}{% endif %}
+                            </span>
+                        </div>
+                        {% endfor %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'accounting:opening_balance' %}" class="btn btn-outline-warning btn-sm">
+                                عرض الكل
+                            </a>
+                        </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-play-circle fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">لا توجد قيود افتتاحية</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

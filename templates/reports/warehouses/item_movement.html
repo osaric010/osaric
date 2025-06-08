@@ -1,0 +1,279 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-exchange-alt text-info me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'reports:warehouses_reports' %}">تقارير المخازن</a></li>
+                            <li class="breadcrumb-item active">حركة صنف</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">الصنف</label>
+                    <select name="item_id" class="form-select" required>
+                        <option value="">اختر الصنف</option>
+                        {% for item in items %}
+                        <option value="{{ item.id }}" {% if selected_item == item.id|stringformat:"s" %}selected{% endif %}>
+                            {{ item.name }} ({{ item.code }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>عرض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if item %}
+    <!-- Item Info -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-box me-2"></i>
+                معلومات الصنف
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>اسم الصنف:</strong> {{ item.name }}</p>
+                    <p><strong>كود الصنف:</strong> {{ item.code }}</p>
+                    <p><strong>الوحدة:</strong> {{ item.unit.name }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>الفئة:</strong> {{ item.category.name|default:"غير محدد" }}</p>
+                    <p><strong>سعر التكلفة:</strong> {{ item.cost_price|default:0|floatformat:2 }}</p>
+                    <p><strong>سعر البيع:</strong> {{ item.selling_price|default:0|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if movements %}
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-lg-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_in|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي الداخل</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_out|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي الخارج</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ current_balance|floatformat:2 }}</h4>
+                            <p class="mb-0">الرصيد الحالي</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_movements }}</h4>
+                            <p class="mb-0">عدد الحركات</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Movements -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                تفاصيل حركة الصنف
+                <span class="badge bg-info">{{ total_movements }}</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>نوع الحركة</th>
+                            <th>المرجع</th>
+                            <th>الكمية الداخلة</th>
+                            <th>الكمية الخارجة</th>
+                            <th>سعر الوحدة</th>
+                            <th>الرصيد</th>
+                            <th>ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for movement in movements %}
+                        <tr>
+                            <td>{{ movement.date|date:"Y-m-d" }}</td>
+                            <td>
+                                {% if movement.type == 'مبيعات' %}
+                                <span class="badge bg-danger">{{ movement.type }}</span>
+                                {% elif movement.type == 'مشتريات' %}
+                                <span class="badge bg-success">{{ movement.type }}</span>
+                                {% elif movement.type == 'إضافة مخزون' %}
+                                <span class="badge bg-primary">{{ movement.type }}</span>
+                                {% elif movement.type == 'صرف مخزون' %}
+                                <span class="badge bg-warning">{{ movement.type }}</span>
+                                {% elif movement.type == 'تحويل' %}
+                                <span class="badge bg-info">{{ movement.type }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ movement.type }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-primary">{{ movement.reference }}</strong>
+                            </td>
+                            <td>
+                                {% if movement.quantity_in > 0 %}
+                                <strong class="text-success">{{ movement.quantity_in|floatformat:2 }}</strong>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if movement.quantity_out > 0 %}
+                                <strong class="text-danger">{{ movement.quantity_out|floatformat:2 }}</strong>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ movement.unit_price|floatformat:2 }}</td>
+                            <td>
+                                <strong class="{% if movement.balance >= 0 %}text-primary{% else %}text-danger{% endif %}">
+                                    {{ movement.balance|floatformat:2 }}
+                                </strong>
+                            </td>
+                            <td>
+                                {% if movement.notes %}
+                                <small class="text-muted">{{ movement.notes|truncatechars:30 }}</small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="3">الإجمالي</th>
+                            <th class="text-success">{{ total_in|floatformat:2 }}</th>
+                            <th class="text-danger">{{ total_out|floatformat:2 }}</th>
+                            <th></th>
+                            <th class="text-primary">{{ current_balance|floatformat:2 }}</th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">لا توجد حركات للصنف</h5>
+            <p class="text-muted">لا توجد حركات للصنف المحدد في الفترة المحددة</p>
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-box fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">اختر صنف لعرض حركته</h5>
+            <p class="text-muted">يرجى اختيار صنف من القائمة أعلاه لعرض تفاصيل حركته</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .btn, .breadcrumb, .card-header {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

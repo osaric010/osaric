@@ -1,0 +1,214 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-boxes me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'definitions:item_list' %}">الأصناف</a></li>
+                <li class="breadcrumb-item active">{{ action }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if item %}edit{% else %}plus{% endif %} me-2"></i>
+                    {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Basic Information -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">
+                                {{ form.code.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.code.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                {{ form.name.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">
+                                {{ form.category.label }}
+                            </label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.category.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.unit.id_for_label }}" class="form-label">
+                                {{ form.unit.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.unit }}
+                            {% if form.unit.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.unit.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.barcode.id_for_label }}" class="form-label">
+                                {{ form.barcode.label }}
+                            </label>
+                            {{ form.barcode }}
+                            {% if form.barcode.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.barcode.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Pricing -->
+                    <h6 class="mt-4 mb-3">
+                        <i class="fas fa-dollar-sign me-2"></i>
+                        معلومات الأسعار
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.cost_price.id_for_label }}" class="form-label">
+                                {{ form.cost_price.label }}
+                            </label>
+                            {{ form.cost_price }}
+                            {% if form.cost_price.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.cost_price.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.selling_price.id_for_label }}" class="form-label">
+                                {{ form.selling_price.label }}
+                            </label>
+                            {{ form.selling_price }}
+                            {% if form.selling_price.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.selling_price.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Stock Limits -->
+                    <h6 class="mt-4 mb-3">
+                        <i class="fas fa-warehouse me-2"></i>
+                        حدود المخزون
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.min_stock.id_for_label }}" class="form-label">
+                                {{ form.min_stock.label }}
+                            </label>
+                            {{ form.min_stock }}
+                            {% if form.min_stock.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.min_stock.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.max_stock.id_for_label }}" class="form-label">
+                                {{ form.max_stock.label }}
+                            </label>
+                            {{ form.max_stock }}
+                            {% if form.max_stock.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.max_stock.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                {{ form.description.label }}
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {{ action }}
+                            </button>
+                            <a href="{% url 'definitions:item_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                        {% if item %}
+                            <button type="button" 
+                                    class="btn btn-outline-danger delete-btn" 
+                                    data-id="{{ item.pk }}"
+                                    data-name="{{ item.name }}">
+                                <i class="fas fa-trash me-2"></i>
+                                حذف
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

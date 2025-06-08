@@ -1,0 +1,271 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-money-bill-wave me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'definitions:expense_category_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            إضافة فئة مصروف جديدة
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" 
+                           class="form-control" 
+                           name="search" 
+                           value="{{ search_query }}"
+                           placeholder="البحث في فئات المصروفات">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="category" class="form-select">
+                    <option value="">جميع التصنيفات</option>
+                    <option value="OPERATIONAL" {% if category_filter == 'OPERATIONAL' %}selected{% endif %}>مصروفات تشغيلية</option>
+                    <option value="ADMINISTRATIVE" {% if category_filter == 'ADMINISTRATIVE' %}selected{% endif %}>مصروفات إدارية</option>
+                    <option value="SELLING" {% if category_filter == 'SELLING' %}selected{% endif %}>مصروفات بيعية</option>
+                    <option value="FINANCIAL" {% if category_filter == 'FINANCIAL' %}selected{% endif %}>مصروفات مالية</option>
+                    <option value="CAPITAL" {% if category_filter == 'CAPITAL' %}selected{% endif %}>مصروفات رأسمالية</option>
+                    <option value="OTHER" {% if category_filter == 'OTHER' %}selected{% endif %}>أخرى</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="d-flex gap-1">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <a href="{% url 'definitions:expense_category_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Expense Categories Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            قائمة فئات المصروفات
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الكود</th>
+                            <th>اسم الفئة</th>
+                            <th>التصنيف</th>
+                            <th>الحساب الافتراضي</th>
+                            <th>الحد الأقصى</th>
+                            <th>يتطلب موافقة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense_category in page_obj %}
+                        <tr>
+                            <td><strong>{{ expense_category.code }}</strong></td>
+                            <td>
+                                {{ expense_category.name }}
+                                {% if expense_category.description %}
+                                    <br>
+                                    <small class="text-muted">{{ expense_category.description|truncatechars:50 }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if expense_category.category == 'OPERATIONAL' %}
+                                    <span class="badge bg-primary">تشغيلية</span>
+                                {% elif expense_category.category == 'ADMINISTRATIVE' %}
+                                    <span class="badge bg-info">إدارية</span>
+                                {% elif expense_category.category == 'SELLING' %}
+                                    <span class="badge bg-success">بيعية</span>
+                                {% elif expense_category.category == 'FINANCIAL' %}
+                                    <span class="badge bg-warning">مالية</span>
+                                {% elif expense_category.category == 'CAPITAL' %}
+                                    <span class="badge bg-danger">رأسمالية</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">أخرى</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if expense_category.default_account %}
+                                    <code>{{ expense_category.default_account }}</code>
+                                {% else %}
+                                    <span class="text-muted">غير محدد</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if expense_category.max_amount %}
+                                    {{ expense_category.max_amount|floatformat:2 }}
+                                {% else %}
+                                    <span class="text-muted">غير محدد</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if expense_category.requires_approval %}
+                                    <i class="fas fa-check text-success" title="يتطلب موافقة"></i>
+                                {% else %}
+                                    <i class="fas fa-times text-muted" title="لا يتطلب موافقة"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'definitions:expense_category_edit' expense_category.pk %}" 
+                                       class="btn btn-outline-primary" 
+                                       title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-outline-danger delete-btn" 
+                                            data-id="{{ expense_category.pk }}"
+                                            data-name="{{ expense_category.name }}"
+                                            title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">الأولى</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">السابقة</a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">
+                                صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">التالية</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">الأخيرة</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">لا توجد فئات مصروفات</h5>
+                <p class="text-muted">لم يتم العثور على أي فئات مصروفات مطابقة لمعايير البحث</p>
+                <a href="{% url 'definitions:expense_category_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    إضافة فئة مصروف جديدة
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف فئة المصروف: <strong id="delete-item-name"></strong>؟</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    لا يمكن التراجع عن هذا الإجراء
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    const deleteItemName = document.getElementById('delete-item-name');
+    let deleteId = null;
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            deleteId = this.dataset.id;
+            deleteItemName.textContent = this.dataset.name;
+            deleteModal.show();
+        });
+    });
+
+    confirmDeleteBtn.addEventListener('click', function() {
+        if (deleteId) {
+            fetch(`/definitions/expense-categories/${deleteId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'حدث خطأ أثناء الحذف');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الحذف');
+            });
+        }
+        deleteModal.hide();
+    });
+});
+</script>
+{% endblock %}

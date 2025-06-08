@@ -1,0 +1,345 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-building text-success me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'assets:asset_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <!-- معلومات الأصل الأساسية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات الأصل الأساسية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">كود الأصل</label>
+                                <input type="text" class="form-control" name="asset_code" 
+                                       placeholder="كود فريد للأصل" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">اسم الأصل</label>
+                                <input type="text" class="form-control" name="name" 
+                                       placeholder="اسم الأصل" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">مجموعة الأصل</label>
+                                <select class="form-select" name="asset_group" required>
+                                    <option value="">اختر مجموعة الأصل</option>
+                                    <!-- سيتم ملؤها من الـ view -->
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الحالة</label>
+                                <select class="form-select" name="status">
+                                    <option value="ACTIVE">نشط</option>
+                                    <option value="UNDER_MAINTENANCE">تحت الصيانة</option>
+                                    <option value="DISPOSED">مستبعد</option>
+                                    <option value="SOLD">مباع</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">وصف الأصل</label>
+                                <textarea class="form-control" name="description" rows="3" 
+                                          placeholder="وصف تفصيلي للأصل"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات الشراء -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shopping-cart me-2"></i>
+                            معلومات الشراء
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">تاريخ الشراء</label>
+                                <input type="date" class="form-control" name="purchase_date" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">تكلفة الشراء</label>
+                                <input type="number" class="form-control" name="purchase_cost" 
+                                       step="0.01" min="0.01" placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">المورد</label>
+                                <input type="text" class="form-control" name="supplier" 
+                                       placeholder="اسم المورد">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">رقم الفاتورة</label>
+                                <input type="text" class="form-control" name="invoice_number" 
+                                       placeholder="رقم الفاتورة">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات الإهلاك -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calculator me-2"></i>
+                            معلومات الإهلاك
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">طريقة الإهلاك</label>
+                                <select class="form-select" name="depreciation_method">
+                                    <option value="STRAIGHT_LINE">القسط الثابت</option>
+                                    <option value="DECLINING_BALANCE">الرصيد المتناقص</option>
+                                    <option value="UNITS_OF_PRODUCTION">وحدات الإنتاج</option>
+                                    <option value="SUM_OF_YEARS">مجموع سنوات الاستخدام</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">العمر الإنتاجي (سنوات)</label>
+                                <input type="number" class="form-control" name="useful_life_years" 
+                                       value="5" min="1" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">القيمة التخريدية</label>
+                                <input type="number" class="form-control" name="salvage_value" 
+                                       step="0.01" min="0" value="0.00">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">معدل الإهلاك (%)</label>
+                                <input type="number" class="form-control" name="depreciation_rate" 
+                                       step="0.01" min="0" max="100" placeholder="للرصيد المتناقص">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الموقع والمسؤولية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            الموقع والمسؤولية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الموقع</label>
+                                <input type="text" class="form-control" name="location" 
+                                       placeholder="موقع الأصل">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الشخص المسؤول</label>
+                                <input type="text" class="form-control" name="responsible_person" 
+                                       placeholder="اسم الشخص المسؤول">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات إضافية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            معلومات إضافية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الرقم التسلسلي</label>
+                                <input type="text" class="form-control" name="serial_number" 
+                                       placeholder="الرقم التسلسلي">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الموديل</label>
+                                <input type="text" class="form-control" name="model" 
+                                       placeholder="موديل الأصل">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الشركة المصنعة</label>
+                                <input type="text" class="form-control" name="manufacturer" 
+                                       placeholder="اسم الشركة المصنعة">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">انتهاء الضمان</label>
+                                <input type="date" class="form-control" name="warranty_expiry">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات مهمة -->
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات مهمة حول الأصول الثابتة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-building me-2"></i>
+                                        تعريف الأصل الثابت
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>أصل طويل الأجل يستخدم في العمليات</li>
+                                        <li>لا يُباع في سياق العمل العادي</li>
+                                        <li>يخضع للإهلاك عبر عمره الإنتاجي</li>
+                                        <li>يساهم في توليد الإيرادات</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-warning">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        نصائح مهمة
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>استخدم كود فريد لكل أصل</li>
+                                        <li>حدد العمر الإنتاجي بدقة</li>
+                                        <li>اختر طريقة الإهلاك المناسبة</li>
+                                        <li>حدث بيانات الأصل دورياً</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الحفظ -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'assets:asset_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i>
+                                {{ action }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديد تاريخ اليوم افتراضياً
+    const dateField = document.querySelector('input[name="purchase_date"]');
+    if (dateField && !dateField.value) {
+        dateField.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // حساب معدل الإهلاك تلقائياً للقسط الثابت
+    const depreciationMethodField = document.querySelector('select[name="depreciation_method"]');
+    const usefulLifeField = document.querySelector('input[name="useful_life_years"]');
+    const depreciationRateField = document.querySelector('input[name="depreciation_rate"]');
+    
+    function calculateDepreciationRate() {
+        if (depreciationMethodField.value === 'STRAIGHT_LINE') {
+            const usefulLife = parseInt(usefulLifeField.value) || 1;
+            const rate = (100 / usefulLife).toFixed(2);
+            depreciationRateField.value = rate;
+        }
+    }
+    
+    depreciationMethodField.addEventListener('change', function() {
+        if (this.value === 'STRAIGHT_LINE') {
+            calculateDepreciationRate();
+            depreciationRateField.readOnly = true;
+        } else {
+            depreciationRateField.readOnly = false;
+            depreciationRateField.value = '';
+        }
+    });
+    
+    usefulLifeField.addEventListener('input', function() {
+        if (depreciationMethodField.value === 'STRAIGHT_LINE') {
+            calculateDepreciationRate();
+        }
+    });
+    
+    // تحديد أولي
+    if (depreciationMethodField.value === 'STRAIGHT_LINE') {
+        calculateDepreciationRate();
+        depreciationRateField.readOnly = true;
+    }
+    
+    // تحقق من صحة النموذج
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const assetCode = document.querySelector('input[name="asset_code"]').value.trim();
+            const name = document.querySelector('input[name="name"]').value.trim();
+            const assetGroup = document.querySelector('select[name="asset_group"]').value;
+            const purchaseCost = parseFloat(document.querySelector('input[name="purchase_cost"]').value);
+            const usefulLife = parseInt(document.querySelector('input[name="useful_life_years"]').value);
+            
+            if (!assetCode) {
+                e.preventDefault();
+                alert('يجب إدخال كود الأصل');
+                return false;
+            }
+            
+            if (!name) {
+                e.preventDefault();
+                alert('يجب إدخال اسم الأصل');
+                return false;
+            }
+            
+            if (!assetGroup) {
+                e.preventDefault();
+                alert('يجب اختيار مجموعة الأصل');
+                return false;
+            }
+            
+            if (!purchaseCost || purchaseCost <= 0) {
+                e.preventDefault();
+                alert('يجب إدخال تكلفة شراء صحيحة');
+                return false;
+            }
+            
+            if (!usefulLife || usefulLife <= 0) {
+                e.preventDefault();
+                alert('يجب إدخال عمر إنتاجي صحيح');
+                return false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

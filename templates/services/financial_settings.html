@@ -1,0 +1,313 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}الإعدادات المالية{% endblock %}
+
+{% block extra_css %}
+<style>
+.settings-card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.settings-card .card-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    border-radius: 10px 10px 0 0;
+    padding: 1rem 1.5rem;
+}
+
+.currency-preview {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.currency-preview h2 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.currency-preview .currency-name {
+    font-size: 1.5rem;
+    opacity: 0.9;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.setting-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.setting-value {
+    font-weight: 500;
+    color: #007bff;
+    background: #f8f9fa;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-family: 'Courier New', monospace;
+}
+
+.currency-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.currency-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s;
+}
+
+.currency-item:hover {
+    background-color: #f8f9fa;
+}
+
+.currency-item.base-currency {
+    background-color: #e7f3ff;
+    border-left: 4px solid #007bff;
+}
+
+.currency-code {
+    font-weight: 700;
+    color: #495057;
+    font-family: 'Courier New', monospace;
+}
+
+.currency-name {
+    color: #6c757d;
+    margin-right: 1rem;
+}
+
+.currency-rate {
+    font-weight: 600;
+    color: #28a745;
+}
+
+.base-badge {
+    background: #007bff;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #007bff;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-coins text-primary me-2"></i>
+                        الإعدادات المالية
+                    </h2>
+                    <p class="text-muted mb-0">إعدادات العملة والتنسيق المالي</p>
+                </div>
+                <div>
+                    <a href="{% url 'services:system_settings' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-cog me-1"></i>
+                        إعدادات النظام
+                    </a>
+                </div>
+            </div>
+
+            <!-- Currency Preview -->
+            <div class="currency-preview">
+                <h2>{% currency_symbol %}</h2>
+                <div class="currency-name">{% currency_name %}</div>
+                <small class="mt-2 d-block">العملة الافتراضية للنظام</small>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ currencies_count }}</div>
+                    <div class="stat-label">العملات المتاحة</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ decimal_places }}</div>
+                    <div class="stat-label">الخانات العشرية</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ tax_rate }}%</div>
+                    <div class="stat-label">معدل الضريبة</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ active_settings_count }}</div>
+                    <div class="stat-label">الإعدادات النشطة</div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Financial Settings -->
+                <div class="col-lg-6">
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cog me-2"></i>
+                                إعدادات التنسيق
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% for setting in financial_settings %}
+                            <div class="setting-item">
+                                <div class="setting-label">{{ setting.description }}</div>
+                                <div class="setting-value">{{ setting.value }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Currency List -->
+                <div class="col-lg-6">
+                    <div class="settings-card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                العملات المتاحة
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="currency-list">
+                                {% for currency in currencies %}
+                                <div class="currency-item {% if currency.is_base_currency %}base-currency{% endif %}">
+                                    <div class="d-flex align-items-center">
+                                        <span class="currency-code">{{ currency.code }}</span>
+                                        <span class="currency-name">{{ currency.name }}</span>
+                                        {% if currency.is_base_currency %}
+                                        <span class="base-badge">أساسية</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="currency-rate">{{ currency.exchange_rate|floatformat:4 }}</span>
+                                        <span class="ms-2 text-muted">{{ currency.symbol }}</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Examples -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-eye me-2"></i>
+                        أمثلة على التنسيق
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6>مبلغ صغير</h6>
+                            <p class="h5">{{ 123.45|currency }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>مبلغ متوسط</h6>
+                            <p class="h5">{{ 12345.67|currency }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>مبلغ كبير</h6>
+                            <p class="h5">{{ 1234567.89|currency }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>مبلغ سالب</h6>
+                            <p class="h5 text-danger">{{ -9876.54|currency }}</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>بدون رمز العملة</h6>
+                            <p>{{ 1234.56|no_currency }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>مع كود العملة</h6>
+                            <p>{{ 1234.56|currency_code_only }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>كامل (رمز + كود)</h6>
+                            <p>{{ 1234.56|currency_full }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة تأثيرات تفاعلية
+    const currencyItems = document.querySelectorAll('.currency-item');
+    currencyItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const code = this.querySelector('.currency-code').textContent;
+            const name = this.querySelector('.currency-name').textContent;
+            alert(`العملة: ${name} (${code})`);
+        });
+    });
+});
+</script>
+{% endblock %}

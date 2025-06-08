@@ -1,0 +1,463 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-share-alt text-danger me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">إضافة توزيع أرباح جديد</p>
+                </div>
+                <div>
+                    <a href="{% url 'accounting:profit_distribution' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>
+                        بيانات توزيع الأرباح
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Info -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label for="distribution_number" class="form-label">رقم التوزيع <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="distribution_number" name="distribution_number" 
+                                       value="{% if distribution %}{{ distribution.distribution_number }}{% else %}{{ form_data.distribution_number|default:'' }}{% endif %}" required>
+                                <div class="form-text">رقم فريد لتوزيع الأرباح</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="distribution_date" class="form-label">تاريخ التوزيع <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="distribution_date" name="distribution_date" 
+                                       value="{% if distribution %}{{ distribution.distribution_date|date:'Y-m-d' }}{% else %}{{ form_data.distribution_date|default:'' }}{% endif %}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="total_profit" class="form-label">إجمالي الأرباح <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="total_profit" name="total_profit" 
+                                           value="{% if distribution %}{{ distribution.total_profit }}{% else %}{{ form_data.total_profit|default:'' }}{% endif %}"
+                                           step="0.01" min="0" required placeholder="0.00">
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="period" class="form-label">الفترة المحاسبية <span class="text-danger">*</span></label>
+                                <select class="form-select" id="period" name="period" required>
+                                    <option value="">اختر الفترة المحاسبية</option>
+                                    {% for period in periods %}
+                                    <option value="{{ period.id }}" 
+                                            {% if distribution and distribution.period.id == period.id %}selected{% elif form_data.period|stringformat:"s" == period.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ period.period_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="description" class="form-label">وصف التوزيع <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="description" name="description" 
+                                       value="{% if distribution %}{{ distribution.description }}{% else %}{{ form_data.description|default:'' }}{% endif %}" required
+                                       placeholder="وصف توزيع الأرباح">
+                            </div>
+                        </div>
+
+                        <!-- Distribution Lines -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-list me-2"></i>
+                                    تفاصيل توزيع الأرباح
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="distribution-lines">
+                                    <!-- Line 1 -->
+                                    <div class="distribution-line border rounded p-3 mb-3">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="form-label">الشريك/المساهم <span class="text-danger">*</span></label>
+                                                <select class="form-select" name="partner_1" required>
+                                                    <option value="">اختر الشريك/المساهم</option>
+                                                    {% for person in persons %}
+                                                    <option value="{{ person.id }}">{{ person.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">نسبة التوزيع (%)</label>
+                                                <input type="number" class="form-control distribution-percentage" name="percentage_1" 
+                                                       step="0.01" min="0" max="100" placeholder="0.00">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">المبلغ المستحق</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control distribution-amount" name="amount_1" 
+                                                           step="0.01" min="0" placeholder="0.00">
+                                                    <span class="input-group-text">ريال</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">طريقة الدفع</label>
+                                                <select class="form-select" name="payment_method_1">
+                                                    <option value="CASH">نقدي</option>
+                                                    <option value="BANK">تحويل بنكي</option>
+                                                    <option value="CHECK">شيك</option>
+                                                    <option value="DEFERRED">مؤجل</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <label class="form-label">&nbsp;</label>
+                                                <div class="d-grid">
+                                                    <button type="button" class="btn btn-outline-danger btn-sm remove-line" disabled>
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-12">
+                                                <label class="form-label">ملاحظات السطر</label>
+                                                <input type="text" class="form-control" name="line_notes_1" 
+                                                       placeholder="ملاحظات خاصة بهذا الشريك">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Line 2 -->
+                                    <div class="distribution-line border rounded p-3 mb-3">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <label class="form-label">الشريك/المساهم <span class="text-danger">*</span></label>
+                                                <select class="form-select" name="partner_2" required>
+                                                    <option value="">اختر الشريك/المساهم</option>
+                                                    {% for person in persons %}
+                                                    <option value="{{ person.id }}">{{ person.name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">نسبة التوزيع (%)</label>
+                                                <input type="number" class="form-control distribution-percentage" name="percentage_2" 
+                                                       step="0.01" min="0" max="100" placeholder="0.00">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">المبلغ المستحق</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control distribution-amount" name="amount_2" 
+                                                           step="0.01" min="0" placeholder="0.00">
+                                                    <span class="input-group-text">ريال</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label">طريقة الدفع</label>
+                                                <select class="form-select" name="payment_method_2">
+                                                    <option value="CASH">نقدي</option>
+                                                    <option value="BANK">تحويل بنكي</option>
+                                                    <option value="CHECK">شيك</option>
+                                                    <option value="DEFERRED">مؤجل</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <label class="form-label">&nbsp;</label>
+                                                <div class="d-grid">
+                                                    <button type="button" class="btn btn-outline-danger btn-sm remove-line">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-12">
+                                                <label class="form-label">ملاحظات السطر</label>
+                                                <input type="text" class="form-control" name="line_notes_2" 
+                                                       placeholder="ملاحظات خاصة بهذا الشريك">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mb-3">
+                                    <button type="button" id="add-line" class="btn btn-outline-primary">
+                                        <i class="fas fa-plus me-2"></i>
+                                        إضافة شريك جديد
+                                    </button>
+                                </div>
+
+                                <!-- Summary -->
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6>إجمالي النسب</h6>
+                                                <h4 id="total-percentage" class="text-primary">0.00%</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6>إجمالي المبالغ</h6>
+                                                <h4 id="total-amount" class="text-success">0.00</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card bg-light">
+                                            <div class="card-body text-center">
+                                                <h6>المتبقي</h6>
+                                                <h4 id="remaining-amount" class="text-warning">0.00</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mt-3">
+                                    <div id="distribution-status" class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        التوزيع غير مكتمل
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="ملاحظات إضافية (اختياري)">{% if distribution %}{{ distribution.notes }}{% else %}{{ form_data.notes|default:'' }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'accounting:profit_distribution' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-danger" id="save-distribution" disabled>
+                                <i class="fas fa-save me-2"></i>
+                                حفظ توزيع الأرباح
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let lineCounter = 2;
+
+    // Auto-generate distribution number if empty
+    const distributionNumberInput = document.getElementById('distribution_number');
+    if (!distributionNumberInput.value) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const time = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+        distributionNumberInput.value = `PD-${year}${month}${day}-${time}`;
+    }
+
+    // Set today's date if empty
+    const dateInput = document.getElementById('distribution_date');
+    if (!dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+
+    // Calculate totals and validate distribution
+    function calculateTotals() {
+        let totalPercentage = 0;
+        let totalAmount = 0;
+        const totalProfit = parseFloat(document.getElementById('total_profit').value) || 0;
+
+        document.querySelectorAll('.distribution-percentage').forEach(input => {
+            totalPercentage += parseFloat(input.value) || 0;
+        });
+
+        document.querySelectorAll('.distribution-amount').forEach(input => {
+            totalAmount += parseFloat(input.value) || 0;
+        });
+
+        const remainingAmount = totalProfit - totalAmount;
+
+        document.getElementById('total-percentage').textContent = totalPercentage.toFixed(2) + '%';
+        document.getElementById('total-amount').textContent = totalAmount.toFixed(2);
+        document.getElementById('remaining-amount').textContent = remainingAmount.toFixed(2);
+
+        const distributionStatus = document.getElementById('distribution-status');
+        const saveButton = document.getElementById('save-distribution');
+
+        if (Math.abs(remainingAmount) < 0.01 && totalPercentage <= 100) {
+            distributionStatus.className = 'alert alert-success';
+            distributionStatus.innerHTML = '<i class="fas fa-check me-2"></i>التوزيع مكتمل ومتوازن';
+            saveButton.disabled = false;
+        } else {
+            distributionStatus.className = 'alert alert-warning';
+            distributionStatus.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>التوزيع غير مكتمل أو غير متوازن';
+            saveButton.disabled = true;
+        }
+    }
+
+    // Auto-calculate amount from percentage
+    function calculateAmountFromPercentage(percentageInput) {
+        const totalProfit = parseFloat(document.getElementById('total_profit').value) || 0;
+        const percentage = parseFloat(percentageInput.value) || 0;
+        const amount = (totalProfit * percentage) / 100;
+        
+        const lineNumber = percentageInput.name.split('_')[1];
+        const amountInput = document.querySelector(`input[name="amount_${lineNumber}"]`);
+        if (amountInput) {
+            amountInput.value = amount.toFixed(2);
+        }
+        
+        calculateTotals();
+    }
+
+    // Add event listeners to existing inputs
+    document.querySelectorAll('.distribution-percentage, .distribution-amount').forEach(input => {
+        input.addEventListener('input', calculateTotals);
+    });
+
+    document.querySelectorAll('.distribution-percentage').forEach(input => {
+        input.addEventListener('input', function() {
+            calculateAmountFromPercentage(this);
+        });
+    });
+
+    document.getElementById('total_profit').addEventListener('input', function() {
+        // Recalculate all amounts based on percentages
+        document.querySelectorAll('.distribution-percentage').forEach(input => {
+            if (input.value) {
+                calculateAmountFromPercentage(input);
+            }
+        });
+    });
+
+    // Add new line
+    document.getElementById('add-line').addEventListener('click', function() {
+        lineCounter++;
+        const newLine = document.createElement('div');
+        newLine.className = 'distribution-line border rounded p-3 mb-3';
+        newLine.innerHTML = `
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">الشريك/المساهم <span class="text-danger">*</span></label>
+                    <select class="form-select" name="partner_${lineCounter}" required>
+                        <option value="">اختر الشريك/المساهم</option>
+                        {% for person in persons %}
+                        <option value="{{ person.id }}">{{ person.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">نسبة التوزيع (%)</label>
+                    <input type="number" class="form-control distribution-percentage" name="percentage_${lineCounter}" 
+                           step="0.01" min="0" max="100" placeholder="0.00">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">المبلغ المستحق</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control distribution-amount" name="amount_${lineCounter}" 
+                               step="0.01" min="0" placeholder="0.00">
+                        <span class="input-group-text">ريال</span>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">طريقة الدفع</label>
+                    <select class="form-select" name="payment_method_${lineCounter}">
+                        <option value="CASH">نقدي</option>
+                        <option value="BANK">تحويل بنكي</option>
+                        <option value="CHECK">شيك</option>
+                        <option value="DEFERRED">مؤجل</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-line">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-12">
+                    <label class="form-label">ملاحظات السطر</label>
+                    <input type="text" class="form-control" name="line_notes_${lineCounter}" 
+                           placeholder="ملاحظات خاصة بهذا الشريك">
+                </div>
+            </div>
+        `;
+
+        document.getElementById('distribution-lines').appendChild(newLine);
+
+        // Add event listeners to new inputs
+        newLine.querySelectorAll('.distribution-percentage, .distribution-amount').forEach(input => {
+            input.addEventListener('input', calculateTotals);
+        });
+
+        newLine.querySelector('.distribution-percentage').addEventListener('input', function() {
+            calculateAmountFromPercentage(this);
+        });
+
+        // Add remove functionality
+        newLine.querySelector('.remove-line').addEventListener('click', function() {
+            newLine.remove();
+            calculateTotals();
+            updateRemoveButtons();
+        });
+
+        updateRemoveButtons();
+    });
+
+    // Remove line functionality
+    document.querySelectorAll('.remove-line').forEach(button => {
+        button.addEventListener('click', function() {
+            button.closest('.distribution-line').remove();
+            calculateTotals();
+            updateRemoveButtons();
+        });
+    });
+
+    // Update remove buttons (disable if only 2 lines)
+    function updateRemoveButtons() {
+        const lines = document.querySelectorAll('.distribution-line');
+        const removeButtons = document.querySelectorAll('.remove-line');
+        
+        removeButtons.forEach(button => {
+            button.disabled = lines.length <= 2;
+        });
+    }
+
+    // Initial calculation
+    calculateTotals();
+    updateRemoveButtons();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,430 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-users me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'definitions:person_list' %}">الأشخاص والجهات</a></li>
+                <li class="breadcrumb-item active">{{ person.name }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'definitions:person_edit' person.pk %}" class="btn btn-primary">
+            <i class="fas fa-edit me-2"></i>
+            تعديل
+        </a>
+        <a href="{% url 'definitions:person_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-2"></i>
+            العودة للقائمة
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Basic Information -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    المعلومات الأساسية
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>الكود:</strong></td>
+                                <td>{{ person.code }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الاسم:</strong></td>
+                                <td>{{ person.name }}</td>
+                            </tr>
+                            {% if person.name_english %}
+                            <tr>
+                                <td><strong>الاسم بالإنجليزية:</strong></td>
+                                <td>{{ person.name_english }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td><strong>نوع الشخص/الجهة:</strong></td>
+                                <td>
+                                    {% if person.person_type == 'CUSTOMER' %}
+                                        <span class="badge bg-success">عميل</span>
+                                    {% elif person.person_type == 'SUPPLIER' %}
+                                        <span class="badge bg-warning">مورد</span>
+                                    {% elif person.person_type == 'EMPLOYEE' %}
+                                        <span class="badge bg-info">موظف</span>
+                                    {% elif person.person_type == 'BOTH' %}
+                                        <span class="badge bg-primary">عميل ومورد</span>
+                                    {% elif person.person_type == 'BANK' %}
+                                        <span class="badge bg-dark">بنك</span>
+                                    {% elif person.person_type == 'GOVERNMENT' %}
+                                        <span class="badge bg-secondary">جهة حكومية</span>
+                                    {% elif person.person_type == 'PARTNER' %}
+                                        <span class="badge bg-purple">شريك</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">أخرى</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>نوع الكيان:</strong></td>
+                                <td>
+                                    {% if person.entity_type == 'INDIVIDUAL' %}
+                                        <i class="fas fa-user text-primary me-1"></i> فرد
+                                    {% elif person.entity_type == 'COMPANY' %}
+                                        <i class="fas fa-building text-success me-1"></i> شركة
+                                    {% elif person.entity_type == 'INSTITUTION' %}
+                                        <i class="fas fa-university text-info me-1"></i> مؤسسة
+                                    {% else %}
+                                        <i class="fas fa-landmark text-warning me-1"></i> جهة حكومية
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            {% if person.national_id %}
+                            <tr>
+                                <td><strong>رقم الهوية/السجل:</strong></td>
+                                <td>{{ person.national_id }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if person.tax_number %}
+                            <tr>
+                                <td><strong>الرقم الضريبي:</strong></td>
+                                <td>{{ person.tax_number }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if person.commercial_register %}
+                            <tr>
+                                <td><strong>السجل التجاري:</strong></td>
+                                <td>{{ person.commercial_register }}</td>
+                            </tr>
+                            {% endif %}
+                            {% if person.registration_date %}
+                            <tr>
+                                <td><strong>تاريخ التسجيل:</strong></td>
+                                <td>{{ person.registration_date|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contact Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-phone me-2"></i>
+                    معلومات الاتصال
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        {% if person.phone %}
+                            <p><strong>الهاتف:</strong> 
+                                <a href="tel:{{ person.phone }}" class="text-decoration-none">{{ person.phone }}</a>
+                            </p>
+                        {% endif %}
+                        {% if person.mobile %}
+                            <p><strong>الجوال:</strong> 
+                                <a href="tel:{{ person.mobile }}" class="text-decoration-none">{{ person.mobile }}</a>
+                            </p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if person.email %}
+                            <p><strong>البريد الإلكتروني:</strong> 
+                                <a href="mailto:{{ person.email }}" class="text-decoration-none">{{ person.email }}</a>
+                            </p>
+                        {% endif %}
+                        {% if person.website %}
+                            <p><strong>الموقع الإلكتروني:</strong> 
+                                <a href="{{ person.website }}" target="_blank" class="text-decoration-none">{{ person.website }}</a>
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if person.full_address %}
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <h6>العنوان:</h6>
+                        <p class="text-muted">{{ person.full_address }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if person.contact_person or person.contact_title %}
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        {% if person.contact_person %}
+                            <p><strong>الشخص المسؤول:</strong> {{ person.contact_person }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if person.contact_title %}
+                            <p><strong>المنصب:</strong> {{ person.contact_title }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Financial Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-dollar-sign me-2"></i>
+                    المعلومات المالية
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        {% if person.credit_limit %}
+                            <p><strong>حد الائتمان:</strong> {{ person.credit_limit|floatformat:2 }}</p>
+                        {% endif %}
+                        {% if person.payment_terms %}
+                            <p><strong>مدة السداد:</strong> {{ person.payment_terms }} يوم</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if person.currency %}
+                            <p><strong>العملة الافتراضية:</strong> {{ person.currency.name }}</p>
+                        {% endif %}
+                        <p><strong>السماح بالائتمان:</strong> 
+                            {% if person.allow_credit %}
+                                <i class="fas fa-check text-success"></i> نعم
+                            {% else %}
+                                <i class="fas fa-times text-danger"></i> لا
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                {% if person.account_receivable or person.account_payable %}
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        {% if person.account_receivable %}
+                            <p><strong>حساب المدينين:</strong> {{ person.account_receivable }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if person.account_payable %}
+                            <p><strong>حساب الدائنين:</strong> {{ person.account_payable }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if person.notes %}
+        <!-- Notes -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-sticky-note me-2"></i>
+                    ملاحظات
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">{{ person.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Status and Quick Actions -->
+    <div class="col-lg-4">
+        <!-- Status -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-toggle-on me-2"></i>
+                    الحالة
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>عميل نشط:</span>
+                    {% if person.is_active_customer %}
+                        <span class="badge bg-success">نشط</span>
+                    {% else %}
+                        <span class="badge bg-secondary">غير نشط</span>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>مورد نشط:</span>
+                    {% if person.is_active_supplier %}
+                        <span class="badge bg-success">نشط</span>
+                    {% else %}
+                        <span class="badge bg-secondary">غير نشط</span>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>الحالة العامة:</span>
+                    {% if person.is_active %}
+                        <span class="badge bg-success">نشط</span>
+                    {% else %}
+                        <span class="badge bg-danger">غير نشط</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    إجراءات سريعة
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'definitions:person_edit' person.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>
+                        تعديل البيانات
+                    </a>
+                    {% if person.email %}
+                    <a href="mailto:{{ person.email }}" class="btn btn-outline-info">
+                        <i class="fas fa-envelope me-2"></i>
+                        إرسال بريد إلكتروني
+                    </a>
+                    {% endif %}
+                    {% if person.phone or person.mobile %}
+                    <a href="tel:{{ person.phone|default:person.mobile }}" class="btn btn-outline-success">
+                        <i class="fas fa-phone me-2"></i>
+                        اتصال هاتفي
+                    </a>
+                    {% endif %}
+                    <button type="button" class="btn btn-outline-warning">
+                        <i class="fas fa-chart-line me-2"></i>
+                        تقرير الحساب
+                    </button>
+                    <button type="button" 
+                            class="btn btn-outline-danger delete-btn" 
+                            data-id="{{ person.pk }}"
+                            data-name="{{ person.name }}">
+                        <i class="fas fa-trash me-2"></i>
+                        حذف
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Additional Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات إضافية
+                </h6>
+            </div>
+            <div class="card-body">
+                <p><strong>تاريخ الإنشاء:</strong><br>{{ person.created_at|date:"d/m/Y H:i" }}</p>
+                {% if person.created_by %}
+                    <p><strong>أنشئ بواسطة:</strong><br>{{ person.created_by.get_full_name|default:person.created_by.username }}</p>
+                {% endif %}
+                {% if person.updated_at %}
+                    <p><strong>تاريخ التحديث:</strong><br>{{ person.updated_at|date:"d/m/Y H:i" }}</p>
+                {% endif %}
+                {% if person.updated_by %}
+                    <p><strong>حُدث بواسطة:</strong><br>{{ person.updated_by.get_full_name|default:person.updated_by.username }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف الشخص/الجهة: <strong>{{ person.name }}</strong>؟</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    لا يمكن التراجع عن هذا الإجراء
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteBtn = document.querySelector('.delete-btn');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            deleteModal.show();
+        });
+    }
+
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            fetch(`/definitions/persons/{{ person.pk }}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{% url "definitions:person_list" %}';
+                } else {
+                    alert(data.message || 'حدث خطأ أثناء الحذف');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الحذف');
+            });
+            deleteModal.hide();
+        });
+    }
+});
+</script>
+
+<style>
+.bg-purple { background-color: #6f42c1 !important; }
+</style>
+{% endblock %}

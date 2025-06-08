@@ -1,0 +1,349 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-building text-success me-2"></i>
+                    تفاصيل الأصل: {{ asset.name }}
+                </h2>
+                <div>
+                    <a href="{% url 'assets:asset_list' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للقائمة
+                    </a>
+                    {% if asset.status != 'SOLD' and asset.status != 'DISPOSED' %}
+                        <a href="{% url 'assets:asset_edit' asset.pk %}" class="btn btn-primary">
+                            <i class="fas fa-edit me-1"></i>
+                            تعديل الأصل
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- معلومات الأصل الأساسية -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                معلومات الأصل الأساسية
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">كود الأصل</label>
+                                    <div class="fw-bold">{{ asset.asset_code }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">اسم الأصل</label>
+                                    <div class="fw-bold">{{ asset.name }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">مجموعة الأصل</label>
+                                    <div>
+                                        <span class="badge bg-primary">{{ asset.asset_group.name }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">الحالة</label>
+                                    <div>
+                                        {% if asset.status == 'ACTIVE' %}
+                                            <span class="badge bg-success">{{ asset.get_status_display }}</span>
+                                        {% elif asset.status == 'UNDER_MAINTENANCE' %}
+                                            <span class="badge bg-warning">{{ asset.get_status_display }}</span>
+                                        {% elif asset.status == 'DISPOSED' %}
+                                            <span class="badge bg-danger">{{ asset.get_status_display }}</span>
+                                        {% elif asset.status == 'SOLD' %}
+                                            <span class="badge bg-info">{{ asset.get_status_display }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label text-muted">وصف الأصل</label>
+                                    <div>{{ asset.description|default:"لا يوجد وصف" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- معلومات الشراء -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                معلومات الشراء
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">تاريخ الشراء</label>
+                                    <div class="fw-bold">{{ asset.purchase_date|date:"d/m/Y" }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">تكلفة الشراء</label>
+                                    <div class="fw-bold text-info">{{ asset.purchase_cost|floatformat:2 }} ر.س</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">المورد</label>
+                                    <div>{{ asset.supplier|default:"غير محدد" }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">رقم الفاتورة</label>
+                                    <div>{{ asset.invoice_number|default:"غير محدد" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- معلومات الإهلاك -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-calculator me-2"></i>
+                                معلومات الإهلاك
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">طريقة الإهلاك</label>
+                                    <div>
+                                        <span class="badge bg-primary">{{ asset.get_depreciation_method_display }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">العمر الإنتاجي</label>
+                                    <div class="fw-bold">{{ asset.useful_life_years }} سنوات</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">القيمة التخريدية</label>
+                                    <div>{{ asset.salvage_value|floatformat:2 }} ر.س</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">معدل الإهلاك</label>
+                                    <div>{{ asset.depreciation_rate|floatformat:2 }}%</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">الإهلاك السنوي</label>
+                                    <div class="fw-bold text-warning">{{ asset.annual_depreciation|floatformat:2 }} ر.س</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">الإهلاك الشهري</label>
+                                    <div class="fw-bold text-danger">{{ asset.monthly_depreciation|floatformat:2 }} ر.س</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الملخص المالي -->
+                <div class="col-lg-4">
+                    <div class="card mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-pie me-2"></i>
+                                الملخص المالي
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">تكلفة الشراء</label>
+                                <div class="h5 text-info">{{ asset.purchase_cost|floatformat:2 }} ر.س</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">مجمع الإهلاك</label>
+                                <div class="h5 text-warning">{{ asset.accumulated_depreciation|floatformat:2 }} ر.س</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">القيمة الدفترية</label>
+                                <div class="h4 text-success">{{ asset.book_value|floatformat:2 }} ر.س</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">نسبة الإهلاك</label>
+                                {% widthratio asset.accumulated_depreciation asset.purchase_cost 100 as depreciation_percentage %}
+                                <div class="progress mb-2" style="height: 25px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                         style="width: {{ depreciation_percentage }}%" 
+                                         aria-valuenow="{{ depreciation_percentage }}" 
+                                         aria-valuemin="0" aria-valuemax="100">
+                                        {{ depreciation_percentage|floatformat:1 }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- معلومات إضافية -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                معلومات إضافية
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">الموقع</label>
+                                <div>{{ asset.location|default:"غير محدد" }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">الشخص المسؤول</label>
+                                <div>{{ asset.responsible_person|default:"غير محدد" }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">الرقم التسلسلي</label>
+                                <div>{{ asset.serial_number|default:"غير محدد" }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">الموديل</label>
+                                <div>{{ asset.model|default:"غير محدد" }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">الشركة المصنعة</label>
+                                <div>{{ asset.manufacturer|default:"غير محدد" }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">انتهاء الضمان</label>
+                                <div>
+                                    {% if asset.warranty_expiry %}
+                                        {{ asset.warranty_expiry|date:"d/m/Y" }}
+                                        {% if asset.warranty_expiry < today %}
+                                            <span class="badge bg-danger ms-2">منتهي</span>
+                                        {% else %}
+                                            <span class="badge bg-success ms-2">ساري</span>
+                                        {% endif %}
+                                    {% else %}
+                                        غير محدد
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- إجراءات سريعة -->
+                    {% if asset.status != 'SOLD' and asset.status != 'DISPOSED' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-cogs me-2"></i>
+                                    إجراءات سريعة
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'assets:asset_renewal_create' %}?asset={{ asset.pk }}" 
+                                       class="btn btn-info">
+                                        <i class="fas fa-sync-alt me-2"></i>
+                                        تجديد الأصل
+                                    </a>
+                                    <a href="{% url 'assets:asset_maintenance_create' %}?asset={{ asset.pk }}" 
+                                       class="btn btn-warning">
+                                        <i class="fas fa-tools me-2"></i>
+                                        صيانة الأصل
+                                    </a>
+                                    <a href="{% url 'assets:asset_sale_create' %}?asset={{ asset.pk }}" 
+                                       class="btn btn-outline-danger">
+                                        <i class="fas fa-hand-holding-usd me-2"></i>
+                                        بيع الأصل
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- تاريخ العمليات -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-history me-2"></i>
+                                تاريخ العمليات على الأصل
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- التجديدات -->
+                                <div class="col-lg-4 mb-4">
+                                    <h6 class="text-info">
+                                        <i class="fas fa-sync-alt me-2"></i>
+                                        التجديدات
+                                    </h6>
+                                    {% if asset.renewals.all %}
+                                        {% for renewal in asset.renewals.all %}
+                                            <div class="border-start border-info ps-3 mb-3">
+                                                <div class="fw-bold">{{ renewal.renewal_number }}</div>
+                                                <div class="text-muted small">{{ renewal.renewal_date|date:"d/m/Y" }}</div>
+                                                <div>{{ renewal.get_renewal_type_display }}</div>
+                                                <div class="text-info">{{ renewal.cost|floatformat:2 }} ر.س</div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted">لا توجد تجديدات</p>
+                                    {% endif %}
+                                </div>
+
+                                <!-- الصيانة -->
+                                <div class="col-lg-4 mb-4">
+                                    <h6 class="text-warning">
+                                        <i class="fas fa-tools me-2"></i>
+                                        الصيانة
+                                    </h6>
+                                    {% if asset.maintenance_records.all %}
+                                        {% for maintenance in asset.maintenance_records.all %}
+                                            <div class="border-start border-warning ps-3 mb-3">
+                                                <div class="fw-bold">{{ maintenance.maintenance_number }}</div>
+                                                <div class="text-muted small">{{ maintenance.maintenance_date|date:"d/m/Y" }}</div>
+                                                <div>{{ maintenance.get_maintenance_type_display }}</div>
+                                                <div class="text-warning">{{ maintenance.cost|floatformat:2 }} ر.س</div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted">لا توجد سجلات صيانة</p>
+                                    {% endif %}
+                                </div>
+
+                                <!-- قيود الإهلاك -->
+                                <div class="col-lg-4 mb-4">
+                                    <h6 class="text-danger">
+                                        <i class="fas fa-calculator me-2"></i>
+                                        قيود الإهلاك الأخيرة
+                                    </h6>
+                                    {% if asset.depreciation_entries.all %}
+                                        {% for entry in asset.depreciation_entries.all|slice:":5" %}
+                                            <div class="border-start border-danger ps-3 mb-3">
+                                                <div class="fw-bold">{{ entry.entry_number }}</div>
+                                                <div class="text-muted small">{{ entry.period_month }}/{{ entry.period_year }}</div>
+                                                <div class="text-danger">{{ entry.depreciation_amount|floatformat:2 }} ر.س</div>
+                                            </div>
+                                        {% endfor %}
+                                        {% if asset.depreciation_entries.count > 5 %}
+                                            <a href="{% url 'assets:depreciation_entry_list' %}?asset={{ asset.pk }}" 
+                                               class="btn btn-sm btn-outline-danger">
+                                                عرض جميع القيود
+                                            </a>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="text-muted">لا توجد قيود إهلاك</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

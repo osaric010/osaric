@@ -1,0 +1,114 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-ruler me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'definitions:unit_list' %}">وحدات القياس</a></li>
+                <li class="breadcrumb-item active">{{ action }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if unit %}edit{% else %}plus{% endif %} me-2"></i>
+                    {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Unit Code -->
+                    <div class="mb-3">
+                        <label for="{{ form.code.id_for_label }}" class="form-label">
+                            {{ form.code.label }}
+                            <span class="text-danger">*</span>
+                        </label>
+                        {{ form.code }}
+                        {% if form.code.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.code.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Unit Name -->
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            {{ form.name.label }}
+                            <span class="text-danger">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.name.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Unit Symbol -->
+                    <div class="mb-3">
+                        <label for="{{ form.symbol.id_for_label }}" class="form-label">
+                            {{ form.symbol.label }}
+                            <span class="text-danger">*</span>
+                        </label>
+                        {{ form.symbol }}
+                        {% if form.symbol.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.symbol.errors.0 }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            رمز مختصر للوحدة (مثل: كجم، قطعة، متر)
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {{ action }}
+                            </button>
+                            <a href="{% url 'definitions:unit_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                        {% if unit %}
+                            <button type="button" 
+                                    class="btn btn-outline-danger delete-btn" 
+                                    data-id="{{ unit.pk }}"
+                                    data-name="{{ unit.name }}">
+                                <i class="fas fa-trash me-2"></i>
+                                حذف
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

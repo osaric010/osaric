@@ -1,0 +1,318 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-map-pin me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'definitions:location_list' %}">مواقع المخازن</a></li>
+                <li class="breadcrumb-item active">{{ action }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if location %}edit{% else %}plus{% endif %} me-2"></i>
+                    {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Basic Information -->
+                    <h6 class="mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        المعلومات الأساسية
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">
+                                {{ form.code.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.code.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                {{ form.name.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.warehouse.id_for_label }}" class="form-label">
+                                {{ form.warehouse.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.warehouse }}
+                            {% if form.warehouse.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.warehouse.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.zone.id_for_label }}" class="form-label">
+                                {{ form.zone.label }}
+                            </label>
+                            {{ form.zone }}
+                            {% if form.zone.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.zone.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Location Details -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-map-marked-alt me-2"></i>
+                        تفاصيل الموقع
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.aisle.id_for_label }}" class="form-label">
+                                {{ form.aisle.label }}
+                            </label>
+                            {{ form.aisle }}
+                            {% if form.aisle.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.aisle.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.rack.id_for_label }}" class="form-label">
+                                {{ form.rack.label }}
+                            </label>
+                            {{ form.rack }}
+                            {% if form.rack.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.rack.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.shelf.id_for_label }}" class="form-label">
+                                {{ form.shelf.label }}
+                            </label>
+                            {{ form.shelf }}
+                            {% if form.shelf.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.shelf.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.bin.id_for_label }}" class="form-label">
+                                {{ form.bin.label }}
+                            </label>
+                            {{ form.bin }}
+                            {% if form.bin.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.bin.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Capacity and Limits -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-weight-hanging me-2"></i>
+                        السعة والحدود
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.capacity.id_for_label }}" class="form-label">
+                                {{ form.capacity.label }}
+                            </label>
+                            {{ form.capacity }}
+                            {% if form.capacity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.capacity.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.capacity_unit.id_for_label }}" class="form-label">
+                                {{ form.capacity_unit.label }}
+                            </label>
+                            {{ form.capacity_unit }}
+                            {% if form.capacity_unit.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.capacity_unit.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.max_weight.id_for_label }}" class="form-label">
+                                {{ form.max_weight.label }}
+                            </label>
+                            {{ form.max_weight }}
+                            {% if form.max_weight.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.max_weight.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Status -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-toggle-on me-2"></i>
+                        حالة الموقع
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                {{ form.is_available }}
+                                <label class="form-check-label" for="{{ form.is_available.id_for_label }}">
+                                    {{ form.is_available.label }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                {{ form.is_pickable }}
+                                <label class="form-check-label" for="{{ form.is_pickable.id_for_label }}">
+                                    {{ form.is_pickable.label }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                {{ form.is_receivable }}
+                                <label class="form-check-label" for="{{ form.is_receivable.id_for_label }}">
+                                    {{ form.is_receivable.label }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes -->
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                {{ form.notes.label }}
+                            </label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.notes.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {{ action }}
+                            </button>
+                            <a href="{% url 'definitions:location_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                        {% if location %}
+                            <button type="button" 
+                                    class="btn btn-outline-danger delete-btn" 
+                                    data-id="{{ location.pk }}"
+                                    data-name="{{ location.name }}">
+                                <i class="fas fa-trash me-2"></i>
+                                حذف
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-uppercase location code
+    const codeField = document.getElementById('{{ form.code.id_for_label }}');
+    if (codeField) {
+        codeField.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+    
+    // Filter zones based on selected warehouse
+    const warehouseField = document.getElementById('{{ form.warehouse.id_for_label }}');
+    const zoneField = document.getElementById('{{ form.zone.id_for_label }}');
+    
+    if (warehouseField && zoneField) {
+        warehouseField.addEventListener('change', function() {
+            const warehouseId = this.value;
+            
+            // Clear zone options
+            zoneField.innerHTML = '<option value="">اختر المنطقة</option>';
+            
+            if (warehouseId) {
+                // Fetch zones for selected warehouse
+                fetch(`/api/warehouses/${warehouseId}/zones/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(zone => {
+                            const option = document.createElement('option');
+                            option.value = zone.id;
+                            option.textContent = zone.name;
+                            zoneField.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

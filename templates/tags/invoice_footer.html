@@ -1,0 +1,73 @@
+{% load system_tags %}
+
+<div class="invoice-footer mt-4">
+    {% if show_terms %}
+        <div class="terms-conditions mb-3">
+            <h6>الشروط والأحكام:</h6>
+            <ul class="small text-muted">
+                <li>جميع الأسعار شاملة ضريبة القيمة المضافة</li>
+                <li>يرجى مراجعة الفاتورة والتأكد من صحة البيانات</li>
+                <li>في حالة وجود أي استفسار يرجى التواصل معنا</li>
+                <li>شكراً لتعاملكم معنا</li>
+            </ul>
+        </div>
+    {% endif %}
+    
+    {% if show_signature %}
+        <div class="signature-section">
+            <div class="row">
+                <div class="col-6">
+                    <div class="signature-box">
+                        <p class="mb-1">توقيع العميل:</p>
+                        <div class="signature-line"></div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="signature-box">
+                        <p class="mb-1">توقيع {{ company_name }}:</p>
+                        <div class="signature-line"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="footer-note text-center mt-3">
+        <small class="text-muted">
+            تم إنشاء هذه الفاتورة بواسطة نظام {{ company_name }} للحسابات
+        </small>
+    </div>
+</div>
+
+<style>
+    .invoice-footer {
+        border-top: 1px solid #dee2e6;
+        padding-top: 20px;
+    }
+    
+    .terms-conditions ul {
+        list-style-type: disc;
+        padding-right: 20px;
+    }
+    
+    .signature-box {
+        text-align: center;
+        padding: 20px 0;
+    }
+    
+    .signature-line {
+        border-bottom: 1px solid #000;
+        height: 40px;
+        margin-top: 10px;
+    }
+    
+    @media print {
+        .invoice-footer {
+            border-top: 1px solid #000;
+        }
+        
+        .signature-line {
+            border-bottom: 1px solid #000;
+        }
+    }
+</style>

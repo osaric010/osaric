@@ -1,0 +1,286 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-quote-right text-warning me-2"></i>
+                    {{ title }}
+                </h2>
+                <div>
+                    {% if quotation.status == 'DRAFT' %}
+                        <a href="#" class="btn btn-warning me-2">
+                            <i class="fas fa-edit me-1"></i>
+                            تعديل
+                        </a>
+                    {% endif %}
+                    <button type="button" class="btn btn-primary me-2" onclick="printQuotation()">
+                        <i class="fas fa-print me-1"></i>
+                        طباعة
+                    </button>
+                    <a href="{% url 'sales:quotation_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- معلومات العرض -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle text-warning me-2"></i>
+                                معلومات العرض
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>رقم العرض:</strong></div>
+                                <div class="col-sm-8">{{ quotation.quotation_number }}</div>
+                            </div>
+                            <hr>
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>التاريخ:</strong></div>
+                                <div class="col-sm-8">{{ quotation.date|date:"d/m/Y" }}</div>
+                            </div>
+                            <hr>
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>صالح حتى:</strong></div>
+                                <div class="col-sm-8">
+                                    {{ quotation.valid_until|date:"d/m/Y" }}
+                                    {% if quotation.is_expired %}
+                                        <span class="badge bg-danger ms-2">منتهي</span>
+                                    {% elif quotation.days_until_expiry <= 7 %}
+                                        <span class="badge bg-warning ms-2">{{ quotation.days_until_expiry }} أيام متبقية</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>الحالة:</strong></div>
+                                <div class="col-sm-8">
+                                    {% if quotation.status == 'DRAFT' %}
+                                        <span class="badge bg-secondary">{{ quotation.get_status_display }}</span>
+                                    {% elif quotation.status == 'SENT' %}
+                                        <span class="badge bg-primary">{{ quotation.get_status_display }}</span>
+                                    {% elif quotation.status == 'ACCEPTED' %}
+                                        <span class="badge bg-success">{{ quotation.get_status_display }}</span>
+                                    {% elif quotation.status == 'REJECTED' %}
+                                        <span class="badge bg-danger">{{ quotation.get_status_display }}</span>
+                                    {% elif quotation.status == 'EXPIRED' %}
+                                        <span class="badge bg-dark">{{ quotation.get_status_display }}</span>
+                                    {% elif quotation.status == 'CONVERTED' %}
+                                        <span class="badge bg-info">{{ quotation.get_status_display }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>العملة:</strong></div>
+                                <div class="col-sm-8">{{ quotation.currency.name }}</div>
+                            </div>
+                            {% if quotation.exchange_rate != 1 %}
+                                <hr>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>سعر الصرف:</strong></div>
+                                    <div class="col-sm-8">{{ quotation.exchange_rate }}</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات العميل -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user text-success me-2"></i>
+                                معلومات العميل
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>اسم العميل:</strong></div>
+                                <div class="col-sm-8">{{ quotation.customer.name }}</div>
+                            </div>
+                            <hr>
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>كود العميل:</strong></div>
+                                <div class="col-sm-8">{{ quotation.customer.code }}</div>
+                            </div>
+                            {% if quotation.customer.phone %}
+                                <hr>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>الهاتف:</strong></div>
+                                    <div class="col-sm-8">{{ quotation.customer.phone }}</div>
+                                </div>
+                            {% endif %}
+                            {% if quotation.customer.email %}
+                                <hr>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>البريد الإلكتروني:</strong></div>
+                                    <div class="col-sm-8">{{ quotation.customer.email }}</div>
+                                </div>
+                            {% endif %}
+                            {% if quotation.salesperson %}
+                                <hr>
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>مندوب المبيعات:</strong></div>
+                                    <div class="col-sm-8">{{ quotation.salesperson.get_full_name|default:quotation.salesperson.username }}</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أصناف العرض -->
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list text-info me-2"></i>
+                                أصناف العرض
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if items %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>الصنف</th>
+                                                <th>الكمية</th>
+                                                <th>سعر الوحدة</th>
+                                                <th>الخصم</th>
+                                                <th>الضريبة</th>
+                                                <th>الإجمالي</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in items %}
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ item.item.name }}</strong>
+                                                        {% if item.description %}
+                                                            <br><small class="text-muted">{{ item.description }}</small>
+                                                        {% endif %}
+                                                        {% if item.delivery_time %}
+                                                            <br><small class="text-info">مدة التسليم: {{ item.delivery_time }}</small>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ item.quantity|floatformat:3 }}</td>
+                                                    <td>{{ item.unit_price|floatformat:2 }} ر.س</td>
+                                                    <td>
+                                                        {% if item.discount_percentage > 0 %}
+                                                            {{ item.discount_percentage|floatformat:2 }}%
+                                                            <br><small>({{ item.discount_amount|floatformat:2 }} ر.س)</small>
+                                                        {% else %}
+                                                            -
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if item.tax_percentage > 0 %}
+                                                            {{ item.tax_percentage|floatformat:2 }}%
+                                                            <br><small>({{ item.tax_amount|floatformat:2 }} ر.س)</small>
+                                                        {% else %}
+                                                            -
+                                                        {% endif %}
+                                                    </td>
+                                                    <td><strong>{{ item.total_amount|floatformat:2 }} ر.س</strong></td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                                    <h6 class="text-muted">لا توجد أصناف في هذا العرض</h6>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- المجاميع -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-calculator text-primary me-2"></i>
+                                المجاميع
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-6"><strong>المجموع الفرعي:</strong></div>
+                                <div class="col-6 text-end">{{ quotation.subtotal|floatformat:2 }} ر.س</div>
+                            </div>
+                            {% if quotation.discount_amount > 0 %}
+                                <div class="row mb-2">
+                                    <div class="col-6"><strong>الخصم:</strong></div>
+                                    <div class="col-6 text-end text-danger">-{{ quotation.discount_amount|floatformat:2 }} ر.س</div>
+                                </div>
+                            {% endif %}
+                            {% if quotation.tax_amount > 0 %}
+                                <div class="row mb-2">
+                                    <div class="col-6"><strong>الضريبة:</strong></div>
+                                    <div class="col-6 text-end">{{ quotation.tax_amount|floatformat:2 }} ر.س</div>
+                                </div>
+                            {% endif %}
+                            <hr>
+                            <div class="row">
+                                <div class="col-6"><strong class="h5">الإجمالي:</strong></div>
+                                <div class="col-6 text-end"><strong class="h5 text-success">{{ quotation.total_amount|floatformat:2 }} ر.س</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الشروط والملاحظات -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-contract text-secondary me-2"></i>
+                                الشروط والملاحظات
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if quotation.terms_and_conditions %}
+                                <div class="mb-3">
+                                    <strong>الشروط والأحكام:</strong>
+                                    <p class="mt-2">{{ quotation.terms_and_conditions|linebreaks }}</p>
+                                </div>
+                            {% endif %}
+                            {% if quotation.notes %}
+                                <div>
+                                    <strong>ملاحظات:</strong>
+                                    <p class="mt-2">{{ quotation.notes|linebreaks }}</p>
+                                </div>
+                            {% endif %}
+                            {% if not quotation.terms_and_conditions and not quotation.notes %}
+                                <p class="text-muted">لا توجد شروط أو ملاحظات</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function printQuotation() {
+    window.print();
+}
+</script>
+{% endblock %}

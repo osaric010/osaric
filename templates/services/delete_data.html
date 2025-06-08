@@ -1,0 +1,122 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-danger">
+                <h2 class="mb-0">
+                    <i class="fas fa-trash-alt text-danger me-2"></i>
+                    {{ title }}
+                </h2>
+                <p class="mb-0 mt-2"><strong>تحذير:</strong> هذه العملية لا يمكن التراجع عنها. تأكد من إنشاء نسخة احتياطية قبل المتابعة.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-database me-2"></i>
+                        اختيار البيانات المراد حذفها
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <!-- نوع البيانات -->
+                        <div class="mb-4">
+                            <label class="form-label">أنواع البيانات المراد حذفها:</label>
+                            {% for model in available_models %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="models" value="{{ model.name }}" id="model_{{ model.name }}">
+                                <label class="form-check-label" for="model_{{ model.name }}">
+                                    {{ model.verbose_name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- فترة التاريخ -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="date_from" class="form-label">من تاريخ:</label>
+                                <input type="date" class="form-control" id="date_from" name="date_from">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date_to" class="form-label">إلى تاريخ:</label>
+                                <input type="date" class="form-control" id="date_to" name="date_to">
+                            </div>
+                        </div>
+
+                        <!-- تأكيد الحذف -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="confirm_delete" id="confirm_delete" required>
+                                <label class="form-check-label text-danger" for="confirm_delete">
+                                    <strong>أؤكد أنني أريد حذف البيانات المحددة نهائياً</strong>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'dashboard:home' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-2"></i>
+                                حذف البيانات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تعليمات -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        تعليمات مهمة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-warning">قبل الحذف:</h6>
+                            <ul>
+                                <li>تأكد من إنشاء نسخة احتياطية كاملة</li>
+                                <li>راجع البيانات المراد حذفها بعناية</li>
+                                <li>تأكد من عدم وجود ارتباطات مهمة</li>
+                                <li>أبلغ جميع المستخدمين بالعملية</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-danger">تحذيرات:</h6>
+                            <ul>
+                                <li>هذه العملية لا يمكن التراجع عنها</li>
+                                <li>قد تؤثر على التقارير والإحصائيات</li>
+                                <li>قد تحتاج لإعادة إدخال بعض البيانات</li>
+                                <li>تأكد من صلاحياتك لتنفيذ هذه العملية</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

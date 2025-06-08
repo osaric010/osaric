@@ -1,0 +1,370 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-recycle text-success me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'inventory:item_transformation_create' %}" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i>
+                    إضافة تحويل جديد
+                </a>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                                    <i class="fas fa-list fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ total_transformations }}</h4>
+                            <p class="card-text text-muted">إجمالي التحويلات</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-secondary bg-opacity-10 p-3">
+                                    <i class="fas fa-edit fa-2x text-secondary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ draft_transformations }}</h4>
+                            <p class="card-text text-muted">مسودات</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                                    <i class="fas fa-check fa-2x text-info"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ approved_transformations }}</h4>
+                            <p class="card-text text-muted">معتمدة</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                                    <i class="fas fa-check-double fa-2x text-success"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ completed_transformations }}</h4>
+                            <p class="card-text text-muted">مكتملة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- فلاتر البحث -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-2">
+                            {{ form.search.label_tag }}
+                            {{ form.search }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.warehouse.label_tag }}
+                            {{ form.warehouse }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.transformation_type.label_tag }}
+                            {{ form.transformation_type }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.status.label_tag }}
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_from.label_tag }}
+                            {{ form.date_from }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_to.label_tag }}
+                            {{ form.date_to }}
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search me-1"></i>
+                                بحث
+                            </button>
+                            <a href="{% url 'inventory:item_transformation_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                إعادة تعيين
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- قائمة التحويلات -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة تحويلات الأصناف
+                        <span class="badge bg-success ms-2">{{ page_obj.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم التحويل</th>
+                                        <th>التاريخ</th>
+                                        <th>المخزن</th>
+                                        <th>نوع التحويل</th>
+                                        <th>سبب التحويل</th>
+                                        <th>قيمة المدخلات</th>
+                                        <th>قيمة المخرجات</th>
+                                        <th>صافي التغيير</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transformation in page_obj %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ transformation.transformation_number }}</strong>
+                                            </td>
+                                            <td>{{ transformation.date|date:"d/m/Y" }}</td>
+                                            <td>{{ transformation.warehouse.name }}</td>
+                                            <td>
+                                                <span class="badge bg-info bg-opacity-10 text-info">
+                                                    {{ transformation.get_transformation_type_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ transformation.transformation_reason|truncatechars:40 }}</td>
+                                            <td>
+                                                <span class="text-danger">{{ transformation.total_input_value|floatformat:2 }} ر.س</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-success">{{ transformation.total_output_value|floatformat:2 }} ر.س</span>
+                                            </td>
+                                            <td>
+                                                {% if transformation.net_value_change >= 0 %}
+                                                    <span class="text-success">+{{ transformation.net_value_change|floatformat:2 }} ر.س</span>
+                                                {% else %}
+                                                    <span class="text-danger">{{ transformation.net_value_change|floatformat:2 }} ر.س</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if transformation.status == 'DRAFT' %}
+                                                    <span class="badge bg-secondary">{{ transformation.get_status_display }}</span>
+                                                {% elif transformation.status == 'APPROVED' %}
+                                                    <span class="badge bg-info">{{ transformation.get_status_display }}</span>
+                                                {% elif transformation.status == 'COMPLETED' %}
+                                                    <span class="badge bg-success">{{ transformation.get_status_display }}</span>
+                                                {% elif transformation.status == 'CANCELLED' %}
+                                                    <span class="badge bg-danger">{{ transformation.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'inventory:item_transformation_detail' transformation.pk %}" 
+                                                       class="btn btn-sm btn-outline-info" title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if transformation.status == 'DRAFT' %}
+                                                        <a href="{% url 'inventory:item_transformation_edit' transformation.pk %}" 
+                                                           class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                onclick="approveTransformation({{ transformation.pk }})" title="اعتماد">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="deleteTransformation({{ transformation.pk }}, '{{ transformation.transformation_number }}')" title="حذف">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% elif transformation.status == 'APPROVED' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                                onclick="completeTransformation({{ transformation.pk }})" title="إكمال التحويل">
+                                                            <i class="fas fa-play"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                                onclick="cancelTransformation({{ transformation.pk }})" title="إلغاء">
+                                                            <i class="fas fa-ban"></i>
+                                                        </button>
+                                                    {% elif transformation.status == 'CANCELLED' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="deleteTransformation({{ transformation.pk }}, '{{ transformation.transformation_number }}')" title="حذف">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-recycle fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد تحويلات أصناف</h5>
+                            <p class="text-muted">ابدأ بإضافة تحويل جديد</p>
+                            <a href="{% url 'inventory:item_transformation_create' %}" class="btn btn-success">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة تحويل جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function approveTransformation(transformationId) {
+    if (confirm('هل تريد اعتماد هذا التحويل؟')) {
+        fetch(`/inventory/item-transformations/${transformationId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الاعتماد');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الاعتماد');
+        });
+    }
+}
+
+function completeTransformation(transformationId) {
+    if (confirm('هل تريد إكمال هذا التحويل؟ سيتم تطبيقه على المخزون ولا يمكن التراجع.')) {
+        fetch(`/inventory/item-transformations/${transformationId}/complete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإكمال');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإكمال');
+        });
+    }
+}
+
+function cancelTransformation(transformationId) {
+    if (confirm('هل تريد إلغاء هذا التحويل؟')) {
+        fetch(`/inventory/item-transformations/${transformationId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإلغاء');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإلغاء');
+        });
+    }
+}
+
+function deleteTransformation(transformationId, transformationNumber) {
+    if (confirm(`هل أنت متأكد من حذف التحويل "${transformationNumber}"؟`)) {
+        fetch(`/inventory/item-transformations/${transformationId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+</script>
+{% endblock %}

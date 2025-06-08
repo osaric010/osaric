@@ -1,0 +1,388 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}أسعار العملات - البنوك المصرية{% endblock %}
+
+{% block extra_css %}
+<style>
+.currency-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+}
+
+.currency-card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 2rem;
+}
+
+.currency-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.currency-flag {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.rate-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.rate-card:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+}
+
+.best-rate {
+    border: 2px solid #28a745;
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+}
+
+.worst-rate {
+    border: 2px solid #dc3545;
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+}
+
+.rate-trend {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+.trend-up {
+    color: #28a745;
+}
+
+.trend-down {
+    color: #dc3545;
+}
+
+.trend-stable {
+    color: #6c757d;
+}
+
+.update-time {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.live-indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: #28a745;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+    margin-right: 0.5rem;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+.refresh-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.refresh-animation {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="currency-header text-center">
+    <div class="container">
+        <h1 class="display-4 mb-3">
+            <span class="live-indicator"></span>
+            أسعار العملات المباشرة
+        </h1>
+        <p class="lead">أسعار صرف العملات الأجنبية في البنوك المصرية</p>
+        <small class="opacity-75">آخر تحديث: {{ last_update|date:"Y-m-d H:i:s" }}</small>
+    </div>
+</div>
+
+<div class="container">
+    <!-- إحصائيات سريعة -->
+    <div class="stats-grid">
+        <div class="stat-item">
+            <h3 class="text-primary">{{ currencies|length }}</h3>
+            <p class="mb-0">عملة متاحة</p>
+        </div>
+        <div class="stat-item">
+            <h3 class="text-success">5</h3>
+            <p class="mb-0">بنك مصري</p>
+        </div>
+        <div class="stat-item">
+            <h3 class="text-info">{{ update_frequency }}</h3>
+            <p class="mb-0">تردد التحديث</p>
+        </div>
+        <div class="stat-item">
+            <h3 class="text-warning">مباشر</h3>
+            <p class="mb-0">نوع البيانات</p>
+        </div>
+    </div>
+
+    <!-- العملات -->
+    {% for currency in currencies %}
+    <div class="currency-card card">
+        <div class="card-header bg-light">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <span class="currency-flag me-3">
+                            {% if currency.code == 'USD' %}🇺🇸
+                            {% elif currency.code == 'EUR' %}🇪🇺
+                            {% elif currency.code == 'GBP' %}🇬🇧
+                            {% elif currency.code == 'SAR' %}🇸🇦
+                            {% elif currency.code == 'AED' %}🇦🇪
+                            {% else %}💱
+                            {% endif %}
+                        </span>
+                        <div>
+                            <h3 class="mb-1">{{ currency.name }}</h3>
+                            <p class="text-muted mb-0">{{ currency.code }} - {{ currency.symbol }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="text-muted d-block">متوسط الشراء</small>
+                            <h4 class="text-success mb-0">{{ currency.avg_buy|floatformat:4 }}</h4>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">متوسط البيع</small>
+                            <h4 class="text-danger mb-0">{{ currency.avg_sell|floatformat:4 }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="row">
+                {% for rate in currency.rates %}
+                <div class="col-lg-4 col-md-6 mb-3">
+                    <div class="rate-card {% if rate == currency.best_buy_rate %}best-rate{% elif rate == currency.worst_buy_rate %}worst-rate{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="mb-0">{{ rate.bank }}</h6>
+                            <span class="update-time">{{ rate.last_updated }}</span>
+                        </div>
+                        
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <small class="text-muted d-block">شراء</small>
+                                <strong class="text-success">{{ rate.buy|floatformat:4 }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">بيع</small>
+                                <strong class="text-danger">{{ rate.sell|floatformat:4 }}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="rate-trend text-center">
+                            <i class="fas fa-arrow-up trend-up"></i>
+                            <small>+0.02%</small>
+                        </div>
+                        
+                        {% if rate == currency.best_buy_rate %}
+                        <div class="text-center mt-2">
+                            <span class="badge bg-success">أفضل شراء</span>
+                        </div>
+                        {% elif rate == currency.best_sell_rate %}
+                        <div class="text-center mt-2">
+                            <span class="badge bg-danger">أفضل بيع</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- معلومات إضافية -->
+            <div class="row mt-3 pt-3 border-top">
+                <div class="col-md-3 text-center">
+                    <small class="text-muted d-block">أفضل شراء</small>
+                    <strong class="text-success">{{ currency.best_buy.rate|floatformat:4 }}</strong>
+                    <br><small class="text-muted">{{ currency.best_buy.bank|truncatechars:15 }}</small>
+                </div>
+                <div class="col-md-3 text-center">
+                    <small class="text-muted d-block">أفضل بيع</small>
+                    <strong class="text-danger">{{ currency.best_sell.rate|floatformat:4 }}</strong>
+                    <br><small class="text-muted">{{ currency.best_sell.bank|truncatechars:15 }}</small>
+                </div>
+                <div class="col-md-3 text-center">
+                    <small class="text-muted d-block">الفرق</small>
+                    <strong class="text-info">{{ currency.spread|floatformat:4 }}</strong>
+                    <br><small class="text-muted">نقطة</small>
+                </div>
+                <div class="col-md-3 text-center">
+                    <small class="text-muted d-block">التذبذب</small>
+                    <strong class="text-warning">{{ currency.volatility|floatformat:2 }}%</strong>
+                    <br><small class="text-muted">يومي</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5">
+        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+        <h4>لا توجد أسعار متاحة</h4>
+        <p class="text-muted">لم يتم تحديث أسعار العملات بعد</p>
+        <button type="button" class="btn btn-primary" onclick="updateRates()">
+            <i class="fas fa-sync-alt me-1"></i>
+            تحديث الأسعار
+        </button>
+    </div>
+    {% endfor %}
+    
+    <!-- معلومات إضافية -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">
+                <i class="fas fa-info-circle me-2"></i>
+                معلومات مهمة
+            </h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>الأسعار محدثة كل {{ update_frequency }}</li>
+                        <li><i class="fas fa-check text-success me-2"></i>البيانات من البنوك المصرية الرسمية</li>
+                        <li><i class="fas fa-check text-success me-2"></i>أسعار الشراء والبيع للعملاء</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>الأسعار قابلة للتغيير</li>
+                        <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>قد تختلف الأسعار بين الفروع</li>
+                        <li><i class="fas fa-exclamation-triangle text-warning me-2"></i>للاستعلام الدقيق اتصل بالبنك</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- زر التحديث العائم -->
+<button type="button" class="btn btn-primary refresh-btn" onclick="updateRates()" title="تحديث الأسعار">
+    <i class="fas fa-sync-alt" id="refreshIcon"></i>
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let autoRefreshInterval;
+
+function updateRates() {
+    const refreshIcon = document.getElementById('refreshIcon');
+    refreshIcon.classList.add('refresh-animation');
+    
+    fetch('/dashboard/update-currency-rates/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('تم تحديث الأسعار بنجاح', 'success');
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification('فشل في تحديث الأسعار: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('حدث خطأ أثناء التحديث', 'error');
+    })
+    .finally(() => {
+        refreshIcon.classList.remove('refresh-animation');
+    });
+}
+
+function showNotification(message, type) {
+    // إنشاء إشعار بسيط
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+    notification.style.position = 'fixed';
+    notification.style.top = '20px';
+    notification.style.right = '20px';
+    notification.style.zIndex = '9999';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // إزالة الإشعار بعد 5 ثوان
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+}
+
+// تحديث تلقائي كل 15 دقيقة
+document.addEventListener('DOMContentLoaded', function() {
+    autoRefreshInterval = setInterval(() => {
+        updateRates();
+    }, 15 * 60 * 1000);
+});
+
+// تنظيف عند مغادرة الصفحة
+window.addEventListener('beforeunload', function() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+});
+</script>
+{% endblock %}

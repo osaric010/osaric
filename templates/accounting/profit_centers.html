@@ -1,0 +1,54 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-bullseye text-danger me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">إدارة مراكز الربحية وتقاريرها</p>
+                </div>
+                <div>
+                    <a href="{% url 'accounting:profit_center_add' %}" class="btn btn-danger">
+                        <i class="fas fa-plus me-2"></i>
+                        إضافة مركز ربحية
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة مراكز الربحية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-5">
+                        <i class="fas fa-bullseye fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد مراكز ربحية</h5>
+                        <p class="text-muted">لم يتم إنشاء أي مراكز ربحية بعد</p>
+                        <a href="{% url 'accounting:profit_center_add' %}" class="btn btn-danger">
+                            <i class="fas fa-plus me-2"></i>
+                            إضافة مركز ربحية جديد
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

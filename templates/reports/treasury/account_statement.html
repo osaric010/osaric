@@ -1,0 +1,250 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-file-invoice-dollar text-info me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'reports:treasury_reports' %}">تقارير الخزينة</a></li>
+                            <li class="breadcrumb-item active">كشف حساب الخزينة</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>عرض التقرير
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if transactions %}
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-lg-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ opening_balance|floatformat:2 }}</h4>
+                            <p class="mb-0">الرصيد الافتتاحي</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-play-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_receipts|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي الإيرادات</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_payments|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي المصروفات</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ closing_balance|floatformat:2 }}</h4>
+                            <p class="mb-0">الرصيد الختامي</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-stop-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                حركات الخزينة
+                <span class="badge bg-info">{{ total_transactions }}</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>رقم المرجع</th>
+                            <th>نوع العملية</th>
+                            <th>البيان</th>
+                            <th>مدين</th>
+                            <th>دائن</th>
+                            <th>الرصيد</th>
+                            <th>ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Opening Balance Row -->
+                        <tr class="table-success">
+                            <td>{{ date_from }}</td>
+                            <td><strong>-</strong></td>
+                            <td><span class="badge bg-success">رصيد افتتاحي</span></td>
+                            <td><strong>الرصيد الافتتاحي للفترة</strong></td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><strong class="text-success">{{ opening_balance|floatformat:2 }}</strong></td>
+                            <td>-</td>
+                        </tr>
+                        
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.date|date:"Y-m-d" }}</td>
+                            <td>
+                                <strong class="text-primary">{{ transaction.reference_number }}</strong>
+                            </td>
+                            <td>
+                                {% if transaction.type == 'RECEIPT' %}
+                                <span class="badge bg-success">إيراد</span>
+                                {% elif transaction.type == 'PAYMENT' %}
+                                <span class="badge bg-danger">مصروف</span>
+                                {% elif transaction.type == 'TRANSFER_IN' %}
+                                <span class="badge bg-info">تحويل داخل</span>
+                                {% elif transaction.type == 'TRANSFER_OUT' %}
+                                <span class="badge bg-warning">تحويل خارج</span>
+                                {% elif transaction.type == 'COLLECTION' %}
+                                <span class="badge bg-primary">تحصيل</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ transaction.type_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ transaction.description }}</strong>
+                                {% if transaction.party %}
+                                <small class="text-muted d-block">{{ transaction.party }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if transaction.debit_amount > 0 %}
+                                <strong class="text-danger">{{ transaction.debit_amount|floatformat:2 }}</strong>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if transaction.credit_amount > 0 %}
+                                <strong class="text-success">{{ transaction.credit_amount|floatformat:2 }}</strong>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="{% if transaction.balance >= 0 %}text-info{% else %}text-danger{% endif %}">
+                                    {{ transaction.balance|floatformat:2 }}
+                                </strong>
+                            </td>
+                            <td>
+                                {% if transaction.notes %}
+                                <small class="text-muted">{{ transaction.notes|truncatechars:30 }}</small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="4">الإجمالي</th>
+                            <th class="text-danger">{{ total_payments|floatformat:2 }}</th>
+                            <th class="text-success">{{ total_receipts|floatformat:2 }}</th>
+                            <th class="text-info">{{ closing_balance|floatformat:2 }}</th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-file-invoice-dollar fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">لا توجد حركات خزينة</h5>
+            <p class="text-muted">لا توجد حركات خزينة في الفترة المحددة</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .btn, .breadcrumb, .card-header {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

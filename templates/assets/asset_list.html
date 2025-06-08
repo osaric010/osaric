@@ -1,0 +1,521 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-building text-success me-2"></i>
+                    {{ title }}
+                </h2>
+                <div>
+                    <a href="{% url 'assets:home' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للأصول
+                    </a>
+                    <a href="{% url 'assets:asset_create' %}" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i>
+                        إضافة أصل جديد
+                    </a>
+                </div>
+            </div>
+
+            <!-- فلاتر البحث -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="search" 
+                                       value="{{ search_query }}"
+                                       placeholder="البحث في الأصول (كود، اسم، وصف)">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="status">
+                                <option value="">جميع الحالات</option>
+                                {% for value, label in status_choices %}
+                                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="group">
+                                <option value="">جميع المجموعات</option>
+                                {% for group in asset_groups %}
+                                    <option value="{{ group.id }}" {% if group_filter == group.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ group.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                <a href="{% url 'assets:asset_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- قائمة الأصول -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة الأصول الثابتة
+                        {% if page_obj %}
+                            <span class="badge bg-success ms-2">{{ page_obj.paginator.count }}</span>
+                        {% endif %}
+                    </h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-success btn-sm" id="add-asset-inline-btn">
+                            <i class="fas fa-plus me-1"></i>
+                            إضافة أصل سريع
+                        </button>
+                        <a href="{% url 'assets:asset_create' %}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-plus-circle me-1"></i>
+                            إضافة مفصل
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>كود الأصل</th>
+                                        <th>اسم الأصل</th>
+                                        <th>المجموعة</th>
+                                        <th>تاريخ الشراء</th>
+                                        <th>تكلفة الشراء</th>
+                                        <th>مجمع الإهلاك</th>
+                                        <th>القيمة الدفترية</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                    <!-- صف إضافة أصل جديد -->
+                                    <tr id="add-asset-row" class="table-success" style="display: none;">
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" id="new-asset-code" placeholder="كود الأصل" required>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" id="new-asset-name" placeholder="اسم الأصل" required>
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" id="new-asset-group" required>
+                                                <option value="">اختر المجموعة</option>
+                                                {% for group in asset_groups %}
+                                                    <option value="{{ group.id }}">{{ group.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="date" class="form-control form-control-sm" id="new-purchase-date" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control form-control-sm" id="new-purchase-cost" placeholder="0.00" step="0.01" min="0" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control form-control-sm" id="new-useful-life" placeholder="سنوات" min="1" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control form-control-sm" id="new-salvage-value" placeholder="0.00" step="0.01" min="0" value="0">
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm" id="new-asset-status">
+                                                <option value="ACTIVE">نشط</option>
+                                                <option value="UNDER_MAINTENANCE">تحت الصيانة</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-success btn-sm" id="save-asset-btn" title="حفظ">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-secondary btn-sm" id="cancel-asset-btn" title="إلغاء">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for asset in page_obj %}
+                                        <tr>
+                                            <td><strong>{{ asset.asset_code }}</strong></td>
+                                            <td>{{ asset.name }}</td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ asset.asset_group.name }}</span>
+                                            </td>
+                                            <td>{{ asset.purchase_date|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <span class="text-info fw-bold">
+                                                    {{ asset.purchase_cost|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-secondary">
+                                                    {{ asset.accumulated_depreciation|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-success fw-bold">
+                                                    {{ asset.book_value|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if asset.status == 'ACTIVE' %}
+                                                    <span class="badge bg-success">{{ asset.get_status_display }}</span>
+                                                {% elif asset.status == 'UNDER_MAINTENANCE' %}
+                                                    <span class="badge bg-warning">{{ asset.get_status_display }}</span>
+                                                {% elif asset.status == 'DISPOSED' %}
+                                                    <span class="badge bg-danger">{{ asset.get_status_display }}</span>
+                                                {% elif asset.status == 'SOLD' %}
+                                                    <span class="badge bg-info">{{ asset.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'assets:asset_detail' asset.pk %}" 
+                                                       class="btn btn-outline-info" 
+                                                       title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if asset.status != 'SOLD' and asset.status != 'DISPOSED' %}
+                                                        <a href="{% url 'assets:asset_edit' asset.pk %}" 
+                                                           class="btn btn-outline-primary" 
+                                                           title="تعديل">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <div class="btn-group btn-group-sm">
+                                                            <button type="button" class="btn btn-outline-secondary dropdown-toggle" 
+                                                                    data-bs-toggle="dropdown" title="المزيد">
+                                                                <i class="fas fa-ellipsis-v"></i>
+                                                            </button>
+                                                            <ul class="dropdown-menu">
+                                                                <li>
+                                                                    <a class="dropdown-item" href="{% url 'assets:asset_renewal_create' %}?asset={{ asset.pk }}">
+                                                                        <i class="fas fa-sync-alt me-2 text-info"></i>
+                                                                        تجديد
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item" href="{% url 'assets:asset_maintenance_create' %}?asset={{ asset.pk }}">
+                                                                        <i class="fas fa-tools me-2 text-warning"></i>
+                                                                        صيانة
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item" href="{% url 'assets:asset_sale_create' %}?asset={{ asset.pk }}">
+                                                                        <i class="fas fa-hand-holding-usd me-2 text-success"></i>
+                                                                        بيع
+                                                                    </a>
+                                                                </li>
+                                                                <li><hr class="dropdown-divider"></li>
+                                                                <li>
+                                                                    <button type="button" 
+                                                                            class="dropdown-item text-danger delete-btn" 
+                                                                            data-id="{{ asset.pk }}"
+                                                                            data-name="{{ asset.name }}">
+                                                                        <i class="fas fa-trash me-2"></i>
+                                                                        حذف
+                                                                    </button>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1&search={{ search_query }}&status={{ status_filter }}&group={{ group_filter }}">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&status={{ status_filter }}&group={{ group_filter }}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&status={{ status_filter }}&group={{ group_filter }}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&search={{ search_query }}&status={{ status_filter }}&group={{ group_filter }}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد أصول ثابتة</h5>
+                            <p class="text-muted">لم يتم العثور على أي أصول ثابتة مطابقة لمعايير البحث</p>
+                            <a href="{% url 'assets:asset_create' %}" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>
+                                إضافة أصل ثابت جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- معلومات إضافية -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات حول إدارة الأصول الثابتة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-chart-line me-2"></i>
+                                الإهلاك
+                            </h6>
+                            <p class="mb-0">يتم حساب الإهلاك تلقائياً حسب طريقة الإهلاك المحددة والعمر الإنتاجي للأصل.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-tools me-2"></i>
+                                الصيانة
+                            </h6>
+                            <p class="mb-0">تتبع جدولة الصيانة الدورية والطارئة للحفاظ على كفاءة الأصول.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-success">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-sync-alt me-2"></i>
+                                التجديد
+                            </h6>
+                            <p class="mb-0">سجل عمليات التجديد والترقية التي تمدد العمر الإنتاجي للأصل.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // عناصر إضافة الأصل
+    const addAssetInlineBtn = document.getElementById('add-asset-inline-btn');
+    const addAssetRow = document.getElementById('add-asset-row');
+    const saveAssetBtn = document.getElementById('save-asset-btn');
+    const cancelAssetBtn = document.getElementById('cancel-asset-btn');
+
+    // إظهار صف الإضافة
+    if (addAssetInlineBtn) {
+        addAssetInlineBtn.addEventListener('click', function() {
+            addAssetRow.style.display = 'table-row';
+            addAssetInlineBtn.style.display = 'none';
+
+            // تعيين التاريخ الحالي
+            document.getElementById('new-purchase-date').value = new Date().toISOString().split('T')[0];
+
+            // التركيز على أول حقل
+            document.getElementById('new-asset-code').focus();
+        });
+    }
+
+    // إلغاء الإضافة
+    if (cancelAssetBtn) {
+        cancelAssetBtn.addEventListener('click', function() {
+            hideAddAssetRow();
+        });
+    }
+
+    // حفظ الأصل الجديد
+    if (saveAssetBtn) {
+        saveAssetBtn.addEventListener('click', function() {
+            const assetData = {
+                asset_code: document.getElementById('new-asset-code').value.trim(),
+                name: document.getElementById('new-asset-name').value.trim(),
+                asset_group: document.getElementById('new-asset-group').value,
+                purchase_date: document.getElementById('new-purchase-date').value,
+                purchase_cost: parseFloat(document.getElementById('new-purchase-cost').value) || 0,
+                useful_life: parseInt(document.getElementById('new-useful-life').value) || 1,
+                salvage_value: parseFloat(document.getElementById('new-salvage-value').value) || 0,
+                status: document.getElementById('new-asset-status').value
+            };
+
+            // التحقق من صحة البيانات
+            if (!assetData.asset_code) {
+                alert('يرجى إدخال كود الأصل');
+                document.getElementById('new-asset-code').focus();
+                return;
+            }
+
+            if (!assetData.name) {
+                alert('يرجى إدخال اسم الأصل');
+                document.getElementById('new-asset-name').focus();
+                return;
+            }
+
+            if (!assetData.asset_group) {
+                alert('يرجى اختيار مجموعة الأصل');
+                document.getElementById('new-asset-group').focus();
+                return;
+            }
+
+            if (!assetData.purchase_date) {
+                alert('يرجى إدخال تاريخ الشراء');
+                document.getElementById('new-purchase-date').focus();
+                return;
+            }
+
+            if (assetData.purchase_cost <= 0) {
+                alert('يرجى إدخال تكلفة شراء صحيحة');
+                document.getElementById('new-purchase-cost').focus();
+                return;
+            }
+
+            // إرسال البيانات
+            saveAssetBtn.disabled = true;
+            saveAssetBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            fetch('{% url "assets:asset_create_ajax" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(assetData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // إعادة تحميل الصفحة لإظهار الأصل الجديد
+                    location.reload();
+                } else {
+                    alert(data.message || 'حدث خطأ أثناء حفظ الأصل');
+                    saveAssetBtn.disabled = false;
+                    saveAssetBtn.innerHTML = '<i class="fas fa-check"></i>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء حفظ الأصل');
+                saveAssetBtn.disabled = false;
+                saveAssetBtn.innerHTML = '<i class="fas fa-check"></i>';
+            });
+        });
+    }
+
+    // إخفاء صف الإضافة
+    function hideAddAssetRow() {
+        addAssetRow.style.display = 'none';
+        addAssetInlineBtn.style.display = 'inline-block';
+
+        // مسح الحقول
+        document.getElementById('new-asset-code').value = '';
+        document.getElementById('new-asset-name').value = '';
+        document.getElementById('new-asset-group').value = '';
+        document.getElementById('new-purchase-date').value = '';
+        document.getElementById('new-purchase-cost').value = '';
+        document.getElementById('new-useful-life').value = '';
+        document.getElementById('new-salvage-value').value = '0';
+        document.getElementById('new-asset-status').value = 'ACTIVE';
+    }
+
+    // حذف أصل
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const assetId = this.getAttribute('data-id');
+            const assetName = this.getAttribute('data-name');
+
+            if (confirm(`هل أنت متأكد من حذف الأصل "${assetName}"؟`)) {
+                fetch(`/assets/assets/${assetId}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'حدث خطأ أثناء الحذف');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('حدث خطأ أثناء الحذف');
+                });
+            }
+        });
+    });
+
+    // التحقق من كود الأصل عند الكتابة
+    const assetCodeInput = document.getElementById('new-asset-code');
+    if (assetCodeInput) {
+        assetCodeInput.addEventListener('blur', function() {
+            const code = this.value.trim();
+            if (code) {
+                // التحقق من عدم تكرار الكود
+                fetch(`{% url "assets:check_asset_code" %}?code=${encodeURIComponent(code)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.exists) {
+                        alert('كود الأصل موجود مسبقاً، يرجى اختيار كود آخر');
+                        this.focus();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking asset code:', error);
+                });
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

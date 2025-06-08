@@ -1,0 +1,131 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-university me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'definitions:bank_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            إضافة بنك جديد
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" 
+                           class="form-control" 
+                           name="search" 
+                           value="{{ search_query }}"
+                           placeholder="البحث في البنوك (الكود، الاسم، رقم الحساب)">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search me-1"></i>
+                        بحث
+                    </button>
+                    <a href="{% url 'definitions:bank_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>
+                        مسح
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Banks Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            قائمة البنوك
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>كود البنك</th>
+                            <th>اسم البنك</th>
+                            <th>الفرع</th>
+                            <th>رقم الحساب</th>
+                            <th>العملة</th>
+                            <th>الرصيد</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bank in page_obj %}
+                        <tr>
+                            <td><strong>{{ bank.code }}</strong></td>
+                            <td>{{ bank.name }}</td>
+                            <td>{{ bank.branch|default:"-" }}</td>
+                            <td>{{ bank.account_number }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ bank.currency.code }}</span>
+                            </td>
+                            <td>
+                                <span class="{% if bank.balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ bank.balance|floatformat:2 }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'definitions:bank_edit' bank.pk %}" 
+                                       class="btn btn-outline-primary" 
+                                       title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-outline-danger delete-btn" 
+                                            data-id="{{ bank.pk }}"
+                                            data-name="{{ bank.name }}"
+                                            title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-university fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">لا توجد بنوك</h5>
+                <p class="text-muted">لم يتم العثور على أي بنوك مطابقة لمعايير البحث</p>
+                <a href="{% url 'definitions:bank_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    إضافة بنك جديد
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

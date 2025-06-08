@@ -1,0 +1,237 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-percentage text-info me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'purchases:earned_discount_create' %}" class="btn btn-info">
+                    <i class="fas fa-plus me-1"></i>
+                    إضافة خصم مكتسب جديد
+                </a>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">البحث</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search_query }}" placeholder="البحث في رقم الخصم أو اسم المورد">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="discount_type" class="form-label">نوع الخصم</label>
+                            <select class="form-select" id="discount_type" name="discount_type">
+                                <option value="">جميع الأنواع</option>
+                                {% for value, label in discount_type_choices %}
+                                    <option value="{{ value }}" {% if discount_type_filter == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">الحالة</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">جميع الحالات</option>
+                                {% for value, label in status_choices %}
+                                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search me-1"></i>
+                                بحث
+                            </button>
+                            <a href="{% url 'purchases:earned_discount_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                مسح
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة الخصومات المكتسبة
+                        <span class="badge bg-info ms-2">{{ page_obj.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم الخصم</th>
+                                        <th>التاريخ</th>
+                                        <th>المورد</th>
+                                        <th>نوع الخصم</th>
+                                        <th>قيمة الخصم</th>
+                                        <th>صالح حتى</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for discount in page_obj %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ discount.discount_number }}</strong>
+                                            </td>
+                                            <td>{{ discount.date|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <a href="#" class="text-decoration-none">
+                                                    {{ discount.supplier.name }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ discount.get_discount_type_display }}</span>
+                                            </td>
+                                            <td>
+                                                {% if discount.discount_percentage > 0 %}
+                                                    <strong class="text-success">{{ discount.discount_percentage|floatformat:1 }}%</strong>
+                                                    <br><small>({{ discount.discount_amount|floatformat:2 }} ر.س)</small>
+                                                {% else %}
+                                                    <strong class="text-success">{{ discount.discount_amount|floatformat:2 }} ر.س</strong>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if discount.valid_until %}
+                                                    {{ discount.valid_until|date:"d/m/Y" }}
+                                                    {% if discount.is_expired %}
+                                                        <br><span class="badge bg-danger">منتهي</span>
+                                                    {% elif discount.days_until_expiry <= 7 %}
+                                                        <br><span class="badge bg-warning">{{ discount.days_until_expiry }} أيام</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if discount.status == 'PENDING' %}
+                                                    <span class="badge bg-warning">{{ discount.get_status_display }}</span>
+                                                {% elif discount.status == 'APPROVED' %}
+                                                    <span class="badge bg-success">{{ discount.get_status_display }}</span>
+                                                {% elif discount.status == 'APPLIED' %}
+                                                    <span class="badge bg-primary">{{ discount.get_status_display }}</span>
+                                                {% elif discount.status == 'REJECTED' %}
+                                                    <span class="badge bg-danger">{{ discount.get_status_display }}</span>
+                                                {% elif discount.status == 'EXPIRED' %}
+                                                    <span class="badge bg-dark">{{ discount.get_status_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-light text-dark">{{ discount.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'purchases:earned_discount_detail' discount.pk %}" 
+                                                       class="btn btn-sm btn-outline-info" title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if discount.status == 'PENDING' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                onclick="approveDiscount({{ discount.pk }})" title="اعتماد">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="rejectDiscount({{ discount.pk }})" title="رفض">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                    {% if discount.status == 'APPROVED' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                                onclick="applyDiscount({{ discount.pk }})" title="تطبيق">
+                                                            <i class="fas fa-play"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if discount_type_filter %}&discount_type={{ discount_type_filter }}{% endif %}">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if discount_type_filter %}&discount_type={{ discount_type_filter }}{% endif %}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if discount_type_filter %}&discount_type={{ discount_type_filter }}{% endif %}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if discount_type_filter %}&discount_type={{ discount_type_filter }}{% endif %}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-percentage fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد خصومات مكتسبة</h5>
+                            <p class="text-muted">ابدأ بإضافة خصم مكتسب جديد</p>
+                            <a href="{% url 'purchases:earned_discount_create' %}" class="btn btn-info">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة خصم مكتسب جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function approveDiscount(discountId) {
+    if (confirm('هل تريد اعتماد هذا الخصم؟')) {
+        alert('سيتم إضافة وظيفة الاعتماد قريباً');
+    }
+}
+
+function rejectDiscount(discountId) {
+    if (confirm('هل تريد رفض هذا الخصم؟')) {
+        alert('سيتم إضافة وظيفة الرفض قريباً');
+    }
+}
+
+function applyDiscount(discountId) {
+    if (confirm('هل تريد تطبيق هذا الخصم؟')) {
+        alert('سيتم إضافة وظيفة التطبيق قريباً');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,321 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-cogs text-primary me-2"></i>
+                    {{ title }}
+                </h2>
+                <div>
+                    <a href="{% url 'definitions:production_stage_edit' stage.pk %}" class="btn btn-warning me-2">
+                        <i class="fas fa-edit me-1"></i>
+                        تعديل
+                    </a>
+                    <a href="{% url 'definitions:production_stage_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- المعلومات الأساسية -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle text-primary me-2"></i>
+                                المعلومات الأساسية
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>الكود:</strong></div>
+                                <div class="col-sm-8">{{ stage.code }}</div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>اسم المرحلة:</strong></div>
+                                <div class="col-sm-8">{{ stage.name }}</div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>رقم التسلسل:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge bg-secondary">{{ stage.sequence_number }}</span>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>نوع المرحلة:</strong></div>
+                                <div class="col-sm-8">
+                                    <span class="badge bg-info">{{ stage.get_stage_type_display }}</span>
+                                </div>
+                            </div>
+                            {% if stage.description %}
+                                <hr>
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>الوصف:</strong></div>
+                                    <div class="col-sm-8">{{ stage.description }}</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الموقع والمعدات -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-map-marker-alt text-success me-2"></i>
+                                الموقع والمعدات
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>الموقع:</strong></div>
+                                <div class="col-sm-8">{{ stage.location|default:"غير محدد" }}</div>
+                            </div>
+                            {% if stage.required_equipment %}
+                                <hr>
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>المعدات المطلوبة:</strong></div>
+                                    <div class="col-sm-8">{{ stage.required_equipment }}</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الوقت والتكلفة -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-clock text-warning me-2"></i>
+                                الوقت والتكلفة
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-6"><strong>المدة المقدرة:</strong></div>
+                                <div class="col-sm-6">
+                                    {% if stage.estimated_duration_hours %}
+                                        {{ stage.estimated_duration_hours }} ساعة
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-6"><strong>وقت الإعداد:</strong></div>
+                                <div class="col-sm-6">
+                                    {% if stage.setup_time_hours %}
+                                        {{ stage.setup_time_hours }} ساعة
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-6"><strong>تكلفة العمالة/ساعة:</strong></div>
+                                <div class="col-sm-6">
+                                    {% if stage.labor_cost_per_hour %}
+                                        {{ stage.labor_cost_per_hour|floatformat:2 }} ر.س
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-6"><strong>التكاليف الإضافية/ساعة:</strong></div>
+                                <div class="col-sm-6">
+                                    {% if stage.overhead_cost_per_hour %}
+                                        {{ stage.overhead_cost_per_hour|floatformat:2 }} ر.س
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-6"><strong>إجمالي التكلفة/ساعة:</strong></div>
+                                <div class="col-sm-6">
+                                    <strong class="text-primary">{{ stage.total_cost_per_hour|floatformat:2 }} ر.س</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- المسؤوليات -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user-tie text-info me-2"></i>
+                                المسؤوليات
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>المسؤول:</strong></div>
+                                <div class="col-sm-8">
+                                    {% if stage.responsible_user %}
+                                        {{ stage.responsible_user.get_full_name|default:stage.responsible_user.username }}
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>مركز التكلفة:</strong></div>
+                                <div class="col-sm-8">{{ stage.cost_center|default:"غير محدد" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الإعدادات -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cog text-secondary me-2"></i>
+                                الإعدادات
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-sm-6"><strong>تتطلب موافقة:</strong></div>
+                                <div class="col-sm-6">
+                                    {% if stage.requires_approval %}
+                                        <span class="badge bg-warning">نعم</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">لا</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-6"><strong>تتطلب فحص جودة:</strong></div>
+                                <div class="col-sm-6">
+                                    {% if stage.requires_quality_check %}
+                                        <span class="badge bg-success">نعم</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">لا</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-6"><strong>مرحلة حرجة:</strong></div>
+                                <div class="col-sm-6">
+                                    {% if stage.is_critical %}
+                                        <span class="badge bg-danger">نعم</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">لا</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-6"><strong>يمكن تشغيلها بالتوازي:</strong></div>
+                                <div class="col-sm-6">
+                                    {% if stage.can_run_parallel %}
+                                        <span class="badge bg-info">نعم</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">لا</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معايير الجودة -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-award text-success me-2"></i>
+                                معايير الجودة
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if stage.quality_standards %}
+                                <div class="mb-3">
+                                    <strong>معايير الجودة:</strong>
+                                    <p class="mt-2">{{ stage.quality_standards }}</p>
+                                </div>
+                            {% endif %}
+                            {% if stage.acceptance_criteria %}
+                                <div>
+                                    <strong>معايير القبول:</strong>
+                                    <p class="mt-2">{{ stage.acceptance_criteria }}</p>
+                                </div>
+                            {% endif %}
+                            {% if not stage.quality_standards and not stage.acceptance_criteria %}
+                                <p class="text-muted">لم يتم تحديد معايير الجودة</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات النظام -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info text-muted me-2"></i>
+                                معلومات النظام
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-4"><strong>تاريخ الإنشاء:</strong></div>
+                                <div class="col-sm-8">{{ stage.created_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-sm-4"><strong>أنشئ بواسطة:</strong></div>
+                                <div class="col-sm-8">
+                                    {% if stage.created_by %}
+                                        {{ stage.created_by.get_full_name|default:stage.created_by.username }}
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if stage.updated_at %}
+                                <hr>
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>آخر تحديث:</strong></div>
+                                    <div class="col-sm-8">{{ stage.updated_at|date:"d/m/Y H:i" }}</div>
+                                </div>
+                            {% endif %}
+                            {% if stage.updated_by %}
+                                <hr>
+                                <div class="row">
+                                    <div class="col-sm-4"><strong>حُدث بواسطة:</strong></div>
+                                    <div class="col-sm-8">
+                                        {{ stage.updated_by.get_full_name|default:stage.updated_by.username }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

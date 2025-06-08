@@ -1,0 +1,274 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-calculator text-danger me-2"></i>
+                    {{ title }}
+                </h2>
+                <div>
+                    <a href="{% url 'assets:home' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للأصول
+                    </a>
+                    <a href="{% url 'assets:calculate_depreciation' %}" class="btn btn-danger me-2">
+                        <i class="fas fa-calculator me-1"></i>
+                        حساب الإهلاك الشهري
+                    </a>
+                    <a href="{% url 'assets:depreciation_entry_list' %}" class="btn btn-outline-danger">
+                        <i class="fas fa-list me-1"></i>
+                        قيود الإهلاك
+                    </a>
+                </div>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        الأصول النشطة
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">{{ assets.count }}</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-building fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        إجمالي التكلفة
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {% widthratio assets|length 1 1 as total_cost %}
+                                        {% for asset in assets %}
+                                            {% if forloop.first %}
+                                                {% widthratio asset.purchase_cost 1 1 as running_total %}
+                                            {% else %}
+                                                {% widthratio running_total|add:asset.purchase_cost 1 1 as running_total %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {{ running_total|default:0|floatformat:0 }} ر.س
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        مجمع الإهلاك
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {% for asset in assets %}
+                                            {% if forloop.first %}
+                                                {% widthratio asset.accumulated_depreciation 1 1 as running_depreciation %}
+                                            {% else %}
+                                                {% widthratio running_depreciation|add:asset.accumulated_depreciation 1 1 as running_depreciation %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {{ running_depreciation|default:0|floatformat:0 }} ر.س
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        القيمة الدفترية
+                                    </div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                        {% for asset in assets %}
+                                            {% if forloop.first %}
+                                                {% widthratio asset.book_value 1 1 as running_book_value %}
+                                            {% else %}
+                                                {% widthratio running_book_value|add:asset.book_value 1 1 as running_book_value %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {{ running_book_value|default:0|floatformat:0 }} ر.س
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calculator fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- جدول حساب الإهلاك -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        جدول حساب الإهلاك للأصول النشطة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if assets %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>كود الأصل</th>
+                                        <th>اسم الأصل</th>
+                                        <th>تاريخ الشراء</th>
+                                        <th>تكلفة الشراء</th>
+                                        <th>طريقة الإهلاك</th>
+                                        <th>العمر الإنتاجي</th>
+                                        <th>الإهلاك السنوي</th>
+                                        <th>الإهلاك الشهري</th>
+                                        <th>مجمع الإهلاك</th>
+                                        <th>القيمة الدفترية</th>
+                                        <th>نسبة الإهلاك</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for asset in assets %}
+                                        <tr>
+                                            <td><strong>{{ asset.asset_code }}</strong></td>
+                                            <td>{{ asset.name }}</td>
+                                            <td>{{ asset.purchase_date|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <span class="text-info fw-bold">
+                                                    {{ asset.purchase_cost|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ asset.get_depreciation_method_display }}</span>
+                                            </td>
+                                            <td>{{ asset.useful_life_years }} سنوات</td>
+                                            <td>
+                                                <span class="text-warning fw-bold">
+                                                    {{ asset.annual_depreciation|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-danger fw-bold">
+                                                    {{ asset.monthly_depreciation|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-secondary">
+                                                    {{ asset.accumulated_depreciation|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-success fw-bold">
+                                                    {{ asset.book_value|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% widthratio asset.accumulated_depreciation asset.purchase_cost 100 as depreciation_percentage %}
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                                         style="width: {{ depreciation_percentage }}%" 
+                                                         aria-valuenow="{{ depreciation_percentage }}" 
+                                                         aria-valuemin="0" aria-valuemax="100">
+                                                        {{ depreciation_percentage|floatformat:1 }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-calculator fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد أصول نشطة</h5>
+                            <p class="text-muted">لا توجد أصول نشطة لحساب الإهلاك عليها</p>
+                            <a href="{% url 'assets:asset_create' %}" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>
+                                إضافة أصل جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- معلومات إضافية -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات حول حساب الإهلاك
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-calculator me-2"></i>
+                                طرق الإهلاك
+                            </h6>
+                            <ul class="mb-0">
+                                <li><strong>القسط الثابت:</strong> إهلاك ثابت سنوياً</li>
+                                <li><strong>الرصيد المتناقص:</strong> إهلاك متناقص</li>
+                                <li><strong>وحدات الإنتاج:</strong> حسب الاستخدام</li>
+                                <li><strong>مجموع السنوات:</strong> إهلاك متدرج</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                نصائح مهمة
+                            </h6>
+                            <ul class="mb-0">
+                                <li>يتم حساب الإهلاك تلقائياً شهرياً</li>
+                                <li>تأكد من صحة العمر الإنتاجي</li>
+                                <li>راجع طريقة الإهلاك المناسبة</li>
+                                <li>احتفظ بسجلات الإهلاك للمراجعة</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

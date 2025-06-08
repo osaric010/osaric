@@ -1,0 +1,135 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-users text-primary me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item active">تقارير الأشخاص</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Grid -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-file-invoice fa-3x text-info"></i>
+                    </div>
+                    <h5 class="card-title">كشف حساب حسب الفواتير</h5>
+                    <p class="card-text text-muted">عرض كشف حساب الشخص مع تفاصيل الفواتير</p>
+                    <a href="{% url 'reports:person_account_statement_invoices' %}" class="btn btn-info">
+                        <i class="fas fa-chart-line me-2"></i>
+                        عرض التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-file-alt fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">كشف حساب شخص تفصيلي</h5>
+                    <p class="card-text text-muted">عرض جميع معاملات الشخص بالتفصيل</p>
+                    <a href="{% url 'reports:person_account_statement_detailed' %}" class="btn btn-primary">
+                        <i class="fas fa-list me-2"></i>
+                        عرض التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-balance-scale fa-3x text-success"></i>
+                    </div>
+                    <h5 class="card-title">أرصدة الأشخاص</h5>
+                    <p class="card-text text-muted">عرض أرصدة جميع الأشخاص (عملاء وموردين)</p>
+                    <a href="{% url 'reports:persons_balances' %}" class="btn btn-success">
+                        <i class="fas fa-calculator me-2"></i>
+                        عرض التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-address-book fa-3x text-warning"></i>
+                    </div>
+                    <h5 class="card-title">دليل الأشخاص</h5>
+                    <p class="card-text text-muted">دليل شامل بمعلومات الاتصال للأشخاص</p>
+                    <a href="{% url 'reports:persons_directory' %}" class="btn btn-warning">
+                        <i class="fas fa-book me-2"></i>
+                        عرض التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        إحصائيات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-primary">{{ persons.count }}</h4>
+                                <p class="text-muted mb-0">إجمالي الأشخاص</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-success">{{ persons|length }}</h4>
+                                <p class="text-muted mb-0">الأشخاص النشطين</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-info">-</h4>
+                                <p class="text-muted mb-0">العملاء</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-warning">-</h4>
+                            <p class="text-muted mb-0">الموردين</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

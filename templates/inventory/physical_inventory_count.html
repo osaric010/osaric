@@ -1,0 +1,425 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.count-card {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.count-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.count-card.counted {
+    border-color: #28a745;
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.count-card.not-counted {
+    border-color: #ffc107;
+    background-color: rgba(255, 193, 7, 0.05);
+}
+
+.count-card.difference {
+    border-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+.item-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.item-placeholder {
+    width: 60px;
+    height: 60px;
+    background-color: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+}
+
+.progress-bar-custom {
+    height: 8px;
+    border-radius: 4px;
+}
+
+.filter-buttons .btn {
+    margin: 2px;
+}
+
+.quick-count-input {
+    width: 100px;
+    display: inline-block;
+}
+
+.count-status {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.item-details {
+    font-size: 0.875rem;
+}
+
+.search-box {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-clipboard-check text-primary me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        المخزن: <strong>{{ inventory.warehouse.name }}</strong> | 
+                        التاريخ: <strong>{{ inventory.date|date:"d/m/Y" }}</strong>
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'inventory:physical_inventory_detail' inventory.pk %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للتفاصيل
+                    </a>
+                    <button type="button" class="btn btn-success" onclick="completeInventory()">
+                        <i class="fas fa-check me-1"></i>
+                        إكمال الجرد
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="mb-2">تقدم الجرد</h6>
+                            <div class="progress progress-bar-custom mb-2">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ inventory.completion_percentage }}%">
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                تم جرد {{ inventory.counted_items_count }} من {{ inventory.total_items_count }} صنف
+                                ({{ inventory.completion_percentage|floatformat:1 }}%)
+                            </small>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <h5 class="text-success mb-0">{{ inventory.counted_items_count }}</h5>
+                                    <small class="text-muted">تم الجرد</small>
+                                </div>
+                                <div class="col-4">
+                                    <h5 class="text-warning mb-0">{{ inventory.remaining_items_count }}</h5>
+                                    <small class="text-muted">متبقي</small>
+                                </div>
+                                <div class="col-4">
+                                    <h5 class="text-info mb-0">{{ inventory.total_items_count }}</h5>
+                                    <small class="text-muted">الإجمالي</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="search-box">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="searchInput" 
+                                   placeholder="البحث في الأصناف..." value="{{ search }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="filter-buttons">
+                            <button type="button" class="btn btn-outline-primary btn-sm filter-btn" data-filter="all">
+                                الكل ({{ inventory.total_items_count }})
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm filter-btn" data-filter="counted">
+                                تم الجرد ({{ inventory.counted_items_count }})
+                            </button>
+                            <button type="button" class="btn btn-outline-warning btn-sm filter-btn" data-filter="not_counted">
+                                لم يتم الجرد ({{ inventory.remaining_items_count }})
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Grid -->
+            <div class="row" id="itemsGrid">
+                {% for item in page_obj %}
+                <div class="col-lg-6 col-xl-4 mb-3 item-card" 
+                     data-counted="{{ item.is_counted|yesno:'true,false' }}"
+                     data-name="{{ item.item.name|lower }}"
+                     data-code="{{ item.item.code|lower }}">
+                    <div class="card count-card {% if item.is_counted %}counted{% else %}not-counted{% endif %}">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-3">
+                                    {% if item.item.image %}
+                                        <img src="{{ item.item.image.url }}" alt="{{ item.item.name }}" class="item-image">
+                                    {% else %}
+                                        <div class="item-placeholder">
+                                            <i class="fas fa-box"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-9">
+                                    <h6 class="card-title mb-1">{{ item.item.name }}</h6>
+                                    <div class="item-details text-muted">
+                                        <div>كود: <strong>{{ item.item.code }}</strong></div>
+                                        <div>الوحدة: {{ item.item.unit.name }}</div>
+                                        {% if item.item.category %}
+                                        <div>الفئة: {{ item.item.category.name }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <hr class="my-2">
+                            
+                            <div class="row">
+                                <div class="col-6">
+                                    <small class="text-muted">الكمية في النظام</small>
+                                    <div class="fw-bold">{{ item.system_quantity|floatformat:3 }}</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">الكمية المجردة</small>
+                                    <div class="fw-bold">
+                                        {% if item.is_counted %}
+                                            <span class="text-success">{{ item.counted_quantity|floatformat:3 }}</span>
+                                        {% else %}
+                                            <span class="text-warning">لم يتم الجرد</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if item.is_counted and item.difference_quantity != 0 %}
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <div class="alert alert-sm {% if item.difference_quantity > 0 %}alert-success{% else %}alert-danger{% endif %} py-1 mb-0">
+                                        <small>
+                                            <i class="fas {% if item.difference_quantity > 0 %}fa-plus{% else %}fa-minus{% endif %} me-1"></i>
+                                            فرق: {{ item.difference_quantity|floatformat:3 }}
+                                            ({{ item.difference_value|floatformat:2 }} ج.م)
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    {% if item.is_counted %}
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="count-status text-success">
+                                                <i class="fas fa-check-circle me-1"></i>
+                                                تم الجرد
+                                            </span>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                    onclick="editCount({{ item.pk }})">
+                                                <i class="fas fa-edit me-1"></i>
+                                                تعديل
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <button type="button" class="btn btn-warning w-100" 
+                                                onclick="startCount({{ item.pk }})">
+                                            <i class="fas fa-clipboard-check me-1"></i>
+                                            بدء الجرد
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد أصناف</h5>
+                        <p class="text-muted">لم يتم العثور على أصناف تطابق البحث أو الفلتر المحدد</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="pagination">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search }}&counted={{ counted_filter }}">السابق</a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}&search={{ search }}&counted={{ counted_filter }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search }}&counted={{ counted_filter }}">التالي</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Quick Count Modal -->
+<div class="modal fade" id="quickCountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">جرد سريع</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickCountForm">
+                    <div class="mb-3">
+                        <label class="form-label">الصنف</label>
+                        <div id="selectedItemInfo" class="alert alert-info"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quickCountQuantity" class="form-label">الكمية المجردة</label>
+                        <input type="number" class="form-control" id="quickCountQuantity" 
+                               step="0.001" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quickCountNotes" class="form-label">ملاحظات (اختياري)</label>
+                        <textarea class="form-control" id="quickCountNotes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveQuickCount()">حفظ الجرد</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentItemId = null;
+
+// البحث والفلترة
+document.getElementById('searchInput').addEventListener('input', function() {
+    filterItems();
+});
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        filterItems();
+    });
+});
+
+function filterItems() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+    
+    document.querySelectorAll('.item-card').forEach(card => {
+        const name = card.dataset.name;
+        const code = card.dataset.code;
+        const counted = card.dataset.counted === 'true';
+        
+        let showBySearch = !searchTerm || name.includes(searchTerm) || code.includes(searchTerm);
+        let showByFilter = activeFilter === 'all' || 
+                          (activeFilter === 'counted' && counted) ||
+                          (activeFilter === 'not_counted' && !counted);
+        
+        card.style.display = showBySearch && showByFilter ? 'block' : 'none';
+    });
+}
+
+// بدء الجرد
+function startCount(itemId) {
+    window.location.href = `/inventory/physical-inventory/{{ inventory.pk }}/count/${itemId}/`;
+}
+
+// تعديل الجرد
+function editCount(itemId) {
+    window.location.href = `/inventory/physical-inventory/{{ inventory.pk }}/count/${itemId}/`;
+}
+
+// إكمال الجرد
+function completeInventory() {
+    if (confirm('هل أنت متأكد من إكمال الجرد؟ لن تتمكن من تعديله بعد ذلك.')) {
+        fetch(`/inventory/physical-inventory/{{ inventory.pk }}/complete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = `/inventory/physical-inventory/{{ inventory.pk }}/`;
+            } else {
+                alert('حدث خطأ: ' + (data.message || 'خطأ غير معروف'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ في الاتصال بالخادم');
+        });
+    }
+}
+
+// تحديث الصفحة كل 30 ثانية لإظهار التقدم
+setInterval(() => {
+    if (document.visibilityState === 'visible') {
+        location.reload();
+    }
+}, 30000);
+</script>
+{% endblock %}

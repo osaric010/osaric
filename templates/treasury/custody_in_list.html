@@ -1,0 +1,297 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-inbox text-primary me-2"></i>
+                    {{ title }}
+                </h2>
+                <div>
+                    <a href="{% url 'treasury:home' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للخزينة
+                    </a>
+                    <a href="{% url 'treasury:custody_in_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        إضافة إيصال أمانة وارد
+                    </a>
+                </div>
+            </div>
+
+            <!-- فلاتر البحث -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="search" 
+                                       value="{{ search_query }}"
+                                       placeholder="البحث في إيصالات الأمانة الواردة (رقم الإيصال، المودع، الغرض)">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search me-1"></i>
+                                    بحث
+                                </button>
+                                <a href="{% url 'treasury:custody_in_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>
+                                    مسح
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- قائمة إيصالات الأمانة الواردة -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة إيصالات الأمانة الواردة
+                        {% if page_obj %}
+                            <span class="badge bg-primary ms-2">{{ page_obj.paginator.count }}</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم الإيصال</th>
+                                        <th>التاريخ</th>
+                                        <th>الخزينة</th>
+                                        <th>المودع</th>
+                                        <th>رقم الهوية</th>
+                                        <th>المبلغ</th>
+                                        <th>الغرض</th>
+                                        <th>تاريخ الإرجاع المتوقع</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for custody in page_obj %}
+                                        <tr>
+                                            <td><strong>{{ custody.receipt_number }}</strong></td>
+                                            <td>{{ custody.date|date:"d/m/Y" }}</td>
+                                            <td>{{ custody.treasury.name }}</td>
+                                            <td>{{ custody.depositor }}</td>
+                                            <td>
+                                                {% if custody.depositor_id %}
+                                                    {{ custody.depositor_id }}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="text-primary fw-bold">
+                                                    {{ custody.amount|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>{{ custody.purpose|truncatechars:30 }}</td>
+                                            <td>
+                                                {% if custody.expected_return_date %}
+                                                    {{ custody.expected_return_date|date:"d/m/Y" }}
+                                                    {% if custody.status == 'ACTIVE' %}
+                                                        {% now "Y-m-d" as today %}
+                                                        {% if custody.expected_return_date|date:"Y-m-d" < today %}
+                                                            <br><small class="text-danger">متأخر</small>
+                                                        {% elif custody.expected_return_date|date:"Y-m-d" == today %}
+                                                            <br><small class="text-warning">مستحق اليوم</small>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if custody.status == 'ACTIVE' %}
+                                                    <span class="badge bg-success">{{ custody.get_status_display }}</span>
+                                                {% elif custody.status == 'RETURNED' %}
+                                                    <span class="badge bg-info">{{ custody.get_status_display }}</span>
+                                                    {% if custody.return_date %}
+                                                        <br><small class="text-muted">{{ custody.return_date|date:"d/m/Y" }}</small>
+                                                    {% endif %}
+                                                {% elif custody.status == 'CANCELLED' %}
+                                                    <span class="badge bg-danger">{{ custody.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    {% if custody.status == 'ACTIVE' %}
+                                                        <a href="{% url 'treasury:custody_in_edit' custody.pk %}" 
+                                                           class="btn btn-outline-primary" 
+                                                           title="تعديل">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button type="button" 
+                                                                class="btn btn-outline-success return-btn" 
+                                                                data-id="{{ custody.pk }}"
+                                                                data-name="{{ custody.receipt_number }}"
+                                                                data-depositor="{{ custody.depositor }}"
+                                                                title="إرجاع الأمانة">
+                                                            <i class="fas fa-undo"></i>
+                                                        </button>
+                                                        <button type="button" 
+                                                                class="btn btn-outline-danger delete-btn" 
+                                                                data-id="{{ custody.pk }}"
+                                                                data-name="{{ custody.receipt_number }}"
+                                                                title="حذف">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="button" 
+                                                                class="btn btn-outline-info print-btn" 
+                                                                data-id="{{ custody.pk }}"
+                                                                title="طباعة">
+                                                            <i class="fas fa-print"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد إيصالات أمانة واردة</h5>
+                            <p class="text-muted">لم يتم العثور على أي إيصالات أمانة واردة مطابقة لمعايير البحث</p>
+                            <a href="{% url 'treasury:custody_in_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                إضافة إيصال أمانة وارد جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// إرجاع أمانة واردة
+document.addEventListener('DOMContentLoaded', function() {
+    const returnButtons = document.querySelectorAll('.return-btn');
+    returnButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const custodyId = this.getAttribute('data-id');
+            const receiptNumber = this.getAttribute('data-name');
+            const depositor = this.getAttribute('data-depositor');
+            
+            if (confirm(`هل تريد تسجيل إرجاع الأمانة "${receiptNumber}" إلى "${depositor}"؟`)) {
+                fetch(`/treasury/custody-in/${custodyId}/return/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'حدث خطأ أثناء إرجاع الأمانة');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('حدث خطأ أثناء إرجاع الأمانة');
+                });
+            }
+        });
+    });
+
+    // حذف إيصال أمانة وارد
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const custodyId = this.getAttribute('data-id');
+            const receiptNumber = this.getAttribute('data-name');
+            
+            if (confirm(`هل أنت متأكد من حذف إيصال الأمانة الوارد "${receiptNumber}"؟`)) {
+                fetch(`/treasury/custody-in/${custodyId}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'حدث خطأ أثناء الحذف');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('حدث خطأ أثناء الحذف');
+                });
+            }
+        });
+    });
+
+    // طباعة إيصال أمانة
+    const printButtons = document.querySelectorAll('.print-btn');
+    printButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const custodyId = this.getAttribute('data-id');
+            // يمكن إضافة رابط الطباعة هنا
+            alert('سيتم إضافة وظيفة الطباعة قريباً');
+        });
+    });
+});
+</script>
+{% endblock %}

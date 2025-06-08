@@ -1,0 +1,283 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-exchange-alt text-info me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'treasury:transfer_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <!-- معلومات التحويل الأساسية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات التحويل الأساسية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.transfer_number.id_for_label }}" class="form-label">{{ form.transfer_number.label }}</label>
+                                {{ form.transfer_number }}
+                                {% if form.transfer_number.errors %}
+                                    <div class="text-danger small">{{ form.transfer_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date.id_for_label }}" class="form-label">{{ form.date.label }}</label>
+                                {{ form.date }}
+                                {% if form.date.errors %}
+                                    <div class="text-danger small">{{ form.date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.from_treasury.id_for_label }}" class="form-label">{{ form.from_treasury.label }}</label>
+                                {{ form.from_treasury }}
+                                {% if form.from_treasury.errors %}
+                                    <div class="text-danger small">{{ form.from_treasury.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text text-danger">
+                                    <i class="fas fa-arrow-left me-1"></i>
+                                    الخزينة التي سيتم السحب منها
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.to_treasury.id_for_label }}" class="form-label">{{ form.to_treasury.label }}</label>
+                                {{ form.to_treasury }}
+                                {% if form.to_treasury.errors %}
+                                    <div class="text-danger small">{{ form.to_treasury.errors.0 }}</div>
+                                {% endif %}
+                                <div class="form-text text-success">
+                                    <i class="fas fa-arrow-right me-1"></i>
+                                    الخزينة التي سيتم الإيداع فيها
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }}</label>
+                                {{ form.amount }}
+                                {% if form.amount.errors %}
+                                    <div class="text-danger small">{{ form.amount.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title">ملخص التحويل</h6>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-danger" id="fromTreasuryName">من خزينة</span>
+                                            <i class="fas fa-arrow-right fa-2x text-info"></i>
+                                            <span class="badge bg-success" id="toTreasuryName">إلى خزينة</span>
+                                        </div>
+                                        <div class="mt-2">
+                                            <span class="text-info fw-bold" id="transferAmount">0.00 ر.س</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ملاحظات إضافية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-sticky-note me-2"></i>
+                            ملاحظات إضافية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات مهمة -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            معلومات مهمة حول التحويل بين الخزائن
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-exchange-alt me-2"></i>
+                                        كيفية عمل التحويل
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>إنشاء التحويل بحالة "معلق"</li>
+                                        <li>مراجعة بيانات التحويل</li>
+                                        <li>إكمال التحويل لتطبيقه</li>
+                                        <li>تسجيل معاملات في كلا الخزينتين</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-warning">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        تنبيهات مهمة
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>لا يمكن التحويل من خزينة إلى نفسها</li>
+                                        <li>تأكد من وجود رصيد كافي في الخزينة المرسلة</li>
+                                        <li>لا يمكن التراجع عن التحويل المكتمل</li>
+                                        <li>سيتم تسجيل التحويل في كلا الخزينتين</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الحفظ -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'treasury:transfer_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-info">
+                                <i class="fas fa-save me-1"></i>
+                                {{ action }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديد تاريخ اليوم افتراضياً
+    const dateField = document.querySelector('input[type="date"][name="date"]');
+    if (dateField && !dateField.value) {
+        dateField.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // عناصر النموذج
+    const fromTreasuryField = document.querySelector('select[name="from_treasury"]');
+    const toTreasuryField = document.querySelector('select[name="to_treasury"]');
+    const amountField = document.querySelector('input[name="amount"]');
+    
+    // عناصر الملخص
+    const fromTreasuryName = document.getElementById('fromTreasuryName');
+    const toTreasuryName = document.getElementById('toTreasuryName');
+    const transferAmount = document.getElementById('transferAmount');
+    
+    // تحديث ملخص التحويل
+    function updateSummary() {
+        // تحديث اسم الخزينة المرسلة
+        if (fromTreasuryField.value) {
+            const selectedOption = fromTreasuryField.options[fromTreasuryField.selectedIndex];
+            fromTreasuryName.textContent = selectedOption.text;
+        } else {
+            fromTreasuryName.textContent = 'من خزينة';
+        }
+        
+        // تحديث اسم الخزينة المستقبلة
+        if (toTreasuryField.value) {
+            const selectedOption = toTreasuryField.options[toTreasuryField.selectedIndex];
+            toTreasuryName.textContent = selectedOption.text;
+        } else {
+            toTreasuryName.textContent = 'إلى خزينة';
+        }
+        
+        // تحديث المبلغ
+        const amount = parseFloat(amountField.value) || 0;
+        transferAmount.textContent = amount.toFixed(2) + ' ر.س';
+    }
+    
+    // ربط الأحداث
+    fromTreasuryField.addEventListener('change', updateSummary);
+    toTreasuryField.addEventListener('change', updateSummary);
+    amountField.addEventListener('input', updateSummary);
+    
+    // تحديث أولي
+    updateSummary();
+    
+    // تحقق من صحة النموذج
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const amount = parseFloat(amountField.value);
+            const fromTreasury = fromTreasuryField.value;
+            const toTreasury = toTreasuryField.value;
+            const description = document.querySelector('input[name="description"]').value.trim();
+            
+            if (!amount || amount <= 0) {
+                e.preventDefault();
+                alert('يجب إدخال مبلغ صحيح');
+                return false;
+            }
+            
+            if (!fromTreasury) {
+                e.preventDefault();
+                alert('يجب اختيار الخزينة المرسلة');
+                return false;
+            }
+            
+            if (!toTreasury) {
+                e.preventDefault();
+                alert('يجب اختيار الخزينة المستقبلة');
+                return false;
+            }
+            
+            if (fromTreasury === toTreasury) {
+                e.preventDefault();
+                alert('لا يمكن التحويل من خزينة إلى نفس الخزينة');
+                return false;
+            }
+            
+            if (!description) {
+                e.preventDefault();
+                alert('يجب إدخال بيان التحويل');
+                return false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

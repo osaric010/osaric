@@ -1,0 +1,405 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.status-badge {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+}
+.info-card {
+    border-left: 4px solid #0d6efd;
+}
+.stats-card {
+    border-left: 4px solid #198754;
+}
+.item-row {
+    border-bottom: 1px solid #dee2e6;
+    padding: 0.75rem 0;
+}
+.item-row:last-child {
+    border-bottom: none;
+}
+.condition-badge {
+    font-size: 0.75rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-0">
+                <i class="fas fa-clipboard-list text-primary me-2"></i>
+                {{ title }}
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="/accounting/">الحسابات العامة</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'accounting:opening_balance' %}">القيد الافتتاحي</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'accounting:opening_inventory_list' %}">جرد أول المدة</a>
+                    </li>
+                    <li class="breadcrumb-item active">{{ opening_inventory.inventory_number }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group">
+                <a href="{% url 'accounting:opening_inventory_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    العودة للقائمة
+                </a>
+                {% if opening_inventory.can_be_edited %}
+                    <a href="{% url 'accounting:opening_inventory_edit' opening_inventory.pk %}" class="btn btn-outline-warning">
+                        <i class="fas fa-edit me-2"></i>
+                        تعديل
+                    </a>
+                {% endif %}
+                <a href="{% url 'accounting:opening_inventory_report' opening_inventory.pk %}" class="btn btn-outline-info" target="_blank">
+                    <i class="fas fa-print me-2"></i>
+                    طباعة
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Information -->
+        <div class="col-md-8">
+            <!-- Basic Info -->
+            <div class="card info-card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        معلومات الجرد
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">رقم الجرد:</td>
+                                    <td>{{ opening_inventory.inventory_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">التاريخ:</td>
+                                    <td>{{ opening_inventory.date|date:"Y-m-d" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">المخزن:</td>
+                                    <td>
+                                        <i class="fas fa-warehouse text-muted me-1"></i>
+                                        {{ opening_inventory.warehouse.name }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">السنة المالية:</td>
+                                    <td>{{ opening_inventory.fiscal_year }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">اسم الفترة:</td>
+                                    <td>{{ opening_inventory.period_name|default:"غير محدد" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">العملة:</td>
+                                    <td>{{ opening_inventory.currency.name|default:"غير محدد" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">سعر الصرف:</td>
+                                    <td>{{ opening_inventory.exchange_rate }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">الحالة:</td>
+                                    <td>
+                                        {% if opening_inventory.status == 'DRAFT' %}
+                                            <span class="badge bg-warning status-badge">مسودة</span>
+                                        {% elif opening_inventory.status == 'APPROVED' %}
+                                            <span class="badge bg-info status-badge">معتمد</span>
+                                        {% elif opening_inventory.status == 'POSTED' %}
+                                            <span class="badge bg-success status-badge">مرحل</span>
+                                        {% elif opening_inventory.status == 'CANCELLED' %}
+                                            <span class="badge bg-danger status-badge">ملغي</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {% if opening_inventory.notes %}
+                        <div class="mt-3">
+                            <h6 class="fw-bold">ملاحظات:</h6>
+                            <p class="text-muted">{{ opening_inventory.notes }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Items List -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-boxes me-2"></i>
+                        أصناف الجرد ({{ items.count }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>الصنف</th>
+                                        <th>الكمية</th>
+                                        <th>تكلفة الوحدة</th>
+                                        <th>إجمالي القيمة</th>
+                                        <th>رقم الدفعة</th>
+                                        <th>الحالة</th>
+                                        <th>تاريخ الانتهاء</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ item.item.name }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">{{ item.item.code }}</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold">{{ item.opening_quantity }}</span>
+                                                {% if item.item.unit %}
+                                                    <small class="text-muted">{{ item.item.unit.name }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ item.unit_cost }} ج.م</td>
+                                            <td class="fw-bold text-success">{{ item.total_value }} ج.م</td>
+                                            <td>{{ item.batch_number|default:"-" }}</td>
+                                            <td>
+                                                {% if item.condition == 'NEW' %}
+                                                    <span class="badge bg-primary condition-badge">جديد</span>
+                                                {% elif item.condition == 'GOOD' %}
+                                                    <span class="badge bg-success condition-badge">جيد</span>
+                                                {% elif item.condition == 'FAIR' %}
+                                                    <span class="badge bg-warning condition-badge">مقبول</span>
+                                                {% elif item.condition == 'POOR' %}
+                                                    <span class="badge bg-danger condition-badge">ضعيف</span>
+                                                {% elif item.condition == 'DAMAGED' %}
+                                                    <span class="badge bg-dark condition-badge">تالف</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.expiry_date %}
+                                                    {{ item.expiry_date|date:"Y-m-d" }}
+                                                    {% if item.is_expired %}
+                                                        <span class="badge bg-danger ms-1">منتهي</span>
+                                                    {% elif item.is_near_expiry %}
+                                                        <span class="badge bg-warning ms-1">قريب الانتهاء</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد أصناف في هذا الجرد</h5>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Statistics -->
+            <div class="card stats-card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        إحصائيات الجرد
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-12 mb-3">
+                            <div class="border rounded p-3">
+                                <h6 class="text-muted mb-1">عدد الأصناف</h6>
+                                <h3 class="mb-0 text-primary">{{ stats.total_items }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="border rounded p-3">
+                                <h6 class="text-muted mb-1">إجمالي الكميات</h6>
+                                <h3 class="mb-0 text-info">{{ stats.total_quantity }}</h3>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="border rounded p-3">
+                                <h6 class="text-muted mb-1">إجمالي القيمة</h6>
+                                <h3 class="mb-0 text-success">{{ stats.total_value }} ج.م</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        الإجراءات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if opening_inventory.can_be_approved %}
+                            <button type="button" class="btn btn-info" id="approve-btn">
+                                <i class="fas fa-check me-2"></i>
+                                اعتماد الجرد
+                            </button>
+                        {% endif %}
+                        
+                        {% if opening_inventory.can_be_posted %}
+                            <button type="button" class="btn btn-success" id="post-btn">
+                                <i class="fas fa-check-double me-2"></i>
+                                ترحيل الجرد
+                            </button>
+                        {% endif %}
+                        
+                        {% if opening_inventory.can_be_cancelled %}
+                            <button type="button" class="btn btn-danger" id="delete-btn">
+                                <i class="fas fa-trash me-2"></i>
+                                حذف الجرد
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approval/Posting Info -->
+            {% if opening_inventory.approved_by or opening_inventory.posted_by %}
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user-check me-2"></i>
+                            معلومات الاعتماد والترحيل
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if opening_inventory.approved_by %}
+                            <div class="mb-3">
+                                <h6 class="fw-bold">معتمد من:</h6>
+                                <p class="mb-1">{{ opening_inventory.approved_by.get_full_name|default:opening_inventory.approved_by.username }}</p>
+                                <small class="text-muted">{{ opening_inventory.approved_date|date:"Y-m-d h:i A" }}</small>
+                            </div>
+                        {% endif %}
+                        
+                        {% if opening_inventory.posted_by %}
+                            <div>
+                                <h6 class="fw-bold">رحل بواسطة:</h6>
+                                <p class="mb-1">{{ opening_inventory.posted_by.get_full_name|default:opening_inventory.posted_by.username }}</p>
+                                <small class="text-muted">{{ opening_inventory.posted_date|date:"Y-m-d h:i A" }}</small>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Approve button
+    const approveBtn = document.getElementById('approve-btn');
+    if (approveBtn) {
+        approveBtn.addEventListener('click', function() {
+            if (confirm('هل أنت متأكد من اعتماد هذا الجرد؟')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{% url "accounting:opening_inventory_approve" opening_inventory.pk %}';
+                
+                const csrfToken = '{{ csrf_token }}';
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = csrfToken;
+                
+                form.appendChild(csrfInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    // Post button
+    const postBtn = document.getElementById('post-btn');
+    if (postBtn) {
+        postBtn.addEventListener('click', function() {
+            if (confirm('هل أنت متأكد من ترحيل هذا الجرد؟\nسيتم إنشاء قيد افتتاحي للمخزون.')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{% url "accounting:opening_inventory_post" opening_inventory.pk %}';
+                
+                const csrfToken = '{{ csrf_token }}';
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = csrfToken;
+                
+                form.appendChild(csrfInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+
+    // Delete button
+    const deleteBtn = document.getElementById('delete-btn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            if (confirm('هل أنت متأكد من حذف هذا الجرد؟\nهذا الإجراء لا يمكن التراجع عنه.')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{% url "accounting:opening_inventory_delete" opening_inventory.pk %}';
+                
+                const csrfToken = '{{ csrf_token }}';
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = csrfToken;
+                
+                form.appendChild(csrfInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

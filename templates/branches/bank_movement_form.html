@@ -1,0 +1,263 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-university text-primary me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'branches:home' %}">الفروع</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'branches:bank_deposits_from_branches' %}">الحركات البنكية</a></li>
+                            <li class="breadcrumb-item active">{{ title }}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <a href="{% url 'branches:bank_deposits_from_branches' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        بيانات الحركة البنكية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- رقم الحركة -->
+                            <div class="col-md-6 mb-3">
+                                <label for="movement_number" class="form-label">رقم الحركة <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="movement_number" name="movement_number" 
+                                       value="BM-{{ 'now'|date:'Y' }}-" required>
+                                <div class="form-text">سيتم إنشاء رقم تلقائي إذا ترك فارغاً</div>
+                            </div>
+
+                            <!-- الفرع -->
+                            <div class="col-md-6 mb-3">
+                                <label for="branch" class="form-label">الفرع <span class="text-danger">*</span></label>
+                                <select class="form-select" id="branch" name="branch" required>
+                                    <option value="">اختر الفرع</option>
+                                    {% for branch in branches %}
+                                    <option value="{{ branch.id }}">{{ branch.name }} ({{ branch.code }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- نوع الحركة -->
+                            <div class="col-md-12 mb-3">
+                                <label for="movement_type" class="form-label">نوع الحركة <span class="text-danger">*</span></label>
+                                <select class="form-select" id="movement_type" name="movement_type" required>
+                                    {% if movement_type %}
+                                    <option value="{{ movement_type }}" selected>
+                                        {% if movement_type == 'DEPOSIT_FROM_BRANCH_TREASURY' %}إيداع بنكي وارد من خزينة الفرع
+                                        {% elif movement_type == 'WITHDRAWAL_TO_BRANCH_TREASURY' %}مسحوب بنكي لخزينة الفرع
+                                        {% elif movement_type == 'DEPOSIT_FROM_BRANCH_BANK' %}إيداع بنكي وارد من بنك الفرع
+                                        {% elif movement_type == 'WITHDRAWAL_TO_BRANCH_BANK' %}مسحوب بنكي لبنك الفرع{% endif %}
+                                    </option>
+                                    {% else %}
+                                    <option value="">اختر نوع الحركة</option>
+                                    <option value="DEPOSIT_FROM_BRANCH_TREASURY">إيداع بنكي وارد من خزينة الفرع</option>
+                                    <option value="WITHDRAWAL_TO_BRANCH_TREASURY">مسحوب بنكي لخزينة الفرع</option>
+                                    <option value="DEPOSIT_FROM_BRANCH_BANK">إيداع بنكي وارد من بنك الفرع</option>
+                                    <option value="WITHDRAWAL_TO_BRANCH_BANK">مسحوب بنكي لبنك الفرع</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+
+                            <!-- تاريخ الحركة -->
+                            <div class="col-md-6 mb-3">
+                                <label for="movement_date" class="form-label">تاريخ الحركة <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="movement_date" name="movement_date" required>
+                            </div>
+
+                            <!-- المبلغ -->
+                            <div class="col-md-6 mb-3">
+                                <label for="amount" class="form-label">المبلغ <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="amount" name="amount" 
+                                           step="0.01" min="0.01" required>
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+
+                            <!-- اسم البنك -->
+                            <div class="col-md-6 mb-3">
+                                <label for="bank_name" class="form-label">اسم البنك <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="bank_name" name="bank_name" 
+                                       placeholder="مثال: البنك الأهلي السعودي" required>
+                            </div>
+
+                            <!-- رقم الحساب -->
+                            <div class="col-md-6 mb-3">
+                                <label for="account_number" class="form-label">رقم الحساب</label>
+                                <input type="text" class="form-control" id="account_number" name="account_number" 
+                                       placeholder="رقم الحساب البنكي">
+                            </div>
+
+                            <!-- البيان -->
+                            <div class="col-md-12 mb-3">
+                                <label for="description" class="form-label">البيان <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="description" name="description" rows="3" 
+                                          placeholder="وصف تفصيلي للحركة البنكية" required></textarea>
+                            </div>
+
+                            <!-- ملاحظات -->
+                            <div class="col-md-12 mb-3">
+                                <label for="notes" class="form-label">ملاحظات</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="2" 
+                                          placeholder="ملاحظات إضافية (اختيارية)"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Summary Card -->
+                        <div class="card bg-light mb-3" id="summaryCard" style="display: none;">
+                            <div class="card-body">
+                                <h6 class="card-title">ملخص الحركة البنكية:</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>النوع:</strong> <span id="summaryType"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>المبلغ:</strong> <span id="summaryAmount"></span> ريال
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>الفرع:</strong> <span id="summaryBranch"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>البنك:</strong> <span id="summaryBank"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'branches:bank_deposits_from_branches' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ الحركة
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    document.getElementById('movement_date').value = new Date().toISOString().split('T')[0];
+    
+    // Auto-generate movement number
+    function generateMovementNumber() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const time = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+        return `BM-${year}-${month}${day}-${time}`;
+    }
+    
+    // Set auto-generated number if field is empty
+    const movementNumberInput = document.getElementById('movement_number');
+    if (!movementNumberInput.value || movementNumberInput.value === 'BM-{{ "now"|date:"Y" }}-') {
+        movementNumberInput.value = generateMovementNumber();
+    }
+    
+    // Movement type descriptions
+    const typeDescriptions = {
+        'DEPOSIT_FROM_BRANCH_TREASURY': 'إيداع بنكي وارد من خزينة الفرع',
+        'WITHDRAWAL_TO_BRANCH_TREASURY': 'مسحوب بنكي لخزينة الفرع',
+        'DEPOSIT_FROM_BRANCH_BANK': 'إيداع بنكي وارد من بنك الفرع',
+        'WITHDRAWAL_TO_BRANCH_BANK': 'مسحوب بنكي لبنك الفرع'
+    };
+    
+    // Update summary when form changes
+    function updateSummary() {
+        const type = document.getElementById('movement_type').value;
+        const amount = document.getElementById('amount').value;
+        const branchSelect = document.getElementById('branch');
+        const branch = branchSelect.options[branchSelect.selectedIndex].text;
+        const bank = document.getElementById('bank_name').value;
+        
+        if (type && amount && branchSelect.value && bank) {
+            document.getElementById('summaryType').textContent = typeDescriptions[type] || type;
+            document.getElementById('summaryAmount').textContent = parseFloat(amount).toLocaleString();
+            document.getElementById('summaryBranch').textContent = branch;
+            document.getElementById('summaryBank').textContent = bank;
+            document.getElementById('summaryCard').style.display = 'block';
+        } else {
+            document.getElementById('summaryCard').style.display = 'none';
+        }
+    }
+    
+    // Add event listeners
+    ['movement_type', 'amount', 'branch', 'bank_name'].forEach(id => {
+        document.getElementById(id).addEventListener('change', updateSummary);
+        document.getElementById(id).addEventListener('input', updateSummary);
+    });
+    
+    // Auto-fill description based on movement type and branch
+    function autoFillDescription() {
+        const type = document.getElementById('movement_type').value;
+        const branchSelect = document.getElementById('branch');
+        const branchName = branchSelect.options[branchSelect.selectedIndex].text;
+        const bankName = document.getElementById('bank_name').value;
+        const descriptionField = document.getElementById('description');
+        
+        if (type && branchSelect.value && bankName && !descriptionField.value) {
+            descriptionField.value = `${typeDescriptions[type]} - فرع ${branchName} - ${bankName}`;
+        }
+    }
+    
+    ['movement_type', 'branch', 'bank_name'].forEach(id => {
+        document.getElementById(id).addEventListener('change', autoFillDescription);
+    });
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const amount = parseFloat(document.getElementById('amount').value);
+        if (amount <= 0) {
+            alert('يجب أن يكون المبلغ أكبر من صفر');
+            e.preventDefault();
+            return;
+        }
+        
+        const description = document.getElementById('description').value.trim();
+        if (description.length < 10) {
+            alert('يجب أن يكون البيان أكثر تفصيلاً (على الأقل 10 أحرف)');
+            e.preventDefault();
+            return;
+        }
+    });
+});
+</script>
+{% endblock %}

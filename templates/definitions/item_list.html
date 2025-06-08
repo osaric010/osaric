@@ -1,0 +1,150 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-boxes me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'definitions:item_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            إضافة صنف جديد
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" 
+                           class="form-control" 
+                           name="search" 
+                           value="{{ search_query }}"
+                           placeholder="البحث في الأصناف (الكود، الاسم، الباركود)">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-select">
+                    <option value="">جميع الفئات</option>
+                    {% for category in categories %}
+                        <option value="{{ category.pk }}" {% if category_filter == category.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search me-1"></i>
+                        بحث
+                    </button>
+                    <a href="{% url 'definitions:item_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>
+                        مسح
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Items Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            قائمة الأصناف
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>كود الصنف</th>
+                            <th>اسم الصنف</th>
+                            <th>الفئة</th>
+                            <th>وحدة القياس</th>
+                            <th>سعر التكلفة</th>
+                            <th>سعر البيع</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in page_obj %}
+                        <tr>
+                            <td><strong>{{ item.code }}</strong></td>
+                            <td>
+                                <a href="{% url 'definitions:item_detail' item.pk %}" class="text-decoration-none">
+                                    {{ item.name }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if item.category %}
+                                    <span class="badge bg-info">{{ item.category.name }}</span>
+                                {% else %}
+                                    <span class="text-muted">غير محدد</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.unit.symbol }}</td>
+                            <td>{{ item.cost_price|floatformat:2 }}</td>
+                            <td>{{ item.selling_price|floatformat:2 }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'definitions:item_detail' item.pk %}" 
+                                       class="btn btn-outline-info" 
+                                       title="عرض">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'definitions:item_edit' item.pk %}" 
+                                       class="btn btn-outline-primary" 
+                                       title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-outline-danger delete-btn" 
+                                            data-id="{{ item.pk }}"
+                                            data-name="{{ item.name }}"
+                                            title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">لا توجد أصناف</h5>
+                <p class="text-muted">لم يتم العثور على أي أصناف مطابقة لمعايير البحث</p>
+                <a href="{% url 'definitions:item_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    إضافة صنف جديد
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

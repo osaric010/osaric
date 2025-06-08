@@ -1,0 +1,249 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-share text-secondary me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'treasury:custody_out_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <!-- معلومات إيصال الأمانة الأساسية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات إيصال الأمانة الأساسية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.receipt_number.id_for_label }}" class="form-label">{{ form.receipt_number.label }}</label>
+                                {{ form.receipt_number }}
+                                {% if form.receipt_number.errors %}
+                                    <div class="text-danger small">{{ form.receipt_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date.id_for_label }}" class="form-label">{{ form.date.label }}</label>
+                                {{ form.date }}
+                                {% if form.date.errors %}
+                                    <div class="text-danger small">{{ form.date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.treasury.id_for_label }}" class="form-label">{{ form.treasury.label }}</label>
+                                {{ form.treasury }}
+                                {% if form.treasury.errors %}
+                                    <div class="text-danger small">{{ form.treasury.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }}</label>
+                                {{ form.amount }}
+                                {% if form.amount.errors %}
+                                    <div class="text-danger small">{{ form.amount.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات أمين العهدة -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user me-2"></i>
+                            معلومات أمين العهدة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.custodian.id_for_label }}" class="form-label">{{ form.custodian.label }}</label>
+                                {{ form.custodian }}
+                                {% if form.custodian.errors %}
+                                    <div class="text-danger small">{{ form.custodian.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.custodian_id.id_for_label }}" class="form-label">{{ form.custodian_id.label }}</label>
+                                {{ form.custodian_id }}
+                                {% if form.custodian_id.errors %}
+                                    <div class="text-danger small">{{ form.custodian_id.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- تفاصيل الأمانة -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-clipboard-list me-2"></i>
+                            تفاصيل الأمانة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.purpose.id_for_label }}" class="form-label">{{ form.purpose.label }}</label>
+                                {{ form.purpose }}
+                                {% if form.purpose.errors %}
+                                    <div class="text-danger small">{{ form.purpose.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.expected_return_date.id_for_label }}" class="form-label">{{ form.expected_return_date.label }}</label>
+                                {{ form.expected_return_date }}
+                                {% if form.expected_return_date.errors %}
+                                    <div class="text-danger small">{{ form.expected_return_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات مهمة -->
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات مهمة حول إيصالات الأمانة الصادرة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-share me-2"></i>
+                                        ما هي الأمانة الصادرة؟
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>مبلغ يُسلم لأمين عهدة</li>
+                                        <li>لغرض محدد ومؤقت</li>
+                                        <li>يجب إرجاعه في الموعد المحدد</li>
+                                        <li>يُسجل كخروج من الخزينة</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-warning">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        إدارة الأمانات
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>تحديد أمين العهدة بدقة</li>
+                                        <li>توضيح الغرض من الأمانة</li>
+                                        <li>تحديد تاريخ الإرجاع المتوقع</li>
+                                        <li>متابعة الأمانات المستحقة</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الحفظ -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'treasury:custody_out_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-secondary">
+                                <i class="fas fa-save me-1"></i>
+                                {{ action }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديد تاريخ اليوم افتراضياً
+    const dateField = document.querySelector('input[type="date"][name="date"]');
+    if (dateField && !dateField.value) {
+        dateField.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // تحديد تاريخ الإرجاع المتوقع (7 أيام من اليوم)
+    const expectedReturnDateField = document.querySelector('input[type="date"][name="expected_return_date"]');
+    if (expectedReturnDateField && !expectedReturnDateField.value) {
+        const futureDate = new Date();
+        futureDate.setDate(futureDate.getDate() + 7);
+        expectedReturnDateField.value = futureDate.toISOString().split('T')[0];
+    }
+    
+    // تحقق من صحة النموذج
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const amount = parseFloat(document.querySelector('input[name="amount"]').value);
+            const treasury = document.querySelector('select[name="treasury"]').value;
+            const custodian = document.querySelector('input[name="custodian"]').value.trim();
+            const purpose = document.querySelector('input[name="purpose"]').value.trim();
+            
+            if (!amount || amount <= 0) {
+                e.preventDefault();
+                alert('يجب إدخال مبلغ صحيح');
+                return false;
+            }
+            
+            if (!treasury) {
+                e.preventDefault();
+                alert('يجب اختيار الخزينة');
+                return false;
+            }
+            
+            if (!custodian) {
+                e.preventDefault();
+                alert('يجب إدخال اسم أمين العهدة');
+                return false;
+            }
+            
+            if (!purpose) {
+                e.preventDefault();
+                alert('يجب تحديد الغرض من الأمانة');
+                return false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

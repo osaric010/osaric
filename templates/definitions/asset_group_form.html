@@ -1,0 +1,401 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-layer-group me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'definitions:asset_group_list' %}">مجموعات الأصول</a></li>
+                <li class="breadcrumb-item active">{{ action }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if asset_group %}edit{% else %}plus{% endif %} me-2"></i>
+                    {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Basic Information -->
+                    <h6 class="mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        المعلومات الأساسية
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">
+                                {{ form.code.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.code.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                {{ form.name.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.parent.id_for_label }}" class="form-label">
+                                {{ form.parent.label }}
+                            </label>
+                            {{ form.parent }}
+                            {% if form.parent.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.parent.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.asset_category.id_for_label }}" class="form-label">
+                                {{ form.asset_category.label }}
+                            </label>
+                            {{ form.asset_category }}
+                            {% if form.asset_category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.asset_category.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">
+                                {{ form.description.label }}
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Depreciation Settings -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-chart-line me-2"></i>
+                        إعدادات الاستهلاك
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.depreciation_method.id_for_label }}" class="form-label">
+                                {{ form.depreciation_method.label }}
+                            </label>
+                            {{ form.depreciation_method }}
+                            {% if form.depreciation_method.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.depreciation_method.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.default_useful_life.id_for_label }}" class="form-label">
+                                {{ form.default_useful_life.label }}
+                            </label>
+                            {{ form.default_useful_life }}
+                            {% if form.default_useful_life.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.default_useful_life.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.default_salvage_value_rate.id_for_label }}" class="form-label">
+                                {{ form.default_salvage_value_rate.label }}
+                            </label>
+                            {{ form.default_salvage_value_rate }}
+                            {% if form.default_salvage_value_rate.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.default_salvage_value_rate.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Accounting Accounts -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-calculator me-2"></i>
+                        الحسابات المحاسبية
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.asset_account.id_for_label }}" class="form-label">
+                                {{ form.asset_account.label }}
+                            </label>
+                            {{ form.asset_account }}
+                            {% if form.asset_account.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.asset_account.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.depreciation_account.id_for_label }}" class="form-label">
+                                {{ form.depreciation_account.label }}
+                            </label>
+                            {{ form.depreciation_account }}
+                            {% if form.depreciation_account.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.depreciation_account.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.accumulated_depreciation_account.id_for_label }}" class="form-label">
+                                {{ form.accumulated_depreciation_account.label }}
+                            </label>
+                            {{ form.accumulated_depreciation_account }}
+                            {% if form.accumulated_depreciation_account.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.accumulated_depreciation_account.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Cost Thresholds -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-dollar-sign me-2"></i>
+                        حدود التكلفة
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.min_cost_threshold.id_for_label }}" class="form-label">
+                                {{ form.min_cost_threshold.label }}
+                            </label>
+                            {{ form.min_cost_threshold }}
+                            {% if form.min_cost_threshold.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.min_cost_threshold.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.max_cost_threshold.id_for_label }}" class="form-label">
+                                {{ form.max_cost_threshold.label }}
+                            </label>
+                            {{ form.max_cost_threshold }}
+                            {% if form.max_cost_threshold.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.max_cost_threshold.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Settings -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-cog me-2"></i>
+                        الإعدادات الإضافية
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                {{ form.is_depreciable }}
+                                <label class="form-check-label" for="{{ form.is_depreciable.id_for_label }}">
+                                    {{ form.is_depreciable.label }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                {{ form.requires_insurance }}
+                                <label class="form-check-label" for="{{ form.requires_insurance.id_for_label }}">
+                                    {{ form.requires_insurance.label }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-check">
+                                {{ form.requires_maintenance }}
+                                <label class="form-check-label" for="{{ form.requires_maintenance.id_for_label }}">
+                                    {{ form.requires_maintenance.label }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {{ action }}
+                            </button>
+                            <a href="{% url 'definitions:asset_group_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                        {% if asset_group %}
+                            <button type="button" 
+                                    class="btn btn-outline-danger delete-btn" 
+                                    data-id="{{ asset_group.pk }}"
+                                    data-name="{{ asset_group.name }}">
+                                <i class="fas fa-trash me-2"></i>
+                                حذف
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {% if asset_group %}
+        <!-- Additional Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات إضافية
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>المستوى الهرمي:</strong> {{ asset_group.level }}</p>
+                        <p><strong>الاسم الكامل:</strong> {{ asset_group.full_name }}</p>
+                        <p><strong>تاريخ الإنشاء:</strong> {{ asset_group.created_at|date:"d/m/Y H:i" }}</p>
+                        {% if asset_group.created_by %}
+                            <p><strong>أنشئ بواسطة:</strong> {{ asset_group.created_by.get_full_name|default:asset_group.created_by.username }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>عدد المجموعات الفرعية:</strong> {{ asset_group.get_children.count }}</p>
+                        {% if asset_group.updated_at %}
+                            <p><strong>تاريخ التحديث:</strong> {{ asset_group.updated_at|date:"d/m/Y H:i" }}</p>
+                        {% endif %}
+                        {% if asset_group.updated_by %}
+                            <p><strong>حُدث بواسطة:</strong> {{ asset_group.updated_by.get_full_name|default:asset_group.updated_by.username }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if asset_group %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف مجموعة الأصول: <strong>{{ asset_group.name }}</strong>؟</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    لا يمكن التراجع عن هذا الإجراء
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-uppercase asset group code
+    const codeField = document.getElementById('{{ form.code.id_for_label }}');
+    if (codeField) {
+        codeField.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+    
+    {% if asset_group %}
+    // Delete functionality
+    const deleteBtn = document.querySelector('.delete-btn');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            deleteModal.show();
+        });
+    }
+
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            fetch(`/definitions/asset-groups/{{ asset_group.pk }}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{% url "definitions:asset_group_list" %}';
+                } else {
+                    alert(data.message || 'حدث خطأ أثناء الحذف');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الحذف');
+            });
+            deleteModal.hide();
+        });
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

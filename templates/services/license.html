@@ -1,0 +1,169 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-0">
+                <i class="fas fa-certificate text-warning me-2"></i>
+                {{ title }}
+            </h2>
+            <p class="text-muted mb-0">معلومات ترخيص البرنامج</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        معلومات الترخيص
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if license %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>نوع الترخيص:</h6>
+                            <p class="text-primary">{{ license.get_license_type_display }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>حالة الترخيص:</h6>
+                            {% if license.is_expired %}
+                                <span class="badge bg-danger">منتهي الصلاحية</span>
+                            {% elif license.is_active %}
+                                <span class="badge bg-success">نشط</span>
+                            {% else %}
+                                <span class="badge bg-secondary">غير نشط</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>مفتاح الترخيص:</h6>
+                            <p class="text-muted font-monospace">{{ license.license_key }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>اسم العميل:</h6>
+                            <p>{{ license.customer_name }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>تاريخ الإصدار:</h6>
+                            <p class="text-info">{{ license.issued_date|date:"Y-m-d" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>تاريخ الانتهاء:</h6>
+                            <p class="{% if license.is_expired %}text-danger{% else %}text-warning{% endif %}">
+                                {{ license.expiry_date|date:"Y-m-d" }}
+                            </p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6>الأيام المتبقية:</h6>
+                            <p class="{% if license.days_remaining < 7 %}text-danger{% elif license.days_remaining < 30 %}text-warning{% else %}text-success{% endif %}">
+                                {{ license.days_remaining }} يوم
+                            </p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>الحد الأقصى للمستخدمين:</h6>
+                            <p>{{ license.max_users }} مستخدم</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h6>الحد الأقصى للفروع:</h6>
+                            <p>{{ license.max_branches }} فرع</p>
+                        </div>
+                    </div>
+
+                    {% if license.max_transactions %}
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>الحد الأقصى للمعاملات:</h6>
+                            <p>{{ license.max_transactions|floatformat:0 }} معاملة</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>الشركة:</h6>
+                            <p>{{ license.company_name|default:"غير محدد" }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if license.features %}
+                    <hr>
+                    <div class="row">
+                        <div class="col-12">
+                            <h6>المميزات المتاحة:</h6>
+                            <div class="row">
+                                {% for feature, enabled in license.features.items %}
+                                <div class="col-md-4 mb-2">
+                                    {% if enabled %}
+                                        <span class="badge bg-success me-1">
+                                            <i class="fas fa-check me-1"></i>{{ feature|title }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary me-1">
+                                            <i class="fas fa-times me-1"></i>{{ feature|title }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if license.notes %}
+                    <hr>
+                    <div class="row">
+                        <div class="col-12">
+                            <h6>ملاحظات:</h6>
+                            <p class="text-muted">{{ license.notes }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="text-center mt-4">
+                        {% if license.is_expired %}
+                        <button class="btn btn-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            الترخيص منتهي الصلاحية - يجب التجديد
+                        </button>
+                        {% elif license.days_remaining < 7 %}
+                        <button class="btn btn-warning">
+                            <i class="fas fa-clock me-2"></i>
+                            الترخيص ينتهي قريباً - جدد الآن
+                        </button>
+                        {% else %}
+                        <button class="btn btn-success">
+                            <i class="fas fa-key me-2"></i>
+                            تجديد الترخيص
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-certificate fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد معلومات ترخيص</h5>
+                        <p class="text-muted">لم يتم تفعيل أي ترخيص للنظام</p>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>
+                            إضافة ترخيص
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

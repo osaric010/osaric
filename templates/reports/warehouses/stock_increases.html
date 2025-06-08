@@ -1,0 +1,239 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-plus-circle text-success me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'reports:warehouses_reports' %}">تقارير المخازن</a></li>
+                            <li class="breadcrumb-item active">أذون إضافة الزيادات</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">المخزن</label>
+                    <select name="warehouse_id" class="form-select">
+                        <option value="">جميع المخازن</option>
+                        {% for warehouse in warehouses %}
+                        <option value="{{ warehouse.id }}" {% if selected_warehouse == warehouse.id|stringformat:"s" %}selected{% endif %}>
+                            {{ warehouse.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>عرض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if increases %}
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-lg-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_increases }}</h4>
+                            <p class="mb-0">عدد أذون الإضافة</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_amount|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي قيمة الإضافة</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_items }}</h4>
+                            <p class="mb-0">عدد الأصناف المضافة</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Increases -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                تفاصيل أذون إضافة الزيادات
+                <span class="badge bg-success">{{ total_increases }}</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>رقم الإذن</th>
+                            <th>التاريخ</th>
+                            <th>المخزن</th>
+                            <th>السبب</th>
+                            <th>إجمالي القيمة</th>
+                            <th>الحالة</th>
+                            <th>المعتمد من</th>
+                            <th>ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for increase in increases %}
+                        <tr>
+                            <td>
+                                <strong class="text-primary">{{ increase.increase_number|default:increase.id }}</strong>
+                            </td>
+                            <td>{{ increase.date|date:"Y-m-d" }}</td>
+                            <td>
+                                <strong>{{ increase.warehouse.name }}</strong>
+                                {% if increase.warehouse.location %}
+                                <small class="text-muted d-block">{{ increase.warehouse.location }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if increase.reason == 'PURCHASE' %}
+                                <span class="badge bg-primary">مشتريات</span>
+                                {% elif increase.reason == 'PRODUCTION' %}
+                                <span class="badge bg-success">إنتاج</span>
+                                {% elif increase.reason == 'RETURN' %}
+                                <span class="badge bg-info">مرتجع</span>
+                                {% elif increase.reason == 'ADJUSTMENT' %}
+                                <span class="badge bg-warning">تسوية</span>
+                                {% elif increase.reason == 'TRANSFER' %}
+                                <span class="badge bg-secondary">تحويل</span>
+                                {% else %}
+                                <span class="badge bg-dark">{{ increase.reason }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-success">{{ increase.total_amount|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                {% if increase.status == 'DRAFT' %}
+                                <span class="badge bg-secondary">مسودة</span>
+                                {% elif increase.status == 'PENDING' %}
+                                <span class="badge bg-warning">معلق</span>
+                                {% elif increase.status == 'APPROVED' %}
+                                <span class="badge bg-success">معتمد</span>
+                                {% elif increase.status == 'CANCELLED' %}
+                                <span class="badge bg-danger">ملغي</span>
+                                {% else %}
+                                <span class="badge bg-primary">{{ increase.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if increase.approved_by %}
+                                <strong>{{ increase.approved_by.get_full_name|default:increase.approved_by.username }}</strong>
+                                {% if increase.approved_date %}
+                                <small class="text-muted d-block">{{ increase.approved_date|date:"Y-m-d" }}</small>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if increase.notes %}
+                                <small class="text-muted">{{ increase.notes|truncatechars:50 }}</small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="4">الإجمالي</th>
+                            <th class="text-success">{{ total_amount|floatformat:2 }}</th>
+                            <th colspan="3"></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-plus-circle fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">لا توجد أذون إضافة زيادات</h5>
+            <p class="text-muted">لا توجد أذون إضافة زيادات في الفترة المحددة</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .btn, .breadcrumb, .card-header {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,321 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-card {
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px 15px 0 0;
+    padding: 2rem;
+}
+
+.form-section {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.required-field::after {
+    content: " *";
+    color: #dc3545;
+}
+
+.help-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+.preview-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.icon-input {
+    position: relative;
+}
+
+.icon-input i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    z-index: 10;
+}
+
+.icon-input input,
+.icon-input select,
+.icon-input textarea {
+    padding-left: 40px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-6">
+            <div class="card form-card">
+                <!-- Header -->
+                <div class="form-header text-center">
+                    <h2 class="mb-2">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="mb-0 opacity-75">
+                        إنشاء جرد افتتاحي لتسجيل أرصدة أول المدة
+                    </p>
+                </div>
+
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- معلومات أساسية -->
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-info-circle text-primary me-2"></i>
+                                المعلومات الأساسية
+                            </h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.inventory_number.id_for_label }}" class="form-label required-field">
+                                        رقم الجرد
+                                    </label>
+                                    <div class="icon-input">
+                                        <i class="fas fa-hashtag"></i>
+                                        {{ form.inventory_number }}
+                                    </div>
+                                    {% if form.inventory_number.errors %}
+                                        <div class="text-danger small">{{ form.inventory_number.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="help-text">سيتم إنشاؤه تلقائياً إذا ترك فارغاً</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.date.id_for_label }}" class="form-label required-field">
+                                        تاريخ الجرد
+                                    </label>
+                                    <div class="icon-input">
+                                        <i class="fas fa-calendar"></i>
+                                        {{ form.date }}
+                                    </div>
+                                    {% if form.date.errors %}
+                                        <div class="text-danger small">{{ form.date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.warehouse.id_for_label }}" class="form-label required-field">
+                                        المخزن
+                                    </label>
+                                    <div class="icon-input">
+                                        <i class="fas fa-warehouse"></i>
+                                        {{ form.warehouse }}
+                                    </div>
+                                    {% if form.warehouse.errors %}
+                                        <div class="text-danger small">{{ form.warehouse.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.financial_year.id_for_label }}" class="form-label required-field">
+                                        السنة المالية
+                                    </label>
+                                    <div class="icon-input">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        {{ form.financial_year }}
+                                    </div>
+                                    {% if form.financial_year.errors %}
+                                        <div class="text-danger small">{{ form.financial_year.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="help-text">مثال: 2024</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- تفاصيل إضافية -->
+                        <div class="form-section">
+                            <h5 class="mb-3">
+                                <i class="fas fa-edit text-info me-2"></i>
+                                التفاصيل
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.reason.id_for_label }}" class="form-label required-field">
+                                    سبب الجرد
+                                </label>
+                                <div class="icon-input">
+                                    <i class="fas fa-question-circle"></i>
+                                    {{ form.reason }}
+                                </div>
+                                {% if form.reason.errors %}
+                                    <div class="text-danger small">{{ form.reason.errors.0 }}</div>
+                                {% endif %}
+                                <div class="help-text">مثال: جرد افتتاحي لبداية السنة المالية 2024</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                    ملاحظات
+                                </label>
+                                <div class="icon-input">
+                                    <i class="fas fa-sticky-note"></i>
+                                    {{ form.notes }}
+                                </div>
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                                <div class="help-text">ملاحظات إضافية حول الجرد (اختياري)</div>
+                            </div>
+                        </div>
+
+                        <!-- نوع الجرد (مخفي) -->
+                        {{ form.inventory_type }}
+
+                        <!-- معاينة -->
+                        {% if form.instance.pk %}
+                        <div class="preview-card">
+                            <h6 class="mb-3">
+                                <i class="fas fa-eye text-success me-2"></i>
+                                معاينة الجرد
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">رقم الجرد</small>
+                                    <strong>{{ form.instance.inventory_number }}</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">الحالة</small>
+                                    <span class="badge bg-primary">{{ form.instance.get_status_display }}</span>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">عدد الأصناف</small>
+                                    <span class="fw-bold text-primary">{{ form.instance.total_items_counted }}</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted d-block">إجمالي القيمة</small>
+                                    <span class="fw-bold text-success">{{ form.instance.total_opening_value|floatformat:2 }} ج.م</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- أزرار الإجراءات -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'inventory:opening_inventory_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                العودة للقائمة
+                            </a>
+                            
+                            <div>
+                                {% if form.instance.pk %}
+                                    <a href="{% url 'inventory:opening_inventory_detail' form.instance.pk %}" class="btn btn-outline-primary me-2">
+                                        <i class="fas fa-eye me-1"></i>
+                                        عرض التفاصيل
+                                    </a>
+                                {% endif %}
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>
+                                    {% if form.instance.pk %}تحديث{% else %}إنشاء{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- نصائح مفيدة -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>
+                        نصائح مفيدة
+                    </h6>
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            تأكد من اختيار المخزن الصحيح قبل البدء
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            حدد السنة المالية بدقة لتجنب الأخطاء
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            بعد الإنشاء يمكنك إضافة الأصناف وكمياتها
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            تطبيق الجرد سيؤثر على أرصدة المخزون
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديد السنة المالية الحالية تلقائياً
+    const financialYearField = document.querySelector('input[name="financial_year"]');
+    if (financialYearField && !financialYearField.value) {
+        financialYearField.value = new Date().getFullYear();
+    }
+    
+    // تحديث سبب الجرد تلقائياً
+    const reasonField = document.querySelector('input[name="reason"]');
+    const yearField = document.querySelector('input[name="financial_year"]');
+    
+    if (reasonField && !reasonField.value && yearField) {
+        yearField.addEventListener('input', function() {
+            if (this.value && !reasonField.value) {
+                reasonField.value = `جرد افتتاحي لبداية السنة المالية ${this.value}`;
+            }
+        });
+    }
+    
+    // التحقق من صحة النموذج
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                isValid = false;
+                field.classList.add('is-invalid');
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('يرجى ملء جميع الحقول المطلوبة');
+        }
+    });
+});
+</script>
+{% endblock %}

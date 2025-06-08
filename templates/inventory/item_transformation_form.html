@@ -1,0 +1,502 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-recycle text-success me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'inventory:item_transformation_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <!-- معلومات التحويل الأساسية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات التحويل الأساسية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.transformation_number.id_for_label }}" class="form-label">{{ form.transformation_number.label }}</label>
+                                {{ form.transformation_number }}
+                                {% if form.transformation_number.errors %}
+                                    <div class="text-danger small">{{ form.transformation_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date.id_for_label }}" class="form-label">{{ form.date.label }}</label>
+                                {{ form.date }}
+                                {% if form.date.errors %}
+                                    <div class="text-danger small">{{ form.date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.warehouse.id_for_label }}" class="form-label">{{ form.warehouse.label }}</label>
+                                {{ form.warehouse }}
+                                {% if form.warehouse.errors %}
+                                    <div class="text-danger small">{{ form.warehouse.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.transformation_type.id_for_label }}" class="form-label">{{ form.transformation_type.label }}</label>
+                                {{ form.transformation_type }}
+                                {% if form.transformation_type.errors %}
+                                    <div class="text-danger small">{{ form.transformation_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.transformation_reason.id_for_label }}" class="form-label">{{ form.transformation_reason.label }}</label>
+                                {{ form.transformation_reason }}
+                                {% if form.transformation_reason.errors %}
+                                    <div class="text-danger small">{{ form.transformation_reason.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.transformation_cost.id_for_label }}" class="form-label">{{ form.transformation_cost.label }}</label>
+                                {{ form.transformation_cost }}
+                                {% if form.transformation_cost.errors %}
+                                    <div class="text-danger small">{{ form.transformation_cost.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- المدخلات (الأصناف المستهلكة) -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-arrow-down text-danger me-2"></i>
+                            المدخلات (الأصناف المستهلكة)
+                        </h5>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="addInputItem()">
+                            <i class="fas fa-plus me-1"></i>
+                            إضافة مدخل
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        {{ input_formset.management_form }}
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="inputs-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 25%">الصنف</th>
+                                        <th style="width: 15%">الكمية</th>
+                                        <th style="width: 15%">تكلفة الوحدة</th>
+                                        <th style="width: 15%">الإجمالي</th>
+                                        <th style="width: 10%">تاريخ الانتهاء</th>
+                                        <th style="width: 10%">رقم الدفعة</th>
+                                        <th style="width: 5%">حذف</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for form in input_formset %}
+                                        <tr class="input-row">
+                                            <td>
+                                                {{ form.item }}
+                                                {% if form.item.errors %}
+                                                    <div class="text-danger small">{{ form.item.errors.0 }}</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ form.quantity }}
+                                                {% if form.quantity.errors %}
+                                                    <div class="text-danger small">{{ form.quantity.errors.0 }}</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ form.unit_cost }}
+                                                {% if form.unit_cost.errors %}
+                                                    <div class="text-danger small">{{ form.unit_cost.errors.0 }}</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control total-value" readonly>
+                                            </td>
+                                            <td>
+                                                {{ form.expiry_date }}
+                                                {% if form.expiry_date.errors %}
+                                                    <div class="text-danger small">{{ form.expiry_date.errors.0 }}</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ form.batch_number }}
+                                                {% if form.batch_number.errors %}
+                                                    <div class="text-danger small">{{ form.batch_number.errors.0 }}</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if form.DELETE %}
+                                                    {{ form.DELETE }}
+                                                {% endif %}
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                            {% for hidden in form.hidden_fields %}
+                                                {{ hidden }}
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-danger">
+                                        <td colspan="3"><strong>إجمالي المدخلات:</strong></td>
+                                        <td><strong id="inputs-total">0.00 ر.س</strong></td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- المخرجات (الأصناف المنتجة) -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-arrow-up text-success me-2"></i>
+                            المخرجات (الأصناف المنتجة)
+                        </h5>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="addOutputItem()">
+                            <i class="fas fa-plus me-1"></i>
+                            إضافة مخرج
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        {{ output_formset.management_form }}
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="outputs-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 25%">الصنف</th>
+                                        <th style="width: 15%">الكمية</th>
+                                        <th style="width: 15%">تكلفة الوحدة</th>
+                                        <th style="width: 15%">الإجمالي</th>
+                                        <th style="width: 10%">تاريخ الانتهاء</th>
+                                        <th style="width: 10%">رقم الدفعة</th>
+                                        <th style="width: 5%">حذف</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for form in output_formset %}
+                                        <tr class="output-row">
+                                            <td>
+                                                {{ form.item }}
+                                                {% if form.item.errors %}
+                                                    <div class="text-danger small">{{ form.item.errors.0 }}</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ form.quantity }}
+                                                {% if form.quantity.errors %}
+                                                    <div class="text-danger small">{{ form.quantity.errors.0 }}</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ form.unit_cost }}
+                                                {% if form.unit_cost.errors %}
+                                                    <div class="text-danger small">{{ form.unit_cost.errors.0 }}</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control total-value" readonly>
+                                            </td>
+                                            <td>
+                                                {{ form.expiry_date }}
+                                                {% if form.expiry_date.errors %}
+                                                    <div class="text-danger small">{{ form.expiry_date.errors.0 }}</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ form.batch_number }}
+                                                {% if form.batch_number.errors %}
+                                                    <div class="text-danger small">{{ form.batch_number.errors.0 }}</div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if form.DELETE %}
+                                                    {{ form.DELETE }}
+                                                {% endif %}
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                            {% for hidden in form.hidden_fields %}
+                                                {{ hidden }}
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-success">
+                                        <td colspan="3"><strong>إجمالي المخرجات:</strong></td>
+                                        <td><strong id="outputs-total">0.00 ر.س</strong></td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ملخص التحويل -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calculator me-2"></i>
+                            ملخص التحويل
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="text-center p-3 border rounded">
+                                    <h6 class="text-muted">إجمالي المدخلات</h6>
+                                    <h4 class="text-danger" id="summary-inputs">0.00 ر.س</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 border rounded">
+                                    <h6 class="text-muted">تكلفة التحويل</h6>
+                                    <h4 class="text-warning" id="summary-cost">0.00 ر.س</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 border rounded">
+                                    <h6 class="text-muted">إجمالي المخرجات</h6>
+                                    <h4 class="text-success" id="summary-outputs">0.00 ر.س</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center p-3 border rounded">
+                                    <h6 class="text-muted">صافي التغيير</h6>
+                                    <h4 id="summary-net">0.00 ر.س</h4>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>تنبيه:</strong> سيتم خصم المدخلات من المخزون وإضافة المخرجات عند إكمال التحويل.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الحفظ -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'inventory:item_transformation_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i>
+                                {{ action }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let inputIndex = {{ input_formset.total_form_count }};
+let outputIndex = {{ output_formset.total_form_count }};
+
+function addInputItem() {
+    const tbody = document.querySelector('#inputs-table tbody');
+    const newRow = document.createElement('tr');
+    newRow.className = 'input-row';
+    newRow.innerHTML = `
+        <td>
+            <select name="inputs-${inputIndex}-item" class="form-select" required>
+                <option value="">اختر الصنف</option>
+            </select>
+        </td>
+        <td>
+            <input type="number" name="inputs-${inputIndex}-quantity" class="form-control quantity" step="0.001" min="0.001" required>
+        </td>
+        <td>
+            <input type="number" name="inputs-${inputIndex}-unit_cost" class="form-control unit-cost" step="0.01" min="0" required>
+        </td>
+        <td>
+            <input type="text" class="form-control total-value" readonly>
+        </td>
+        <td>
+            <input type="date" name="inputs-${inputIndex}-expiry_date" class="form-control">
+        </td>
+        <td>
+            <input type="text" name="inputs-${inputIndex}-batch_number" class="form-control">
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(newRow);
+    
+    inputIndex++;
+    document.querySelector('#id_inputs-TOTAL_FORMS').value = inputIndex;
+    addEventListeners(newRow);
+}
+
+function addOutputItem() {
+    const tbody = document.querySelector('#outputs-table tbody');
+    const newRow = document.createElement('tr');
+    newRow.className = 'output-row';
+    newRow.innerHTML = `
+        <td>
+            <select name="outputs-${outputIndex}-item" class="form-select" required>
+                <option value="">اختر الصنف</option>
+            </select>
+        </td>
+        <td>
+            <input type="number" name="outputs-${outputIndex}-quantity" class="form-control quantity" step="0.001" min="0.001" required>
+        </td>
+        <td>
+            <input type="number" name="outputs-${outputIndex}-unit_cost" class="form-control unit-cost" step="0.01" min="0" required>
+        </td>
+        <td>
+            <input type="text" class="form-control total-value" readonly>
+        </td>
+        <td>
+            <input type="date" name="outputs-${outputIndex}-expiry_date" class="form-control">
+        </td>
+        <td>
+            <input type="text" name="outputs-${outputIndex}-batch_number" class="form-control">
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeItem(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(newRow);
+    
+    outputIndex++;
+    document.querySelector('#id_outputs-TOTAL_FORMS').value = outputIndex;
+    addEventListeners(newRow);
+}
+
+function removeItem(button) {
+    const row = button.closest('tr');
+    const deleteCheckbox = row.querySelector('input[name$="-DELETE"]');
+    
+    if (deleteCheckbox) {
+        deleteCheckbox.checked = true;
+        row.style.display = 'none';
+    } else {
+        row.remove();
+        if (row.classList.contains('input-row')) {
+            inputIndex--;
+            document.querySelector('#id_inputs-TOTAL_FORMS').value = inputIndex;
+        } else {
+            outputIndex--;
+            document.querySelector('#id_outputs-TOTAL_FORMS').value = outputIndex;
+        }
+    }
+    
+    calculateTotals();
+}
+
+function calculateRowTotal(row) {
+    const quantity = parseFloat(row.querySelector('.quantity').value) || 0;
+    const unitCost = parseFloat(row.querySelector('.unit-cost').value) || 0;
+    const total = quantity * unitCost;
+    
+    row.querySelector('.total-value').value = total.toFixed(2);
+    calculateTotals();
+}
+
+function calculateTotals() {
+    // حساب إجمالي المدخلات
+    let inputsTotal = 0;
+    document.querySelectorAll('.input-row:not([style*="display: none"]) .total-value').forEach(input => {
+        inputsTotal += parseFloat(input.value) || 0;
+    });
+    
+    // حساب إجمالي المخرجات
+    let outputsTotal = 0;
+    document.querySelectorAll('.output-row:not([style*="display: none"]) .total-value').forEach(input => {
+        outputsTotal += parseFloat(input.value) || 0;
+    });
+    
+    // تكلفة التحويل
+    const transformationCost = parseFloat(document.querySelector('input[name="transformation_cost"]').value) || 0;
+    
+    // صافي التغيير
+    const netChange = outputsTotal - inputsTotal - transformationCost;
+    
+    // تحديث العرض
+    document.getElementById('inputs-total').textContent = inputsTotal.toFixed(2) + ' ر.س';
+    document.getElementById('outputs-total').textContent = outputsTotal.toFixed(2) + ' ر.س';
+    document.getElementById('summary-inputs').textContent = inputsTotal.toFixed(2) + ' ر.س';
+    document.getElementById('summary-outputs').textContent = outputsTotal.toFixed(2) + ' ر.س';
+    document.getElementById('summary-cost').textContent = transformationCost.toFixed(2) + ' ر.س';
+    
+    const netElement = document.getElementById('summary-net');
+    netElement.textContent = netChange.toFixed(2) + ' ر.س';
+    netElement.className = netChange >= 0 ? 'text-success' : 'text-danger';
+}
+
+function addEventListeners(row) {
+    const quantityInput = row.querySelector('.quantity');
+    const unitCostInput = row.querySelector('.unit-cost');
+    
+    if (quantityInput) {
+        quantityInput.addEventListener('input', () => calculateRowTotal(row));
+    }
+    if (unitCostInput) {
+        unitCostInput.addEventListener('input', () => calculateRowTotal(row));
+    }
+}
+
+// إضافة event listeners للصفوف الموجودة
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.input-row, .output-row').forEach(addEventListeners);
+    
+    // إضافة listener لتكلفة التحويل
+    const transformationCostInput = document.querySelector('input[name="transformation_cost"]');
+    if (transformationCostInput) {
+        transformationCostInput.addEventListener('input', calculateTotals);
+    }
+    
+    calculateTotals();
+    
+    // تحديد تاريخ اليوم افتراضياً
+    const dateField = document.querySelector('input[type="date"][name="date"]');
+    if (dateField && !dateField.value) {
+        dateField.value = new Date().toISOString().split('T')[0];
+    }
+});
+</script>
+{% endblock %}

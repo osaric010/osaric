@@ -1,0 +1,338 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-sitemap me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'definitions:item_location_list' %}">مواقع الأصناف</a></li>
+                <li class="breadcrumb-item active">{{ action }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if item_location %}edit{% else %}plus{% endif %} me-2"></i>
+                    {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Basic Information -->
+                    <h6 class="mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        المعلومات الأساسية
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.item.id_for_label }}" class="form-label">
+                                {{ form.item.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.item }}
+                            {% if form.item.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.item.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.warehouse.id_for_label }}" class="form-label">
+                                {{ form.warehouse.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.warehouse }}
+                            {% if form.warehouse.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.warehouse.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.location.id_for_label }}" class="form-label">
+                                {{ form.location.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.location }}
+                            {% if form.location.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.location.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.location_type.id_for_label }}" class="form-label">
+                                {{ form.location_type.label }}
+                            </label>
+                            {{ form.location_type }}
+                            {% if form.location_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.location_type.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Stock Limits -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-warehouse me-2"></i>
+                        حدود المخزون
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.min_quantity.id_for_label }}" class="form-label">
+                                {{ form.min_quantity.label }}
+                            </label>
+                            {{ form.min_quantity }}
+                            {% if form.min_quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.min_quantity.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.max_quantity.id_for_label }}" class="form-label">
+                                {{ form.max_quantity.label }}
+                            </label>
+                            {{ form.max_quantity }}
+                            {% if form.max_quantity.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.max_quantity.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.reorder_point.id_for_label }}" class="form-label">
+                                {{ form.reorder_point.label }}
+                            </label>
+                            {{ form.reorder_point }}
+                            {% if form.reorder_point.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.reorder_point.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Priority and Settings -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-cog me-2"></i>
+                        الإعدادات
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label">
+                                {{ form.priority.label }}
+                            </label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.priority.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                الأولوية الأقل تعني أولوية أعلى (1 = أولوية عالية)
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check mt-4">
+                                {{ form.is_default }}
+                                <label class="form-check-label" for="{{ form.is_default.id_for_label }}">
+                                    {{ form.is_default.label }}
+                                </label>
+                            </div>
+                            {% if form.is_default.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.is_default.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                الموقع الافتراضي للصنف في هذا المخزن
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {{ action }}
+                            </button>
+                            <a href="{% url 'definitions:item_location_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                        {% if item_location %}
+                            <button type="button" 
+                                    class="btn btn-outline-danger delete-btn" 
+                                    data-id="{{ item_location.pk }}"
+                                    data-name="{{ item_location.item.name }} - {{ item_location.location.name }}">
+                                <i class="fas fa-trash me-2"></i>
+                                حذف
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {% if item_location %}
+        <!-- Additional Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات إضافية
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>تاريخ التخصيص:</strong> {{ item_location.assigned_date|date:"d/m/Y" }}</p>
+                        {% if item_location.created_by %}
+                            <p><strong>أنشئ بواسطة:</strong> {{ item_location.created_by.get_full_name|default:item_location.created_by.username }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if item_location.last_movement_date %}
+                            <p><strong>آخر حركة:</strong> {{ item_location.last_movement_date|date:"d/m/Y H:i" }}</p>
+                        {% endif %}
+                        {% if item_location.updated_by %}
+                            <p><strong>حُدث بواسطة:</strong> {{ item_location.updated_by.get_full_name|default:item_location.updated_by.username }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if item_location %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف موقع الصنف: <strong>{{ item_location.item.name }} - {{ item_location.location.name }}</strong>؟</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    لا يمكن التراجع عن هذا الإجراء
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter locations based on selected warehouse
+    const warehouseField = document.getElementById('{{ form.warehouse.id_for_label }}');
+    const locationField = document.getElementById('{{ form.location.id_for_label }}');
+    
+    if (warehouseField && locationField) {
+        warehouseField.addEventListener('change', function() {
+            const warehouseId = this.value;
+            
+            // Clear location options
+            locationField.innerHTML = '<option value="">اختر الموقع</option>';
+            
+            if (warehouseId) {
+                // Fetch locations for selected warehouse
+                fetch(`/api/warehouses/${warehouseId}/locations/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(location => {
+                            const option = document.createElement('option');
+                            option.value = location.id;
+                            option.textContent = location.name;
+                            locationField.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        });
+    }
+    
+    {% if item_location %}
+    // Delete functionality
+    const deleteBtn = document.querySelector('.delete-btn');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            deleteModal.show();
+        });
+    }
+
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            fetch(`/definitions/item-locations/{{ item_location.pk }}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{% url "definitions:item_location_list" %}';
+                } else {
+                    alert('حدث خطأ أثناء الحذف');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الحذف');
+            });
+            deleteModal.hide();
+        });
+    }
+    {% endif %}
+});
+</script>
+{% endblock %}

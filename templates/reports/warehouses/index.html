@@ -1,0 +1,137 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-warehouse text-dark me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item active">تقارير المخازن</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Grid -->
+    <div class="row">
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-plus-circle fa-3x text-success"></i>
+                    </div>
+                    <h6 class="card-title">أذون إضافة الزيادات</h6>
+                    <a href="{% url 'reports:stock_increases_report' %}" class="btn btn-success btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-minus-circle fa-3x text-danger"></i>
+                    </div>
+                    <h6 class="card-title">أذون صرف النواقص</h6>
+                    <a href="{% url 'reports:stock_decreases_detailed_report' %}" class="btn btn-danger btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-exchange-alt fa-3x text-info"></i>
+                    </div>
+                    <h6 class="card-title">التحويلات بين المخازن</h6>
+                    <a href="{% url 'reports:warehouse_transfers_detailed_report' %}" class="btn btn-info btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-tags fa-3x text-success"></i>
+                    </div>
+                    <h6 class="card-title">الأصناف وأسعارها</h6>
+                    <a href="{% url 'reports:items_prices_report' %}" class="btn btn-success btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-line fa-3x text-info"></i>
+                    </div>
+                    <h6 class="card-title">حركة صنف</h6>
+                    <a href="{% url 'reports:item_movement_report' %}" class="btn btn-info btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-clipboard-check fa-3x text-warning"></i>
+                    </div>
+                    <h6 class="card-title">جرد بضاعة</h6>
+                    <a href="{% url 'reports:inventory_report' %}" class="btn btn-warning btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        إحصائيات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h4 class="text-dark">{{ warehouses.count }}</h4>
+                                <p class="text-muted mb-0">المخازن النشطة</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border-end">
+                                <h4 class="text-primary">-</h4>
+                                <p class="text-muted mb-0">إجمالي الأصناف</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="text-success">-</h4>
+                            <p class="text-muted mb-0">قيمة المخزون</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

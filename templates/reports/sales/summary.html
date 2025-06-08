@@ -1,0 +1,253 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-chart-pie text-info me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'reports:sales_reports' %}">تقارير المبيعات</a></li>
+                            <li class="breadcrumb-item active">المبيعات الإجمالي</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-5">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>عرض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if stats %}
+    <!-- Summary Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ stats.total_amount|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي المبيعات</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ stats.count }}</h4>
+                            <p class="mb-0">عدد الفواتير</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ stats.total_discount|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي الخصومات</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ stats.avg_amount|floatformat:2 }}</h4>
+                            <p class="mb-0">متوسط الفاتورة</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Statistics -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ stats.total_tax|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي الضرائب</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card bg-dark text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">
+                                {% if stats.total_amount and stats.total_discount %}
+                                {% widthratio stats.total_discount stats.total_amount 100 %}%
+                                {% else %}
+                                0%
+                                {% endif %}
+                            </h4>
+                            <p class="mb-0">نسبة الخصم</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Customers -->
+    {% if customer_sales %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-users me-2"></i>
+                أفضل 10 عملاء
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الترتيب</th>
+                            <th>اسم العميل</th>
+                            <th>إجمالي المبيعات</th>
+                            <th>عدد الفواتير</th>
+                            <th>متوسط الفاتورة</th>
+                            <th>النسبة من الإجمالي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customer_sales %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary">{{ forloop.counter }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ customer.customer__name }}</strong>
+                            </td>
+                            <td>
+                                <strong class="text-success">{{ customer.total_amount|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ customer.count }}</span>
+                            </td>
+                            <td>
+                                {% if customer.count > 0 %}
+                                {% widthratio customer.total_amount customer.count 1 %}
+                                {% else %}
+                                0.00
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2">
+                                        {% if stats.total_amount > 0 %}
+                                        {% widthratio customer.total_amount stats.total_amount 100 %}%
+                                        {% else %}
+                                        0%
+                                        {% endif %}
+                                    </span>
+                                    <div class="progress flex-grow-1" style="height: 10px;">
+                                        <div class="progress-bar bg-success" 
+                                             role="progressbar" 
+                                             style="width: {% if stats.total_amount > 0 %}{% widthratio customer.total_amount stats.total_amount 100 %}{% else %}0{% endif %}%">
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">لا توجد بيانات مبيعات</h5>
+            <p class="text-muted">لا توجد مبيعات في الفترة المحددة</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .btn, .breadcrumb, .card-header {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

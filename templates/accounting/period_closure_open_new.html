@@ -1,0 +1,206 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-plus-circle text-success me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">إنشاء وفتح فترة محاسبية جديدة</p>
+                </div>
+                <div>
+                    <a href="{% url 'accounting:period_closure' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة لإدارة الفترات
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        بيانات الفترة المحاسبية الجديدة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>ملاحظة مهمة:</strong> ستصبح الفترة الجديدة هي الفترة الحالية النشطة تلقائياً
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="period_name" class="form-label">اسم الفترة المحاسبية <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="period_name" name="period_name" 
+                                       value="{{ form_data.period_name|default:'' }}" required
+                                       placeholder="مثال: السنة المالية 2024">
+                                <div class="form-text">اسم واضح ومميز للفترة المحاسبية</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="start_date" class="form-label">تاريخ بداية الفترة <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" 
+                                       value="{{ form_data.start_date|default:'' }}" required>
+                                <div class="form-text">تاريخ بداية الفترة المحاسبية</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="end_date" class="form-label">تاريخ نهاية الفترة <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" 
+                                       value="{{ form_data.end_date|default:'' }}" required>
+                                <div class="form-text">تاريخ نهاية الفترة المحاسبية</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="ملاحظات إضافية حول الفترة المحاسبية (اختياري)">{{ form_data.notes|default:'' }}</textarea>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>تأكد من:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>صحة تواريخ بداية ونهاية الفترة</li>
+                                <li>عدم تداخل الفترة الجديدة مع فترات موجودة</li>
+                                <li>إغلاق الفترة السابقة قبل فتح فترة جديدة</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'accounting:period_closure' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                فتح الفترة الجديدة
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        إرشادات فتح فترة محاسبية جديدة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success">خطوات ما قبل فتح الفترة:</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    إغلاق الفترة المحاسبية السابقة
+                                </li>
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    إعداد قائمة الدخل النهائية
+                                </li>
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    إعداد المركز المالي النهائي
+                                </li>
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    توزيع الأرباح (إن وجدت)
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-primary">خطوات ما بعد فتح الفترة:</h6>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                                    إعداد القيد الافتتاحي الجديد
+                                </li>
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                                    ترحيل الأرصدة من الفترة السابقة
+                                </li>
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                                    بدء تسجيل العمليات الجديدة
+                                </li>
+                                <li class="list-group-item border-0 px-0">
+                                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                                    مراجعة إعدادات النظام
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default period name
+    const periodNameInput = document.getElementById('period_name');
+    if (!periodNameInput.value) {
+        const currentYear = new Date().getFullYear();
+        periodNameInput.value = `السنة المالية ${currentYear}`;
+    }
+
+    // Set default dates (current year)
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    
+    if (!startDateInput.value) {
+        const currentYear = new Date().getFullYear();
+        const startDate = new Date(currentYear, 0, 1); // January 1st
+        startDateInput.value = startDate.toISOString().split('T')[0];
+    }
+    
+    if (!endDateInput.value) {
+        const currentYear = new Date().getFullYear();
+        const endDate = new Date(currentYear, 11, 31); // December 31st
+        endDateInput.value = endDate.toISOString().split('T')[0];
+    }
+
+    // Validate date range
+    function validateDateRange() {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        
+        if (startDate && endDate && startDate >= endDate) {
+            alert('تاريخ النهاية يجب أن يكون بعد تاريخ البداية');
+            endDateInput.focus();
+        }
+    }
+    
+    startDateInput.addEventListener('change', validateDateRange);
+    endDateInput.addEventListener('change', validateDateRange);
+});
+</script>
+{% endblock %}

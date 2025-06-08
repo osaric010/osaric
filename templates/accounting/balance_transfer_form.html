@@ -1,0 +1,170 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-exchange-alt text-primary me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">تحويل رصيد من شخص إلى آخر</p>
+                </div>
+                <div>
+                    <a href="{% url 'accounting:balance_transfer' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>
+                        بيانات تحويل الرصيد
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="transfer_number" class="form-label">رقم التحويل <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="transfer_number" name="transfer_number"
+                                       value="{% if transfer %}{{ transfer.transfer_number }}{% else %}{{ form_data.transfer_number|default:'' }}{% endif %}" required>
+                                <div class="form-text">رقم فريد لتحويل الرصيد</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="transfer_date" class="form-label">تاريخ التحويل <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="transfer_date" name="transfer_date"
+                                       value="{% if transfer %}{{ transfer.transfer_date|date:'Y-m-d' }}{% else %}{{ form_data.transfer_date|default:'' }}{% endif %}" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="from_person" class="form-label">من شخص <span class="text-danger">*</span></label>
+                                <select class="form-select" id="from_person" name="from_person" required>
+                                    <option value="">اختر الشخص المحول منه</option>
+                                    {% for person in persons %}
+                                    <option value="{{ person.id }}"
+                                            {% if transfer and transfer.from_person.id == person.id %}selected{% elif form_data.from_person|stringformat:"s" == person.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ person.name }} - {{ person.get_person_type_display }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="to_person" class="form-label">إلى شخص <span class="text-danger">*</span></label>
+                                <select class="form-select" id="to_person" name="to_person" required>
+                                    <option value="">اختر الشخص المحول إليه</option>
+                                    {% for person in persons %}
+                                    <option value="{{ person.id }}"
+                                            {% if transfer and transfer.to_person.id == person.id %}selected{% elif form_data.to_person|stringformat:"s" == person.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ person.name }} - {{ person.get_person_type_display }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="amount" class="form-label">المبلغ <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="amount" name="amount"
+                                           value="{% if transfer %}{{ transfer.amount }}{% else %}{{ form_data.amount|default:'' }}{% endif %}" step="0.01" min="0" required>
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mt-4">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>ملاحظة:</strong> سيتم خصم المبلغ من الشخص الأول وإضافته للشخص الثاني
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">وصف التحويل <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required
+                                      placeholder="وصف تفصيلي لسبب التحويل">{% if transfer %}{{ transfer.description }}{% else %}{{ form_data.description|default:'' }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2"
+                                      placeholder="ملاحظات إضافية (اختياري)">{% if transfer %}{{ transfer.notes }}{% else %}{{ form_data.notes|default:'' }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'accounting:balance_transfer' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ التحويل
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate transfer number if empty
+    const transferNumberInput = document.getElementById('transfer_number');
+    if (!transferNumberInput.value) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const time = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+        transferNumberInput.value = `TRF-${year}${month}${day}-${time}`;
+    }
+
+    // Set today's date if empty
+    const dateInput = document.getElementById('transfer_date');
+    if (!dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+
+    // Prevent selecting the same person for both from and to
+    const fromPersonSelect = document.getElementById('from_person');
+    const toPersonSelect = document.getElementById('to_person');
+    
+    function validatePersonSelection() {
+        const fromValue = fromPersonSelect.value;
+        const toValue = toPersonSelect.value;
+        
+        if (fromValue && toValue && fromValue === toValue) {
+            alert('لا يمكن تحويل الرصيد من الشخص إلى نفسه');
+            toPersonSelect.value = '';
+        }
+    }
+    
+    fromPersonSelect.addEventListener('change', validatePersonSelection);
+    toPersonSelect.addEventListener('change', validatePersonSelection);
+});
+</script>
+{% endblock %}

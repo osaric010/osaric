@@ -1,0 +1,76 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-0">
+                <i class="fas fa-calculator text-success me-2"></i>
+                {{ title }}
+            </h2>
+            <p class="text-muted mb-0">إعادة حساب أسعار التكلفة للأصناف</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        إعدادات إعادة الحساب
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">طريقة الحساب:</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="method" value="FIFO" id="fifo" checked>
+                                <label class="form-check-label" for="fifo">
+                                    FIFO - الوارد أولاً صادر أولاً
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="method" value="LIFO" id="lifo">
+                                <label class="form-check-label" for="lifo">
+                                    LIFO - الوارد أخيراً صادر أولاً
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="method" value="AVERAGE" id="average">
+                                <label class="form-check-label" for="average">
+                                    المتوسط المرجح
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="date_from" class="form-label">من تاريخ:</label>
+                                <input type="date" class="form-control" id="date_from" name="date_from">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="date_to" class="form-label">إلى تاريخ:</label>
+                                <input type="date" class="form-control" id="date_to" name="date_to">
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-calculator me-2"></i>
+                                بدء إعادة الحساب
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

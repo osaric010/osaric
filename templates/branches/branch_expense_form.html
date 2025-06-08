@@ -1,0 +1,202 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-receipt text-secondary me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">إضافة مصروف مدفوع ومحمل على فرع</p>
+                </div>
+                <div>
+                    <a href="{% url 'branches:branch_expenses' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>
+                        بيانات المصروف المحمل
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="expense_number" class="form-label">رقم المصروف <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="expense_number" name="expense_number" 
+                                       value="{{ form_data.expense_number|default:'' }}" required>
+                                <div class="form-text">رقم فريد للمصروف</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="expense_date" class="form-label">تاريخ المصروف <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="expense_date" name="expense_date" 
+                                       value="{{ form_data.expense_date|default:'' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="branch" class="form-label">الفرع المحمل عليه <span class="text-danger">*</span></label>
+                                <select class="form-select" id="branch" name="branch" required>
+                                    <option value="">اختر الفرع</option>
+                                    {% for branch in branches %}
+                                    <option value="{{ branch.id }}" 
+                                            {% if form_data.branch|stringformat:"s" == branch.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ branch.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="expense_type" class="form-label">نوع المصروف <span class="text-danger">*</span></label>
+                                <select class="form-select" id="expense_type" name="expense_type" required>
+                                    <option value="">اختر نوع المصروف</option>
+                                    <option value="RENT" {% if form_data.expense_type == 'RENT' %}selected{% endif %}>إيجار</option>
+                                    <option value="UTILITIES" {% if form_data.expense_type == 'UTILITIES' %}selected{% endif %}>مرافق</option>
+                                    <option value="MAINTENANCE" {% if form_data.expense_type == 'MAINTENANCE' %}selected{% endif %}>صيانة</option>
+                                    <option value="SUPPLIES" {% if form_data.expense_type == 'SUPPLIES' %}selected{% endif %}>مستلزمات</option>
+                                    <option value="MARKETING" {% if form_data.expense_type == 'MARKETING' %}selected{% endif %}>تسويق</option>
+                                    <option value="TRANSPORTATION" {% if form_data.expense_type == 'TRANSPORTATION' %}selected{% endif %}>نقل ومواصلات</option>
+                                    <option value="COMMUNICATION" {% if form_data.expense_type == 'COMMUNICATION' %}selected{% endif %}>اتصالات</option>
+                                    <option value="OTHER" {% if form_data.expense_type == 'OTHER' %}selected{% endif %}>أخرى</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="amount" class="form-label">المبلغ <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="amount" name="amount" 
+                                           value="{{ form_data.amount|default:'' }}" step="0.01" min="0" required>
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="payment_method" class="form-label">طريقة الدفع</label>
+                                <select class="form-select" id="payment_method" name="payment_method">
+                                    <option value="CASH" {% if form_data.payment_method == 'CASH' %}selected{% endif %}>نقدي</option>
+                                    <option value="BANK" {% if form_data.payment_method == 'BANK' %}selected{% endif %}>بنكي</option>
+                                    <option value="CHECK" {% if form_data.payment_method == 'CHECK' %}selected{% endif %}>شيك</option>
+                                    <option value="CREDIT" {% if form_data.payment_method == 'CREDIT' %}selected{% endif %}>آجل</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="vendor_name" class="form-label">اسم المورد/الدائن</label>
+                                <input type="text" class="form-control" id="vendor_name" name="vendor_name" 
+                                       value="{{ form_data.vendor_name|default:'' }}" placeholder="اسم الشركة أو الشخص">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="invoice_number" class="form-label">رقم الفاتورة</label>
+                                <input type="text" class="form-control" id="invoice_number" name="invoice_number" 
+                                       value="{{ form_data.invoice_number|default:'' }}" placeholder="رقم الفاتورة الأصلية">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">وصف المصروف <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required 
+                                      placeholder="وصف تفصيلي للمصروف">{{ form_data.description|default:'' }}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2" 
+                                      placeholder="ملاحظات إضافية (اختياري)">{{ form_data.notes|default:'' }}</textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="status" class="form-label">حالة المصروف</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="PENDING" {% if form_data.status == 'PENDING' %}selected{% endif %}>في الانتظار</option>
+                                    <option value="APPROVED" {% if form_data.status == 'APPROVED' %}selected{% endif %}>معتمد</option>
+                                    <option value="REJECTED" {% if form_data.status == 'REJECTED' %}selected{% endif %}>مرفوض</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="allocation_percentage" class="form-label">نسبة التحميل على الفرع (%)</label>
+                                <input type="number" class="form-control" id="allocation_percentage" name="allocation_percentage" 
+                                       value="{{ form_data.allocation_percentage|default:'100' }}" min="0" max="100" step="0.01">
+                                <div class="form-text">النسبة المئوية من المصروف المحملة على هذا الفرع</div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'branches:branch_expenses' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ المصروف
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate expense number if empty
+    const expenseNumberInput = document.getElementById('expense_number');
+    if (!expenseNumberInput.value) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const time = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+        expenseNumberInput.value = `EXP-${year}${month}${day}-${time}`;
+    }
+
+    // Set today's date if empty
+    const dateInput = document.getElementById('expense_date');
+    if (!dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+
+    // Calculate allocated amount based on percentage
+    const amountInput = document.getElementById('amount');
+    const percentageInput = document.getElementById('allocation_percentage');
+    
+    function updateAllocation() {
+        const amount = parseFloat(amountInput.value) || 0;
+        const percentage = parseFloat(percentageInput.value) || 100;
+        const allocatedAmount = (amount * percentage / 100).toFixed(2);
+        
+        // You can display the allocated amount somewhere if needed
+        console.log(`Allocated amount: ${allocatedAmount}`);
+    }
+    
+    amountInput.addEventListener('input', updateAllocation);
+    percentageInput.addEventListener('input', updateAllocation);
+});
+</script>
+{% endblock %}

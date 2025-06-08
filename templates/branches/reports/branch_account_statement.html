@@ -1,0 +1,319 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-file-alt text-dark me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">كشف حساب شامل لجميع عمليات الفرع</p>
+                </div>
+                <div>
+                    {% if selected_branch %}
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        فلاتر التقرير
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="branch_id" class="form-label">الفرع <span class="text-danger">*</span></label>
+                            <select class="form-select" id="branch_id" name="branch_id" required>
+                                <option value="">اختر الفرع</option>
+                                {% for branch in branches %}
+                                <option value="{{ branch.id }}" {% if branch.id|stringformat:"s" == branch_id %}selected{% endif %}>
+                                    {{ branch.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_from" class="form-label">من تاريخ</label>
+                            <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_to" class="form-label">إلى تاريخ</label>
+                            <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>
+                                    عرض التقرير
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if selected_branch %}
+    <!-- Branch Info -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-building me-2"></i>
+                        معلومات الفرع
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>اسم الفرع:</strong><br>
+                            {{ selected_branch.name }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>كود الفرع:</strong><br>
+                            {{ selected_branch.code }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>مدير الفرع:</strong><br>
+                            {{ selected_branch.manager_name|default:"غير محدد" }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>فترة التقرير:</strong><br>
+                            {% if date_from and date_to %}
+                                من {{ date_from }} إلى {{ date_to }}
+                            {% elif date_from %}
+                                من {{ date_from }} حتى اليوم
+                            {% elif date_to %}
+                                من البداية حتى {{ date_to }}
+                            {% else %}
+                                جميع الفترات
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Statement -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        كشف حساب الفرع
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Cash Movements -->
+                    {% if cash_movements %}
+                    <h6 class="text-primary border-bottom pb-2 mb-3">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        الحركات النقدية
+                    </h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm table-striped">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>رقم الحركة</th>
+                                    <th>النوع</th>
+                                    <th>التاريخ</th>
+                                    <th>المبلغ</th>
+                                    <th>الوصف</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for movement in cash_movements %}
+                                <tr>
+                                    <td>{{ movement.movement_number }}</td>
+                                    <td>
+                                        {% if movement.movement_type == 'RECEIVED_FROM_BRANCH' %}
+                                            <span class="badge bg-success">واردة</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">صادرة</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ movement.movement_date|date:"Y-m-d" }}</td>
+                                    <td class="text-end">{{ movement.amount|floatformat:2 }}</td>
+                                    <td>{{ movement.description }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+
+                    <!-- Bank Movements -->
+                    {% if bank_movements %}
+                    <h6 class="text-info border-bottom pb-2 mb-3">
+                        <i class="fas fa-university me-2"></i>
+                        الحركات البنكية
+                    </h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm table-striped">
+                            <thead class="table-info">
+                                <tr>
+                                    <th>رقم الحركة</th>
+                                    <th>النوع</th>
+                                    <th>التاريخ</th>
+                                    <th>المبلغ</th>
+                                    <th>الوصف</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for movement in bank_movements %}
+                                <tr>
+                                    <td>{{ movement.movement_number }}</td>
+                                    <td>
+                                        {% if 'DEPOSIT' in movement.movement_type %}
+                                            <span class="badge bg-success">إيداع</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">سحب</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ movement.movement_date|date:"Y-m-d" }}</td>
+                                    <td class="text-end">{{ movement.amount|floatformat:2 }}</td>
+                                    <td>{{ movement.description }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+
+                    <!-- Goods Transfers -->
+                    {% if goods_transfers %}
+                    <h6 class="text-warning border-bottom pb-2 mb-3">
+                        <i class="fas fa-truck me-2"></i>
+                        تحويلات البضائع
+                    </h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm table-striped">
+                            <thead class="table-warning">
+                                <tr>
+                                    <th>رقم التحويل</th>
+                                    <th>التاريخ</th>
+                                    <th>القيمة</th>
+                                    <th>الحالة</th>
+                                    <th>ملاحظات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transfer in goods_transfers %}
+                                <tr>
+                                    <td>{{ transfer.transfer_number }}</td>
+                                    <td>{{ transfer.transfer_date|date:"Y-m-d" }}</td>
+                                    <td class="text-end">{{ transfer.total_amount|floatformat:2 }}</td>
+                                    <td>
+                                        {% if transfer.status == 'PENDING' %}
+                                            <span class="badge bg-warning">في الانتظار</span>
+                                        {% elif transfer.status == 'RECEIVED' %}
+                                            <span class="badge bg-success">مستلم</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ transfer.notes|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+
+                    <!-- Collection Revenues -->
+                    {% if collection_revenues %}
+                    <h6 class="text-danger border-bottom pb-2 mb-3">
+                        <i class="fas fa-hand-holding-usd me-2"></i>
+                        الإيرادات التحصيلية
+                    </h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm table-striped">
+                            <thead class="table-danger">
+                                <tr>
+                                    <th>رقم الإيراد</th>
+                                    <th>التاريخ</th>
+                                    <th>المبلغ</th>
+                                    <th>النوع</th>
+                                    <th>الوصف</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for revenue in collection_revenues %}
+                                <tr>
+                                    <td>{{ revenue.revenue_number }}</td>
+                                    <td>{{ revenue.revenue_date|date:"Y-m-d" }}</td>
+                                    <td class="text-end">{{ revenue.amount|floatformat:2 }}</td>
+                                    <td>{{ revenue.revenue_type }}</td>
+                                    <td>{{ revenue.description }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+
+                    {% if not cash_movements and not bank_movements and not goods_transfers and not collection_revenues %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد عمليات</h5>
+                        <p class="text-muted">لم يتم العثور على أي عمليات للفرع المحدد في الفترة المطلوبة</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-building fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">اختر فرع لعرض كشف الحساب</h5>
+                    <p class="text-muted">يرجى اختيار فرع من القائمة أعلاه لعرض كشف حساب مفصل</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .btn, .card-header, .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+}
+</style>
+{% endblock %}

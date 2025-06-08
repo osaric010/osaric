@@ -1,0 +1,146 @@
+{% load system_tags %}
+
+<div class="invoice-template">
+    <!-- Company Header -->
+    {% company_header %}
+    
+    <!-- Invoice Details -->
+    <div class="invoice-details mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <h4>فاتورة رقم: {% numbering_format 'sales' invoice.number %}</h4>
+                <p><strong>التاريخ:</strong> {{ invoice.date|date:"Y-m-d" }}</p>
+                {% if invoice.due_date %}
+                <p><strong>تاريخ الاستحقاق:</strong> {{ invoice.due_date|date:"Y-m-d" }}</p>
+                {% endif %}
+            </div>
+            <div class="col-md-6 text-end">
+                <h5>بيانات العميل</h5>
+                <p><strong>{{ invoice.customer.name }}</strong></p>
+                {% if invoice.customer.address %}
+                <p>{{ invoice.customer.address }}</p>
+                {% endif %}
+                {% if invoice.customer.phone %}
+                <p>هاتف: {{ invoice.customer.phone }}</p>
+                {% endif %}
+                {% if invoice.customer.tax_number %}
+                <p>الرقم الضريبي: {{ invoice.customer.tax_number }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Invoice Items -->
+    <div class="invoice-items mb-4">
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>الصنف</th>
+                    <th>الكمية</th>
+                    <th>السعر</th>
+                    <th>المجموع</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in invoice.items.all %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.quantity|apply_decimal_places }}</td>
+                    <td>{% format_currency item.unit_price %}</td>
+                    <td>{% format_currency item.total_price %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Invoice Totals -->
+    <div class="invoice-totals">
+        <div class="row">
+            <div class="col-md-6 offset-md-6">
+                <table class="table">
+                    <tr>
+                        <td><strong>المجموع الفرعي:</strong></td>
+                        <td class="text-end">{% format_currency invoice.subtotal %}</td>
+                    </tr>
+                    {% if invoice.discount_amount %}
+                    <tr>
+                        <td><strong>الخصم:</strong></td>
+                        <td class="text-end text-danger">-{% format_currency invoice.discount_amount %}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td><strong>ضريبة القيمة المضافة ({% get_setting 'tax_rate' %}%):</strong></td>
+                        <td class="text-end">{% format_currency invoice.tax_amount %}</td>
+                    </tr>
+                    <tr class="table-dark">
+                        <td><strong>المجموع الإجمالي:</strong></td>
+                        <td class="text-end"><strong>{% format_currency invoice.total_amount %}</strong></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Barcode -->
+    {% if get_setting 'enable_barcode' %}
+    <div class="barcode-section text-center mt-4">
+        <div class="barcode-container" id="barcode-{{ invoice.id }}"></div>
+    </div>
+    {% endif %}
+    
+    <!-- Invoice Footer -->
+    {% invoice_footer %}
+</div>
+
+<style>
+    .invoice-template {
+        background: white;
+        padding: 30px;
+        margin: 20px 0;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .invoice-details {
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 20px;
+    }
+    
+    .invoice-items table {
+        margin-bottom: 0;
+    }
+    
+    .invoice-totals {
+        margin-top: 20px;
+    }
+    
+    @media print {
+        .invoice-template {
+            box-shadow: none;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .invoice-details {
+            border-bottom: 2px solid #000;
+        }
+    }
+</style>
+
+{% if get_setting 'enable_barcode' %}
+<script>
+    // Generate barcode if enabled
+    document.addEventListener('DOMContentLoaded', function() {
+        const barcodeContainer = document.getElementById('barcode-{{ invoice.id }}');
+        if (barcodeContainer && typeof JsBarcode !== 'undefined') {
+            JsBarcode(barcodeContainer, "{{ invoice.number }}", {
+                format: "{{ get_setting 'barcode_type' }}",
+                width: {{ get_setting 'barcode_width' }},
+                height: {{ get_setting 'barcode_height' }},
+                displayValue: {% get_setting 'barcode_show_text' as show_text %}{% if show_text == 'true' %}true{% else %}false{% endif %}
+            });
+        }
+    });
+</script>
+{% endif %}

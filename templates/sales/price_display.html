@@ -1,0 +1,226 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-tags text-secondary me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'sales:home' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للمبيعات
+                </a>
+            </div>
+
+            <div class="row">
+                <!-- نموذج البحث -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-search me-2"></i>
+                                البحث عن السعر
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="{{ form.item.id_for_label }}" class="form-label">{{ form.item.label }}</label>
+                                    {{ form.item }}
+                                    {% if form.item.errors %}
+                                        <div class="text-danger small">{{ form.item.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.quantity.id_for_label }}" class="form-label">{{ form.quantity.label }}</label>
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                        <div class="text-danger small">{{ form.quantity.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.price_list.id_for_label }}" class="form-label">{{ form.price_list.label }}</label>
+                                    {{ form.price_list }}
+                                    {% if form.price_list.errors %}
+                                        <div class="text-danger small">{{ form.price_list.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="text-muted">اختياري - سيتم استخدام السعر الأساسي إذا لم يتم التحديد</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.customer.id_for_label }}" class="form-label">{{ form.customer.label }}</label>
+                                    {{ form.customer }}
+                                    {% if form.customer.errors %}
+                                        <div class="text-danger small">{{ form.customer.errors.0 }}</div>
+                                    {% endif %}
+                                    <small class="text-muted">اختياري - لتطبيق خصم العميل</small>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search me-1"></i>
+                                    عرض السعر
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- نتائج السعر -->
+                <div class="col-lg-8 mb-4">
+                    {% if price_info %}
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-tag me-2"></i>
+                                    معلومات السعر
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- معلومات الصنف -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-success border-bottom pb-2 mb-3">
+                                            <i class="fas fa-box me-1"></i>
+                                            معلومات الصنف
+                                        </h6>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <strong>اسم الصنف:</strong>
+                                            <span class="ms-2">{{ price_info.item.name }}</span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>كود الصنف:</strong>
+                                            <span class="ms-2">{{ price_info.item.code }}</span>
+                                        </div>
+                                        {% if price_info.item.unit %}
+                                            <div class="mb-2">
+                                                <strong>وحدة القياس:</strong>
+                                                <span class="ms-2">{{ price_info.item.unit.name }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <strong>الكمية المطلوبة:</strong>
+                                            <span class="ms-2 badge bg-info">{{ form.quantity.value|floatformat:3 }}</span>
+                                        </div>
+                                        <div class="mb-2">
+                                            <strong>مصدر السعر:</strong>
+                                            <span class="ms-2 text-muted">{{ price_info.price_source }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- تفاصيل السعر -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-success border-bottom pb-2 mb-3">
+                                            <i class="fas fa-calculator me-1"></i>
+                                            تفاصيل السعر
+                                        </h6>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card bg-light">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span>السعر الأساسي:</span>
+                                                    <strong>{{ price_info.base_price|floatformat:2 }} ر.س</strong>
+                                                </div>
+                                                {% if price_info.discount_percentage > 0 %}
+                                                    <div class="d-flex justify-content-between mb-2 text-warning">
+                                                        <span>الخصم ({{ price_info.discount_percentage|floatformat:1 }}%):</span>
+                                                        <strong>-{{ price_info.discount_amount|floatformat:2 }} ر.س</strong>
+                                                    </div>
+                                                {% endif %}
+                                                <hr>
+                                                <div class="d-flex justify-content-between">
+                                                    <span class="h6">السعر النهائي:</span>
+                                                    <strong class="h5 text-success">{{ price_info.final_price|floatformat:2 }} ر.س</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card bg-primary text-white">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <span>إجمالي المبلغ:</span>
+                                                    <strong class="h4">{{ price_info.total_amount|floatformat:2 }} ر.س</strong>
+                                                </div>
+                                                <small>للكمية المطلوبة: {{ price_info.quantity|floatformat:3 }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- معلومات إضافية -->
+                                {% if price_info.item.description %}
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <h6 class="text-success border-bottom pb-2 mb-3">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                وصف الصنف
+                                            </h6>
+                                            <p class="text-muted">{{ price_info.item.description }}</p>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="card">
+                            <div class="card-body text-center py-5">
+                                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">ابحث عن سعر صنف</h5>
+                                <p class="text-muted">اختر الصنف والكمية لعرض السعر</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// تحديث السعر تلقائياً عند تغيير الكمية
+document.getElementById('{{ form.quantity.id_for_label }}').addEventListener('input', function() {
+    // يمكن إضافة AJAX لتحديث السعر تلقائياً
+});
+
+// تحديث السعر عند تغيير قائمة الأسعار
+document.getElementById('{{ form.price_list.id_for_label }}').addEventListener('change', function() {
+    // يمكن إضافة AJAX لتحديث السعر تلقائياً
+});
+
+// تحديث السعر عند تغيير العميل
+document.getElementById('{{ form.customer.id_for_label }}').addEventListener('change', function() {
+    // يمكن إضافة AJAX لتحديث السعر تلقائياً
+});
+</script>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+</style>
+{% endblock %}

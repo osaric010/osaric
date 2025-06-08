@@ -1,0 +1,156 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-balance-scale text-success me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'reports:persons_reports' %}">تقارير الأشخاص</a></li>
+                            <li class="breadcrumb-item active">أرصدة الأشخاص</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">نوع الشخص</label>
+                    <select name="person_type" class="form-select">
+                        <option value="">جميع الأنواع</option>
+                        {% for type_code, type_name in person_types %}
+                        <option value="{{ type_code }}" {% if selected_type == type_code %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>عرض التقرير
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if persons_with_balances %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                أرصدة الأشخاص
+                <span class="badge bg-primary">{{ persons_with_balances|length }} شخص</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الاسم</th>
+                            <th>نوع الشخص</th>
+                            <th>إجمالي المبيعات</th>
+                            <th>إجمالي المشتريات</th>
+                            <th>الرصيد</th>
+                            <th>نوع الرصيد</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for person_data in persons_with_balances %}
+                        <tr>
+                            <td>
+                                <strong>{{ person_data.person.name }}</strong>
+                                {% if person_data.person.phone %}
+                                <small class="text-muted d-block">{{ person_data.person.phone }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ person_data.person_type }}</span>
+                            </td>
+                            <td class="text-success">
+                                {{ person_data.total_sales|floatformat:2 }}
+                            </td>
+                            <td class="text-primary">
+                                {{ person_data.total_purchases|floatformat:2 }}
+                            </td>
+                            <td>
+                                <strong class="{% if person_data.balance > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ person_data.balance|floatformat:2 }}
+                                </strong>
+                            </td>
+                            <td>
+                                {% if person_data.balance > 0 %}
+                                <span class="badge bg-success">مدين</span>
+                                {% elif person_data.balance < 0 %}
+                                <span class="badge bg-danger">دائن</span>
+                                {% else %}
+                                <span class="badge bg-secondary">متوازن</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="2">الإجمالي</th>
+                            <th class="text-success">{{ total_sales|floatformat:2 }}</th>
+                            <th class="text-primary">{{ total_purchases|floatformat:2 }}</th>
+                            <th>
+                                <strong class="{% if total_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ total_balance|floatformat:2 }}
+                                </strong>
+                            </th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-balance-scale fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">لا توجد أرصدة للعرض</h5>
+            <p class="text-muted">لا يوجد أشخاص لديهم أرصدة في الفترة المحددة</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .btn, .breadcrumb, .card-header {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

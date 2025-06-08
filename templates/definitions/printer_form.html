@@ -1,0 +1,388 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-print text-dark me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'definitions:printer_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        بيانات الطابعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- المعلومات الأساسية -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-dark border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    المعلومات الأساسية
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.code.id_for_label }}" class="form-label">{{ form.code.label }}</label>
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                    <div class="text-danger small">{{ form.code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- معلومات الطابعة -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-dark border-bottom pb-2 mb-3">
+                                    <i class="fas fa-print me-1"></i>
+                                    معلومات الطابعة
+                                </h6>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.brand.id_for_label }}" class="form-label">{{ form.brand.label }}</label>
+                                {{ form.brand }}
+                                {% if form.brand.errors %}
+                                    <div class="text-danger small">{{ form.brand.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.model.id_for_label }}" class="form-label">{{ form.model.label }}</label>
+                                {{ form.model }}
+                                {% if form.model.errors %}
+                                    <div class="text-danger small">{{ form.model.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.serial_number.id_for_label }}" class="form-label">{{ form.serial_number.label }}</label>
+                                {{ form.serial_number }}
+                                {% if form.serial_number.errors %}
+                                    <div class="text-danger small">{{ form.serial_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.printer_type.id_for_label }}" class="form-label">{{ form.printer_type.label }}</label>
+                                {{ form.printer_type }}
+                                {% if form.printer_type.errors %}
+                                    <div class="text-danger small">{{ form.printer_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.usage_type.id_for_label }}" class="form-label">{{ form.usage_type.label }}</label>
+                                {{ form.usage_type }}
+                                {% if form.usage_type.errors %}
+                                    <div class="text-danger small">{{ form.usage_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- الاتصال -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-dark border-bottom pb-2 mb-3">
+                                    <i class="fas fa-network-wired me-1"></i>
+                                    إعدادات الاتصال
+                                </h6>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.connection_type.id_for_label }}" class="form-label">{{ form.connection_type.label }}</label>
+                                {{ form.connection_type }}
+                                {% if form.connection_type.errors %}
+                                    <div class="text-danger small">{{ form.connection_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.ip_address.id_for_label }}" class="form-label">{{ form.ip_address.label }}</label>
+                                {{ form.ip_address }}
+                                {% if form.ip_address.errors %}
+                                    <div class="text-danger small">{{ form.ip_address.errors.0 }}</div>
+                                {% endif %}
+                                <small class="text-muted">مطلوب للطابعات الشبكية فقط</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.port.id_for_label }}" class="form-label">{{ form.port.label }}</label>
+                                {{ form.port }}
+                                {% if form.port.errors %}
+                                    <div class="text-danger small">{{ form.port.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- إعدادات الطباعة -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-dark border-bottom pb-2 mb-3">
+                                    <i class="fas fa-cog me-1"></i>
+                                    إعدادات الطباعة
+                                </h6>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.paper_size.id_for_label }}" class="form-label">{{ form.paper_size.label }}</label>
+                                {{ form.paper_size }}
+                                {% if form.paper_size.errors %}
+                                    <div class="text-danger small">{{ form.paper_size.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.paper_width.id_for_label }}" class="form-label">{{ form.paper_width.label }}</label>
+                                {{ form.paper_width }}
+                                {% if form.paper_width.errors %}
+                                    <div class="text-danger small">{{ form.paper_width.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.paper_height.id_for_label }}" class="form-label">{{ form.paper_height.label }}</label>
+                                {{ form.paper_height }}
+                                {% if form.paper_height.errors %}
+                                    <div class="text-danger small">{{ form.paper_height.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.dpi.id_for_label }}" class="form-label">{{ form.dpi.label }}</label>
+                                {{ form.dpi }}
+                                {% if form.dpi.errors %}
+                                    <div class="text-danger small">{{ form.dpi.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.print_speed.id_for_label }}" class="form-label">{{ form.print_speed.label }}</label>
+                                {{ form.print_speed }}
+                                {% if form.print_speed.errors %}
+                                    <div class="text-danger small">{{ form.print_speed.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.color_support }}
+                                    <label class="form-check-label" for="{{ form.color_support.id_for_label }}">
+                                        {{ form.color_support.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.duplex_support }}
+                                    <label class="form-check-label" for="{{ form.duplex_support.id_for_label }}">
+                                        {{ form.duplex_support.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- الموقع والاستخدام -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-dark border-bottom pb-2 mb-3">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    الموقع والاستخدام
+                                </h6>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.location.id_for_label }}" class="form-label">{{ form.location.label }}</label>
+                                {{ form.location }}
+                                {% if form.location.errors %}
+                                    <div class="text-danger small">{{ form.location.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.department.id_for_label }}" class="form-label">{{ form.department.label }}</label>
+                                {{ form.department }}
+                                {% if form.department.errors %}
+                                    <div class="text-danger small">{{ form.department.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.responsible_user.id_for_label }}" class="form-label">{{ form.responsible_user.label }}</label>
+                                {{ form.responsible_user }}
+                                {% if form.responsible_user.errors %}
+                                    <div class="text-danger small">{{ form.responsible_user.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- إعدادات النظام -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-dark border-bottom pb-2 mb-3">
+                                    <i class="fas fa-sliders-h me-1"></i>
+                                    إعدادات النظام
+                                </h6>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.is_default }}
+                                    <label class="form-check-label" for="{{ form.is_default.id_for_label }}">
+                                        {{ form.is_default.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.is_shared }}
+                                    <label class="form-check-label" for="{{ form.is_shared.id_for_label }}">
+                                        {{ form.is_shared.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.auto_cut }}
+                                    <label class="form-check-label" for="{{ form.auto_cut.id_for_label }}">
+                                        {{ form.auto_cut.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="form-check">
+                                    {{ form.cash_drawer }}
+                                    <label class="form-check-label" for="{{ form.cash_drawer.id_for_label }}">
+                                        {{ form.cash_drawer.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- معلومات الصيانة -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-dark border-bottom pb-2 mb-3">
+                                    <i class="fas fa-tools me-1"></i>
+                                    معلومات الصيانة
+                                </h6>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.purchase_date.id_for_label }}" class="form-label">{{ form.purchase_date.label }}</label>
+                                {{ form.purchase_date }}
+                                {% if form.purchase_date.errors %}
+                                    <div class="text-danger small">{{ form.purchase_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.warranty_expiry.id_for_label }}" class="form-label">{{ form.warranty_expiry.label }}</label>
+                                {{ form.warranty_expiry }}
+                                {% if form.warranty_expiry.errors %}
+                                    <div class="text-danger small">{{ form.warranty_expiry.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.last_maintenance.id_for_label }}" class="form-label">{{ form.last_maintenance.label }}</label>
+                                {{ form.last_maintenance }}
+                                {% if form.last_maintenance.errors %}
+                                    <div class="text-danger small">{{ form.last_maintenance.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.next_maintenance.id_for_label }}" class="form-label">{{ form.next_maintenance.label }}</label>
+                                {{ form.next_maintenance }}
+                                {% if form.next_maintenance.errors %}
+                                    <div class="text-danger small">{{ form.next_maintenance.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- ملاحظات -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-dark border-bottom pb-2 mb-3">
+                                    <i class="fas fa-sticky-note me-1"></i>
+                                    ملاحظات
+                                </h6>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- أزرار الحفظ -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'definitions:printer_list' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i>
+                                        إلغاء
+                                    </a>
+                                    <button type="submit" class="btn btn-dark">
+                                        <i class="fas fa-save me-1"></i>
+                                        {{ action }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// إظهار/إخفاء حقول IP والمنفذ حسب نوع الاتصال
+document.getElementById('{{ form.connection_type.id_for_label }}').addEventListener('change', function() {
+    const connectionType = this.value;
+    const ipField = document.getElementById('{{ form.ip_address.id_for_label }}').closest('.mb-3');
+    const portField = document.getElementById('{{ form.port.id_for_label }}').closest('.mb-3');
+    
+    if (connectionType === 'NETWORK' || connectionType === 'WIFI') {
+        ipField.style.display = 'block';
+        portField.style.display = 'block';
+    } else {
+        ipField.style.display = 'none';
+        portField.style.display = 'none';
+    }
+});
+
+// إظهار/إخفاء حقول أبعاد الورق حسب حجم الورق
+document.getElementById('{{ form.paper_size.id_for_label }}').addEventListener('change', function() {
+    const paperSize = this.value;
+    const widthField = document.getElementById('{{ form.paper_width.id_for_label }}').closest('.mb-3');
+    const heightField = document.getElementById('{{ form.paper_height.id_for_label }}').closest('.mb-3');
+    
+    if (paperSize === 'CUSTOM') {
+        widthField.style.display = 'block';
+        heightField.style.display = 'block';
+    } else {
+        widthField.style.display = 'none';
+        heightField.style.display = 'none';
+    }
+});
+
+// تشغيل الأحداث عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('{{ form.connection_type.id_for_label }}').dispatchEvent(new Event('change'));
+    document.getElementById('{{ form.paper_size.id_for_label }}').dispatchEvent(new Event('change'));
+});
+</script>
+{% endblock %}

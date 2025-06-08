@@ -1,0 +1,287 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-cash-register text-success me-2"></i>
+                    {{ title }}
+                </h2>
+                <div class="btn-group" role="group">
+                    <a href="{% url 'treasury:receipt_create' %}" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i>
+                        تحصيل نقدي
+                    </a>
+                    <a href="{% url 'treasury:payment_create' %}" class="btn btn-danger">
+                        <i class="fas fa-plus me-1"></i>
+                        دفع نقدي
+                    </a>
+                    <a href="{% url 'treasury:transfer_create' %}" class="btn btn-info">
+                        <i class="fas fa-plus me-1"></i>
+                        تحويل بين خزائن
+                    </a>
+                </div>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="row mb-4">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                                    <i class="fas fa-wallet fa-2x text-success"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ total_balance|floatformat:2 }}</h4>
+                            <p class="card-text text-muted">إجمالي الأرصدة</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                                    <i class="fas fa-exchange-alt fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ today_transactions }}</h4>
+                            <p class="card-text text-muted">معاملات اليوم</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                                    <i class="fas fa-hand-holding-usd fa-2x text-success"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ today_receipts|floatformat:2 }}</h4>
+                            <p class="card-text text-muted">تحصيلات اليوم</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                                    <i class="fas fa-money-bill-wave fa-2x text-danger"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ today_payments|floatformat:2 }}</h4>
+                            <p class="card-text text-muted">مدفوعات اليوم</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                                    <i class="fas fa-plus-circle fa-2x text-info"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ today_revenues|floatformat:2 }}</h4>
+                            <p class="card-text text-muted">إيرادات اليوم</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                                    <i class="fas fa-minus-circle fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ today_expenses|floatformat:2 }}</h4>
+                            <p class="card-text text-muted">مصروفات اليوم</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- إحصائيات إضافية -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                                    <i class="fas fa-file-invoice-dollar fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ pending_payment_notes }}</h4>
+                            <p class="card-text text-muted">أوراق دفع معلقة</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                                    <i class="fas fa-file-invoice fa-2x text-info"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ pending_receipt_notes }}</h4>
+                            <p class="card-text text-muted">أوراق قبض معلقة</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-secondary bg-opacity-10 p-3">
+                                    <i class="fas fa-share fa-2x text-secondary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ active_custody_out }}</h4>
+                            <p class="card-text text-muted">أمانات صادرة نشطة</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                                    <i class="fas fa-inbox fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ active_custody_in }}</h4>
+                            <p class="card-text text-muted">أمانات واردة نشطة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- العمليات السريعة -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-bolt me-2"></i>
+                                العمليات السريعة
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                    <a href="{% url 'treasury:receipt_create' %}" class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                        <i class="fas fa-hand-holding-usd fa-2x mb-2"></i>
+                                        <span>تحصيل نقدي</span>
+                                    </a>
+                                </div>
+                                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                    <a href="{% url 'treasury:payment_create' %}" class="btn btn-outline-danger w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                        <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
+                                        <span>دفع نقدي</span>
+                                    </a>
+                                </div>
+                                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                    <a href="{% url 'treasury:receipt_note_create' %}" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                        <i class="fas fa-file-invoice fa-2x mb-2"></i>
+                                        <span>ورقة قبض</span>
+                                    </a>
+                                </div>
+                                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                    <a href="{% url 'treasury:payment_note_create' %}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                        <i class="fas fa-file-invoice-dollar fa-2x mb-2"></i>
+                                        <span>ورقة دفع</span>
+                                    </a>
+                                </div>
+                                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                    <a href="{% url 'treasury:expense_create' %}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                        <i class="fas fa-minus-circle fa-2x mb-2"></i>
+                                        <span>مصروف</span>
+                                    </a>
+                                </div>
+                                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                                    <a href="{% url 'treasury:revenue_create' %}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3">
+                                        <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                                        <span>إيراد</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- آخر المعاملات -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        آخر المعاملات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_transactions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم المعاملة</th>
+                                        <th>التاريخ</th>
+                                        <th>الخزينة</th>
+                                        <th>نوع المعاملة</th>
+                                        <th>المبلغ</th>
+                                        <th>الوصف</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in recent_transactions %}
+                                        <tr>
+                                            <td><strong>{{ transaction.transaction_number }}</strong></td>
+                                            <td>{{ transaction.date|date:"d/m/Y" }}</td>
+                                            <td>{{ transaction.treasury.name }}</td>
+                                            <td>
+                                                {% if transaction.transaction_type == 'RECEIPT' %}
+                                                    <span class="badge bg-success">{{ transaction.get_transaction_type_display }}</span>
+                                                {% elif transaction.transaction_type == 'PAYMENT' %}
+                                                    <span class="badge bg-danger">{{ transaction.get_transaction_type_display }}</span>
+                                                {% elif transaction.transaction_type == 'EXPENSE' %}
+                                                    <span class="badge bg-warning">{{ transaction.get_transaction_type_display }}</span>
+                                                {% elif transaction.transaction_type == 'REVENUE' %}
+                                                    <span class="badge bg-info">{{ transaction.get_transaction_type_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ transaction.get_transaction_type_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="{% if transaction.transaction_type in 'RECEIPT,REVENUE' %}text-success{% else %}text-danger{% endif %}">
+                                                    {{ transaction.amount|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>{{ transaction.description|truncatechars:50 }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد معاملات</h5>
+                            <p class="text-muted">ابدأ بإضافة معاملة جديدة</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

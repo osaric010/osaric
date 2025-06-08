@@ -1,0 +1,159 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-cash-register text-success me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item active">تقارير الخزينة</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Grid -->
+    <div class="row">
+        <!-- Payment Reports -->
+        <div class="col-12 mb-4">
+            <h4 class="text-danger mb-3">
+                <i class="fas fa-arrow-down me-2"></i>
+                تقارير المدفوعات
+            </h4>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-hand-holding-usd fa-3x text-danger"></i>
+                    </div>
+                    <h6 class="card-title">دفع نقدي</h6>
+                    <a href="{% url 'reports:cash_payments_report' %}" class="btn btn-danger btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-file-contract fa-3x text-warning"></i>
+                    </div>
+                    <h6 class="card-title">أوراق دفع</h6>
+                    <a href="{% url 'reports:payment_papers_report' %}" class="btn btn-warning btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-money-bill-wave fa-3x text-danger"></i>
+                    </div>
+                    <h6 class="card-title">مصروفات</h6>
+                    <a href="{% url 'reports:expenses_report' %}" class="btn btn-danger btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collection Reports -->
+        <div class="col-12 mb-4 mt-4">
+            <h4 class="text-success mb-3">
+                <i class="fas fa-arrow-up me-2"></i>
+                تقارير المقبوضات
+            </h4>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-coins fa-3x text-success"></i>
+                    </div>
+                    <h6 class="card-title">تحصيل نقدي</h6>
+                    <a href="{% url 'reports:cash_collections_report' %}" class="btn btn-success btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-line fa-3x text-success"></i>
+                    </div>
+                    <h6 class="card-title">إيرادات</h6>
+                    <a href="{% url 'reports:revenues_report' %}" class="btn btn-success btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-file-alt fa-3x text-info"></i>
+                    </div>
+                    <h6 class="card-title">كشف حساب الخزينة</h6>
+                    <a href="{% url 'reports:treasury_account_statement' %}" class="btn btn-info btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        إحصائيات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-success">{{ treasuries.count }}</h4>
+                                <p class="text-muted mb-0">الخزائن النشطة</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-primary">-</h4>
+                                <p class="text-muted mb-0">إجمالي المعاملات</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-danger">-</h4>
+                                <p class="text-muted mb-0">إجمالي المدفوعات</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-success">-</h4>
+                            <p class="text-muted mb-0">إجمالي المقبوضات</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

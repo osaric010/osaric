@@ -1,0 +1,320 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load currency_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.status-badge {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+}
+
+.status-draft {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.status-completed {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+.status-approved {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-cancelled {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.inventory-card {
+    transition: all 0.3s ease;
+    border-radius: 10px;
+}
+
+.inventory-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.stats-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.filter-card {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-clipboard-list text-primary me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        إدارة الجرد الافتتاحي لأول المدة
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'inventory:opening_inventory_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        إنشاء جرد افتتاحي جديد
+                    </a>
+                </div>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="stats-card">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <h3 class="mb-1">{{ inventories.paginator.count }}</h3>
+                        <p class="mb-0 opacity-75">إجمالي الجرد</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3 class="mb-1">{{ inventories|length }}</h3>
+                        <p class="mb-0 opacity-75">في الصفحة الحالية</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3 class="mb-1">{{ warehouses|length }}</h3>
+                        <p class="mb-0 opacity-75">المخازن المتاحة</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3 class="mb-1">2024</h3>
+                        <p class="mb-0 opacity-75">السنة المالية الحالية</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- فلاتر البحث -->
+            <div class="filter-card">
+                <form method="get" class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">المخزن</label>
+                        <select name="warehouse" class="form-select">
+                            <option value="">جميع المخازن</option>
+                            {% for warehouse in warehouses %}
+                                <option value="{{ warehouse.id }}" {% if request.GET.warehouse == warehouse.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ warehouse.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">الحالة</label>
+                        <select name="status" class="form-select">
+                            <option value="">جميع الحالات</option>
+                            <option value="DRAFT" {% if request.GET.status == "DRAFT" %}selected{% endif %}>مسودة</option>
+                            <option value="COMPLETED" {% if request.GET.status == "COMPLETED" %}selected{% endif %}>مكتمل</option>
+                            <option value="APPROVED" {% if request.GET.status == "APPROVED" %}selected{% endif %}>معتمد</option>
+                            <option value="CANCELLED" {% if request.GET.status == "CANCELLED" %}selected{% endif %}>ملغي</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">السنة المالية</label>
+                        <input type="text" name="financial_year" class="form-control" 
+                               value="{{ request.GET.financial_year }}" placeholder="2024">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-outline-primary flex-fill">
+                                <i class="fas fa-search me-1"></i>
+                                بحث
+                            </button>
+                            <a href="{% url 'inventory:opening_inventory_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- قائمة الجرد -->
+            {% if inventories %}
+                <div class="row">
+                    {% for inventory in inventories %}
+                    <div class="col-lg-6 col-xl-4 mb-4">
+                        <div class="card inventory-card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-clipboard-list me-2"></i>
+                                    {{ inventory.inventory_number }}
+                                </h6>
+                                <span class="status-badge status-{{ inventory.status|lower }}">
+                                    {{ inventory.get_status_display }}
+                                </span>
+                            </div>
+                            
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <small class="text-muted d-block">المخزن</small>
+                                    <strong>{{ inventory.warehouse.name }}</strong>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">التاريخ</small>
+                                        <span>{{ inventory.date|date:"Y-m-d" }}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">السنة المالية</small>
+                                        <span>{{ inventory.financial_year|default:"غير محدد" }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">عدد الأصناف</small>
+                                        <span class="fw-bold text-primary">{{ inventory.total_items_counted }}</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">إجمالي القيمة</small>
+                                        <span class="fw-bold text-success">{{ inventory.total_opening_value|currency }}</span>
+                                    </div>
+                                </div>
+                                
+                                {% if inventory.reason %}
+                                <div class="mb-3">
+                                    <small class="text-muted d-block">السبب</small>
+                                    <span class="text-truncate d-block">{{ inventory.reason }}</span>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <small class="text-muted d-block">أنشئ بواسطة</small>
+                                    <span>{{ inventory.created_by.get_full_name|default:inventory.created_by.username }}</span>
+                                    <br><small class="text-muted">{{ inventory.created_at|date:"Y-m-d H:i" }}</small>
+                                </div>
+                            </div>
+                            
+                            <div class="card-footer bg-light">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% url 'inventory:opening_inventory_detail' inventory.pk %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>
+                                        عرض
+                                    </a>
+                                    
+                                    {% if inventory.can_be_edited %}
+                                        <a href="{% url 'inventory:opening_inventory_edit' inventory.pk %}" 
+                                           class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit me-1"></i>
+                                            تعديل
+                                        </a>
+                                    {% endif %}
+                                    
+                                    {% if inventory.status == 'DRAFT' %}
+                                        <a href="{% url 'inventory:opening_inventory_add_items' inventory.pk %}" 
+                                           class="btn btn-sm btn-success">
+                                            <i class="fas fa-plus me-1"></i>
+                                            إضافة أصناف
+                                        </a>
+                                    {% elif inventory.status == 'COMPLETED' %}
+                                        <form method="post" action="{% url 'inventory:opening_inventory_apply' inventory.pk %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-warning"
+                                                    onclick="return confirm('هل تريد تطبيق الجرد على المخزون؟ هذا الإجراء لا يمكن التراجع عنه.')">
+                                                <i class="fas fa-check me-1"></i>
+                                                تطبيق
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if inventories.has_other_pages %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if inventories.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ inventories.previous_page_number }}{% if request.GET.warehouse %}&warehouse={{ request.GET.warehouse }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.financial_year %}&financial_year={{ request.GET.financial_year }}{% endif %}">
+                                    السابق
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in inventories.paginator.page_range %}
+                            {% if inventories.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > inventories.number|add:'-3' and num < inventories.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.warehouse %}&warehouse={{ request.GET.warehouse }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.financial_year %}&financial_year={{ request.GET.financial_year }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if inventories.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ inventories.next_page_number }}{% if request.GET.warehouse %}&warehouse={{ request.GET.warehouse }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.financial_year %}&financial_year={{ request.GET.financial_year }}{% endif %}">
+                                    التالي
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h4>لا يوجد جرد افتتاحي</h4>
+                    <p class="text-muted mb-4">لم يتم إنشاء أي جرد افتتاحي بعد</p>
+                    <a href="{% url 'inventory:opening_inventory_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        إنشاء جرد افتتاحي جديد
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة تأثيرات تفاعلية للبطاقات
+    const cards = document.querySelectorAll('.inventory-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+            this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

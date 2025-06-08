@@ -1,0 +1,387 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-arrow-up text-warning me-2"></i>
+                    {{ title }}
+                </h2>
+                <div>
+                    <a href="{% url 'inventory:goods_issued_on_loan_list' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للقائمة
+                    </a>
+                    {% if loan.status == 'ISSUED' %}
+                        <a href="{% url 'inventory:goods_issued_on_loan_edit' loan.pk %}" class="btn btn-warning">
+                            <i class="fas fa-edit me-1"></i>
+                            تعديل
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- معلومات السلفة -->
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                معلومات السلفة
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">رقم السلفة:</label>
+                                    <div class="fw-bold">{{ loan.loan_number }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">التاريخ:</label>
+                                    <div class="fw-bold">{{ loan.date|date:"d/m/Y" }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">المخزن:</label>
+                                    <div class="fw-bold">{{ loan.warehouse.name }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">الحالة:</label>
+                                    <div>
+                                        {% if loan.status == 'ISSUED' %}
+                                            <span class="badge bg-warning fs-6">{{ loan.get_status_display }}</span>
+                                        {% elif loan.status == 'PARTIAL_RETURNED' %}
+                                            <span class="badge bg-info fs-6">{{ loan.get_status_display }}</span>
+                                        {% elif loan.status == 'RETURNED' %}
+                                            <span class="badge bg-success fs-6">{{ loan.get_status_display }}</span>
+                                        {% elif loan.status == 'OVERDUE' %}
+                                            <span class="badge bg-danger fs-6">{{ loan.get_status_display }}</span>
+                                        {% elif loan.status == 'CANCELLED' %}
+                                            <span class="badge bg-dark fs-6">{{ loan.get_status_display }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">المُستعير:</label>
+                                    <div class="fw-bold">{{ loan.borrower_name }}</div>
+                                    {% if loan.borrower_phone %}
+                                        <small class="text-muted">{{ loan.borrower_phone }}</small>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">تاريخ الإرجاع المتوقع:</label>
+                                    <div>
+                                        {% if loan.expected_return_date %}
+                                            {{ loan.expected_return_date|date:"d/m/Y" }}
+                                            {% if loan.is_overdue %}
+                                                <span class="badge bg-danger ms-2">متأخرة</span>
+                                            {% elif loan.days_until_return <= 7 and loan.days_until_return > 0 %}
+                                                <span class="badge bg-warning ms-2">{{ loan.days_until_return }} أيام متبقية</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">غير محدد</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if loan.borrower_address %}
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label text-muted">عنوان المُستعير:</label>
+                                        <div>{{ loan.borrower_address }}</div>
+                                    </div>
+                                {% endif %}
+                                <div class="col-12 mb-3">
+                                    <label class="form-label text-muted">سبب السلفة:</label>
+                                    <div class="fw-bold">{{ loan.loan_reason }}</div>
+                                </div>
+                                {% if loan.notes %}
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label text-muted">ملاحظات:</label>
+                                        <div>{{ loan.notes }}</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                ملخص السلفة
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">إجمالي القيمة التقديرية:</label>
+                                <div class="h4 text-warning">{{ loan.total_estimated_value|floatformat:2 }} ر.س</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">عدد الأصناف:</label>
+                                <div class="fw-bold">{{ items.count }} صنف</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">أنشئ بواسطة:</label>
+                                <div>{{ loan.created_by.get_full_name|default:loan.created_by.username }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">تاريخ الإنشاء:</label>
+                                <div>{{ loan.created_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            {% if loan.approved_by %}
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">معتمد بواسطة:</label>
+                                    <div>{{ loan.approved_by.get_full_name|default:loan.approved_by.username }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">تاريخ الاعتماد:</label>
+                                    <div>{{ loan.approved_date|date:"d/m/Y H:i" }}</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- إجراءات -->
+                    {% if loan.status == 'ISSUED' %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">الإجراءات المتاحة</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-success w-100 mb-2" 
+                                        onclick="returnLoan({{ loan.pk }})">
+                                    <i class="fas fa-undo me-1"></i>
+                                    إرجاع كامل
+                                </button>
+                                <button type="button" class="btn btn-info w-100 mb-2" 
+                                        onclick="partialReturnLoan({{ loan.pk }})">
+                                    <i class="fas fa-undo-alt me-1"></i>
+                                    إرجاع جزئي
+                                </button>
+                                <button type="button" class="btn btn-secondary w-100" 
+                                        onclick="cancelLoan({{ loan.pk }})">
+                                    <i class="fas fa-ban me-1"></i>
+                                    إلغاء السلفة
+                                </button>
+                            </div>
+                        </div>
+                    {% elif loan.status == 'PARTIAL_RETURNED' %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">الإجراءات المتاحة</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-success w-100 mb-2" 
+                                        onclick="returnLoan({{ loan.pk }})">
+                                    <i class="fas fa-undo me-1"></i>
+                                    إرجاع الباقي
+                                </button>
+                                <button type="button" class="btn btn-secondary w-100" 
+                                        onclick="cancelLoan({{ loan.pk }})">
+                                    <i class="fas fa-ban me-1"></i>
+                                    إلغاء السلفة
+                                </button>
+                            </div>
+                        </div>
+                    {% elif loan.status == 'CANCELLED' %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">الإجراءات المتاحة</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-danger w-100" 
+                                        onclick="deleteLoan({{ loan.pk }}, '{{ loan.loan_number }}')">
+                                    <i class="fas fa-trash me-1"></i>
+                                    حذف السلفة
+                                </button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- أصناف السلفة -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-boxes me-2"></i>
+                        أصناف السلفة المنصرفة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>الصنف</th>
+                                        <th>الكمية المنصرفة</th>
+                                        <th>الكمية المرتجعة</th>
+                                        <th>الكمية المتبقية</th>
+                                        <th>القيمة التقديرية للوحدة</th>
+                                        <th>إجمالي القيمة</th>
+                                        <th>حالة البضاعة</th>
+                                        <th>تاريخ الانتهاء</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ item.item.name }}</strong>
+                                                <br><small class="text-muted">{{ item.item.code }}</small>
+                                            </td>
+                                            <td>{{ item.quantity_issued|floatformat:3 }} {{ item.item.unit.name|default:"وحدة" }}</td>
+                                            <td>
+                                                <span class="text-success">{{ item.quantity_returned|floatformat:3 }}</span>
+                                                {{ item.item.unit.name|default:"وحدة" }}
+                                            </td>
+                                            <td>
+                                                <strong class="{% if item.quantity_remaining > 0 %}text-warning{% else %}text-success{% endif %}">
+                                                    {{ item.quantity_remaining|floatformat:3 }} {{ item.item.unit.name|default:"وحدة" }}
+                                                </strong>
+                                            </td>
+                                            <td>{{ item.estimated_unit_value|floatformat:2 }} ر.س</td>
+                                            <td><strong class="text-warning">{{ item.total_estimated_value|floatformat:2 }} ر.س</strong></td>
+                                            <td>
+                                                {% if item.condition_issued %}
+                                                    {{ item.condition_issued }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.expiry_date %}
+                                                    {{ item.expiry_date|date:"d/m/Y" }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-warning">
+                                    <tr>
+                                        <td colspan="5"><strong>الإجمالي العام:</strong></td>
+                                        <td><strong class="text-warning">{{ loan.total_estimated_value|floatformat:2 }} ر.س</strong></td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد أصناف في هذه السلفة</h5>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function returnLoan(loanId) {
+    if (confirm('هل تريد إرجاع هذه السلفة بالكامل؟ سيتم إرجاع البضاعة للمخزون.')) {
+        fetch(`/inventory/goods-issued-on-loan/${loanId}/return/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإرجاع');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإرجاع');
+        });
+    }
+}
+
+function partialReturnLoan(loanId) {
+    if (confirm('هل تريد تسجيل إرجاع جزئي لهذه السلفة؟')) {
+        fetch(`/inventory/goods-issued-on-loan/${loanId}/partial-return/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإرجاع الجزئي');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإرجاع الجزئي');
+        });
+    }
+}
+
+function cancelLoan(loanId) {
+    if (confirm('هل تريد إلغاء هذه السلفة؟ سيتم إرجاع البضاعة للمخزون.')) {
+        fetch(`/inventory/goods-issued-on-loan/${loanId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإلغاء');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإلغاء');
+        });
+    }
+}
+
+function deleteLoan(loanId, loanNumber) {
+    if (confirm(`هل أنت متأكد من حذف سلفة البضاعة المنصرفة "${loanNumber}"؟`)) {
+        fetch(`/inventory/goods-issued-on-loan/${loanId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/inventory/goods-issued-on-loan/';
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,453 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-recycle text-success me-2"></i>
+                    {{ title }}
+                </h2>
+                <div>
+                    <a href="{% url 'inventory:item_transformation_list' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للقائمة
+                    </a>
+                    {% if transformation.status == 'DRAFT' %}
+                        <a href="{% url 'inventory:item_transformation_edit' transformation.pk %}" class="btn btn-success">
+                            <i class="fas fa-edit me-1"></i>
+                            تعديل
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- معلومات التحويل -->
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                معلومات التحويل
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">رقم التحويل:</label>
+                                    <div class="fw-bold">{{ transformation.transformation_number }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">التاريخ:</label>
+                                    <div class="fw-bold">{{ transformation.date|date:"d/m/Y" }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">المخزن:</label>
+                                    <div class="fw-bold">{{ transformation.warehouse.name }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">نوع التحويل:</label>
+                                    <div>
+                                        <span class="badge bg-info fs-6">{{ transformation.get_transformation_type_display }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">الحالة:</label>
+                                    <div>
+                                        {% if transformation.status == 'DRAFT' %}
+                                            <span class="badge bg-secondary fs-6">{{ transformation.get_status_display }}</span>
+                                        {% elif transformation.status == 'APPROVED' %}
+                                            <span class="badge bg-info fs-6">{{ transformation.get_status_display }}</span>
+                                        {% elif transformation.status == 'COMPLETED' %}
+                                            <span class="badge bg-success fs-6">{{ transformation.get_status_display }}</span>
+                                        {% elif transformation.status == 'CANCELLED' %}
+                                            <span class="badge bg-danger fs-6">{{ transformation.get_status_display }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">تكلفة التحويل:</label>
+                                    <div class="fw-bold text-warning">{{ transformation.transformation_cost|floatformat:2 }} ر.س</div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label text-muted">سبب التحويل:</label>
+                                    <div class="fw-bold">{{ transformation.transformation_reason }}</div>
+                                </div>
+                                {% if transformation.notes %}
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label text-muted">ملاحظات:</label>
+                                        <div>{{ transformation.notes }}</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                ملخص التحويل
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">إجمالي قيمة المدخلات:</label>
+                                <div class="h5 text-danger">{{ transformation.total_input_value|floatformat:2 }} ر.س</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">تكلفة التحويل:</label>
+                                <div class="h5 text-warning">{{ transformation.transformation_cost|floatformat:2 }} ر.س</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">إجمالي قيمة المخرجات:</label>
+                                <div class="h5 text-success">{{ transformation.total_output_value|floatformat:2 }} ر.س</div>
+                            </div>
+                            <hr>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">صافي التغيير في القيمة:</label>
+                                <div class="h4 {% if transformation.net_value_change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% if transformation.net_value_change >= 0 %}+{% endif %}{{ transformation.net_value_change|floatformat:2 }} ر.س
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">عدد المدخلات:</label>
+                                <div class="fw-bold">{{ inputs.count }} صنف</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">عدد المخرجات:</label>
+                                <div class="fw-bold">{{ outputs.count }} صنف</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">أنشئ بواسطة:</label>
+                                <div>{{ transformation.created_by.get_full_name|default:transformation.created_by.username }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">تاريخ الإنشاء:</label>
+                                <div>{{ transformation.created_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            {% if transformation.approved_by %}
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">معتمد بواسطة:</label>
+                                    <div>{{ transformation.approved_by.get_full_name|default:transformation.approved_by.username }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">تاريخ الاعتماد:</label>
+                                    <div>{{ transformation.approved_date|date:"d/m/Y H:i" }}</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- إجراءات -->
+                    {% if transformation.status == 'DRAFT' %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">الإجراءات المتاحة</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-success w-100 mb-2" 
+                                        onclick="approveTransformation({{ transformation.pk }})">
+                                    <i class="fas fa-check me-1"></i>
+                                    اعتماد التحويل
+                                </button>
+                                <button type="button" class="btn btn-danger w-100" 
+                                        onclick="deleteTransformation({{ transformation.pk }}, '{{ transformation.transformation_number }}')">
+                                    <i class="fas fa-trash me-1"></i>
+                                    حذف التحويل
+                                </button>
+                            </div>
+                        </div>
+                    {% elif transformation.status == 'APPROVED' %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">الإجراءات المتاحة</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-primary w-100 mb-2" 
+                                        onclick="completeTransformation({{ transformation.pk }})">
+                                    <i class="fas fa-play me-1"></i>
+                                    إكمال التحويل
+                                </button>
+                                <button type="button" class="btn btn-secondary w-100" 
+                                        onclick="cancelTransformation({{ transformation.pk }})">
+                                    <i class="fas fa-ban me-1"></i>
+                                    إلغاء التحويل
+                                </button>
+                            </div>
+                        </div>
+                    {% elif transformation.status == 'CANCELLED' %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">الإجراءات المتاحة</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-danger w-100" 
+                                        onclick="deleteTransformation({{ transformation.pk }}, '{{ transformation.transformation_number }}')">
+                                    <i class="fas fa-trash me-1"></i>
+                                    حذف التحويل
+                                </button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- المدخلات (الأصناف المستهلكة) -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-arrow-down text-danger me-2"></i>
+                        المدخلات (الأصناف المستهلكة)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if inputs %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>الصنف</th>
+                                        <th>الكمية</th>
+                                        <th>تكلفة الوحدة</th>
+                                        <th>إجمالي التكلفة</th>
+                                        <th>تاريخ الانتهاء</th>
+                                        <th>رقم الدفعة</th>
+                                        <th>ملاحظات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for input in inputs %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ input.item.name }}</strong>
+                                                <br><small class="text-muted">{{ input.item.code }}</small>
+                                            </td>
+                                            <td>{{ input.quantity|floatformat:3 }} {{ input.item.unit.name|default:"وحدة" }}</td>
+                                            <td>{{ input.unit_cost|floatformat:2 }} ر.س</td>
+                                            <td><strong class="text-danger">{{ input.total_cost|floatformat:2 }} ر.س</strong></td>
+                                            <td>
+                                                {% if input.expiry_date %}
+                                                    {{ input.expiry_date|date:"d/m/Y" }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if input.batch_number %}
+                                                    {{ input.batch_number }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if input.notes %}
+                                                    {{ input.notes }}
+                                                {% else %}
+                                                    <span class="text-muted">لا توجد</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-danger">
+                                    <tr>
+                                        <td colspan="3"><strong>إجمالي المدخلات:</strong></td>
+                                        <td><strong class="text-danger">{{ transformation.total_input_value|floatformat:2 }} ر.س</strong></td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-arrow-down fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد مدخلات في هذا التحويل</h5>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- المخرجات (الأصناف المنتجة) -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-arrow-up text-success me-2"></i>
+                        المخرجات (الأصناف المنتجة)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if outputs %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>الصنف</th>
+                                        <th>الكمية</th>
+                                        <th>تكلفة الوحدة</th>
+                                        <th>إجمالي التكلفة</th>
+                                        <th>تاريخ الانتهاء</th>
+                                        <th>رقم الدفعة</th>
+                                        <th>ملاحظات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for output in outputs %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ output.item.name }}</strong>
+                                                <br><small class="text-muted">{{ output.item.code }}</small>
+                                            </td>
+                                            <td>{{ output.quantity|floatformat:3 }} {{ output.item.unit.name|default:"وحدة" }}</td>
+                                            <td>{{ output.unit_cost|floatformat:2 }} ر.س</td>
+                                            <td><strong class="text-success">{{ output.total_cost|floatformat:2 }} ر.س</strong></td>
+                                            <td>
+                                                {% if output.expiry_date %}
+                                                    {{ output.expiry_date|date:"d/m/Y" }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if output.batch_number %}
+                                                    {{ output.batch_number }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if output.notes %}
+                                                    {{ output.notes }}
+                                                {% else %}
+                                                    <span class="text-muted">لا توجد</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-success">
+                                    <tr>
+                                        <td colspan="3"><strong>إجمالي المخرجات:</strong></td>
+                                        <td><strong class="text-success">{{ transformation.total_output_value|floatformat:2 }} ر.س</strong></td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-arrow-up fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد مخرجات في هذا التحويل</h5>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function approveTransformation(transformationId) {
+    if (confirm('هل تريد اعتماد هذا التحويل؟')) {
+        fetch(`/inventory/item-transformations/${transformationId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الاعتماد');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الاعتماد');
+        });
+    }
+}
+
+function completeTransformation(transformationId) {
+    if (confirm('هل تريد إكمال هذا التحويل؟ سيتم تطبيقه على المخزون ولا يمكن التراجع.')) {
+        fetch(`/inventory/item-transformations/${transformationId}/complete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإكمال');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإكمال');
+        });
+    }
+}
+
+function cancelTransformation(transformationId) {
+    if (confirm('هل تريد إلغاء هذا التحويل؟')) {
+        fetch(`/inventory/item-transformations/${transformationId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإلغاء');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإلغاء');
+        });
+    }
+}
+
+function deleteTransformation(transformationId, transformationNumber) {
+    if (confirm(`هل أنت متأكد من حذف التحويل "${transformationNumber}"؟`)) {
+        fetch(`/inventory/item-transformations/${transformationId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/inventory/item-transformations/';
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+</script>
+{% endblock %}

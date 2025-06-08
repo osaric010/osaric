@@ -1,0 +1,331 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-balance-scale text-dark me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">تقرير شامل لأرصدة جميع الفروع</p>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                    <button onclick="exportToExcel()" class="btn btn-outline-success">
+                        <i class="fas fa-file-excel me-2"></i>
+                        تصدير Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        فلاتر التقرير
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="date" class="form-label">تاريخ التقرير</label>
+                            <input type="date" class="form-control" id="date" name="date" value="{{ date_filter }}">
+                            <div class="form-text">اتركه فارغاً لعرض الأرصدة الحالية</div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>
+                                    عرض التقرير
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        {% with total_cash=0 total_bank=0 total_goods=0 total_revenues=0 %}
+        {% for branch_data in branches_data %}
+            {% with total_cash=total_cash|add:branch_data.cash_balance %}
+            {% with total_bank=total_bank|add:branch_data.bank_balance %}
+            {% with total_goods=total_goods|add:branch_data.goods_value %}
+            {% with total_revenues=total_revenues|add:branch_data.collection_revenues %}
+            {% endwith %}
+            {% endwith %}
+            {% endwith %}
+            {% endwith %}
+        {% endfor %}
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_cash|floatformat:0 }}</h4>
+                            <p class="mb-0">إجمالي الأرصدة النقدية</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-money-bill-wave fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_bank|floatformat:0 }}</h4>
+                            <p class="mb-0">إجمالي الأرصدة البنكية</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-university fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_goods|floatformat:0 }}</h4>
+                            <p class="mb-0">إجمالي قيمة البضائع</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-boxes fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_revenues|floatformat:0 }}</h4>
+                            <p class="mb-0">إجمالي الإيرادات التحصيلية</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-hand-holding-usd fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+    </div>
+
+    <!-- Balances Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        تفاصيل أرصدة الفروع
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if branches_data %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="balancesTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>الفرع</th>
+                                    <th>الرصيد النقدي</th>
+                                    <th>الرصيد البنكي</th>
+                                    <th>قيمة البضائع</th>
+                                    <th>الإيرادات التحصيلية</th>
+                                    <th>الرصيد الإجمالي</th>
+                                    <th>الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for branch_data in branches_data %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-building text-primary me-2"></i>
+                                            <div>
+                                                <strong>{{ branch_data.branch.name }}</strong><br>
+                                                <small class="text-muted">{{ branch_data.branch.code }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="{% if branch_data.cash_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ branch_data.cash_balance|floatformat:2 }}
+                                        </span>
+                                        <br>
+                                        <small class="text-muted">
+                                            وارد: {{ branch_data.cash_received|floatformat:0 }}<br>
+                                            صادر: {{ branch_data.cash_sent|floatformat:0 }}
+                                        </small>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="{% if branch_data.bank_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ branch_data.bank_balance|floatformat:2 }}
+                                        </span>
+                                        <br>
+                                        <small class="text-muted">
+                                            إيداع: {{ branch_data.bank_deposits|floatformat:0 }}<br>
+                                            سحب: {{ branch_data.bank_withdrawals|floatformat:0 }}
+                                        </small>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="text-warning">
+                                            {{ branch_data.goods_value|floatformat:2 }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="text-info">
+                                            {{ branch_data.collection_revenues|floatformat:2 }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="{% if branch_data.total_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ branch_data.total_balance|floatformat:2 }}
+                                        </strong>
+                                    </td>
+                                    <td>
+                                        {% if branch_data.total_balance > 10000 %}
+                                            <span class="badge bg-success">ممتاز</span>
+                                        {% elif branch_data.total_balance > 0 %}
+                                            <span class="badge bg-primary">جيد</span>
+                                        {% elif branch_data.total_balance == 0 %}
+                                            <span class="badge bg-warning">متوازن</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">عجز</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-secondary">
+                                <tr>
+                                    <th>الإجمالي</th>
+                                    <th class="text-end">
+                                        {% with total_cash_balance=0 %}
+                                        {% for branch_data in branches_data %}
+                                            {% with total_cash_balance=total_cash_balance|add:branch_data.cash_balance %}
+                                            {% endwith %}
+                                        {% endfor %}
+                                        <strong>{{ total_cash_balance|floatformat:2 }}</strong>
+                                        {% endwith %}
+                                    </th>
+                                    <th class="text-end">
+                                        {% with total_bank_balance=0 %}
+                                        {% for branch_data in branches_data %}
+                                            {% with total_bank_balance=total_bank_balance|add:branch_data.bank_balance %}
+                                            {% endwith %}
+                                        {% endfor %}
+                                        <strong>{{ total_bank_balance|floatformat:2 }}</strong>
+                                        {% endwith %}
+                                    </th>
+                                    <th class="text-end">
+                                        {% with total_goods_value=0 %}
+                                        {% for branch_data in branches_data %}
+                                            {% with total_goods_value=total_goods_value|add:branch_data.goods_value %}
+                                            {% endwith %}
+                                        {% endfor %}
+                                        <strong>{{ total_goods_value|floatformat:2 }}</strong>
+                                        {% endwith %}
+                                    </th>
+                                    <th class="text-end">
+                                        {% with total_collection_revenues=0 %}
+                                        {% for branch_data in branches_data %}
+                                            {% with total_collection_revenues=total_collection_revenues|add:branch_data.collection_revenues %}
+                                            {% endwith %}
+                                        {% endfor %}
+                                        <strong>{{ total_collection_revenues|floatformat:2 }}</strong>
+                                        {% endwith %}
+                                    </th>
+                                    <th class="text-end">
+                                        {% with grand_total=0 %}
+                                        {% for branch_data in branches_data %}
+                                            {% with grand_total=grand_total|add:branch_data.total_balance %}
+                                            {% endwith %}
+                                        {% endfor %}
+                                        <strong class="{% if grand_total >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ grand_total|floatformat:2 }}
+                                        </strong>
+                                        {% endwith %}
+                                    </th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-balance-scale fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد بيانات أرصدة</h5>
+                        <p class="text-muted">لم يتم العثور على بيانات أرصدة للفروع</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportToExcel() {
+    // Simple Excel export functionality
+    const table = document.getElementById('balancesTable');
+    const wb = XLSX.utils.table_to_book(table, {sheet: "أرصدة الفروع"});
+    const filename = `أرصدة_الفروع_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, filename);
+}
+
+// Load XLSX library for Excel export
+const script = document.createElement('script');
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+document.head.appendChild(script);
+</script>
+
+<style>
+@media print {
+    .btn, .card-header, .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        font-size: 11px;
+    }
+    
+    .table th, .table td {
+        padding: 0.25rem !important;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,366 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .report-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .metric-label {
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+    
+    .progress-custom {
+        height: 8px;
+        border-radius: 4px;
+        background: rgba(255,255,255,0.2);
+    }
+    
+    .progress-custom .progress-bar {
+        border-radius: 4px;
+    }
+    
+    .system-status {
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .status-good {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-left: 4px solid #28a745;
+    }
+    
+    .status-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border-left: 4px solid #ffc107;
+    }
+    
+    .status-danger {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border-left: 4px solid #dc3545;
+    }
+    
+    .category-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        margin: 2px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        
+        .report-card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4 no-print">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0">
+                        <i class="fas fa-chart-line text-primary me-3"></i>
+                        {{ title }}
+                    </h1>
+                    <p class="text-muted mb-0 mt-2">تقرير شامل عن حالة وأداء النظام</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary me-2" onclick="window.print()">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة التقرير
+                    </button>
+                    <button class="btn btn-success" onclick="exportReport()">
+                        <i class="fas fa-download me-2"></i>
+                        تصدير PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card report-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-server me-2"></i>
+                        نظرة عامة على النظام
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>معلومات النظام:</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>المنصة:</strong> {{ system_info.platform }}</li>
+                                <li><strong>إصدار Python:</strong> {{ system_info.python_version }}</li>
+                                <li><strong>إصدار Django:</strong> {{ system_info.django_version }}</li>
+                                <li><strong>تاريخ التقرير:</strong> {{ "now"|date:"Y-m-d H:i:s" }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            {% if has_psutil %}
+                            <h6>موارد النظام:</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>عدد المعالجات:</strong> {{ system_info.cpu_count }}</li>
+                                <li><strong>إجمالي الذاكرة:</strong> {{ system_info.memory_total }} GB</li>
+                                <li><strong>الذاكرة المتاحة:</strong> {{ system_info.memory_available }} GB</li>
+                                <li><strong>استخدام القرص:</strong> {{ system_info.disk_usage }}%</li>
+                            </ul>
+                            {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                معلومات الأداء غير متاحة (يتطلب تثبيت psutil)
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    {% if has_psutil %}
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="metric-card">
+                <div class="metric-value">{{ system_info.memory_percent|floatformat:1 }}%</div>
+                <div class="metric-label">استخدام الذاكرة</div>
+                <div class="progress progress-custom mt-2">
+                    <div class="progress-bar bg-white" style="width: {{ system_info.memory_percent }}%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="metric-value">{{ system_info.disk_usage|floatformat:1 }}%</div>
+                <div class="metric-label">استخدام القرص</div>
+                <div class="progress progress-custom mt-2">
+                    <div class="progress-bar bg-white" style="width: {{ system_info.disk_usage }}%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="metric-value">{{ system_info.cpu_count }}</div>
+                <div class="metric-label">عدد المعالجات</div>
+                <div class="mt-2">
+                    <small>{{ system_info.memory_total }} GB إجمالي الذاكرة</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- System Status -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card report-card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-heartbeat me-2"></i>
+                        حالة النظام
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="system-status status-good">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">حالة النظام العامة</h6>
+                                <small class="text-muted">جميع الخدمات تعمل بشكل طبيعي</small>
+                            </div>
+                            <span class="badge bg-success fs-6">ممتاز</span>
+                        </div>
+                    </div>
+                    
+                    <div class="system-status {% if system_info.memory_percent > 80 %}status-warning{% else %}status-good{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">استخدام الذاكرة</h6>
+                                <small class="text-muted">{{ system_info.memory_percent|default:0|floatformat:1 }}% مستخدم</small>
+                            </div>
+                            <span class="badge {% if system_info.memory_percent > 80 %}bg-warning{% else %}bg-success{% endif %} fs-6">
+                                {% if system_info.memory_percent > 80 %}تحذير{% else %}جيد{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="system-status {% if system_info.disk_usage > 85 %}status-danger{% elif system_info.disk_usage > 70 %}status-warning{% else %}status-good{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">مساحة القرص</h6>
+                                <small class="text-muted">{{ system_info.disk_usage|default:0|floatformat:1 }}% مستخدم</small>
+                            </div>
+                            <span class="badge {% if system_info.disk_usage > 85 %}bg-danger{% elif system_info.disk_usage > 70 %}bg-warning{% else %}bg-success{% endif %} fs-6">
+                                {% if system_info.disk_usage > 85 %}خطر{% elif system_info.disk_usage > 70 %}تحذير{% else %}جيد{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card report-card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-database me-2"></i>
+                        إحصائيات قاعدة البيانات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h3 class="text-primary">{{ total_users }}</h3>
+                            <p class="text-muted mb-0">المستخدمين</p>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="text-success">{{ total_settings }}</h3>
+                            <p class="text-muted mb-0">الإعدادات</p>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="text-warning">{{ deleted_records }}</h3>
+                            <p class="text-muted mb-0">المحذوفات</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings by Category -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card report-card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        الإعدادات حسب الفئة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if settings_by_category %}
+                        <div class="row">
+                            {% for category, count in settings_by_category.items %}
+                            <div class="col-md-3 mb-2">
+                                <span class="category-badge bg-primary text-white">
+                                    {{ category }}: {{ count }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-cog fa-2x text-muted mb-2"></i>
+                            <p class="text-muted">لا توجد إعدادات</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- License Information -->
+    {% if license_info %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card report-card">
+                <div class="card-header {% if license_info.is_expired %}bg-danger{% else %}bg-success{% endif %} text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-certificate me-2"></i>
+                        معلومات الترخيص
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6>نوع الترخيص:</h6>
+                            <p class="text-primary">{{ license_info.get_license_type_display }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>حالة الترخيص:</h6>
+                            {% if license_info.is_expired %}
+                                <span class="badge bg-danger">منتهي الصلاحية</span>
+                            {% else %}
+                                <span class="badge bg-success">نشط</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <h6>تاريخ الانتهاء:</h6>
+                            <p class="{% if license_info.is_expired %}text-danger{% else %}text-warning{% endif %}">
+                                {{ license_info.expiry_date|date:"Y-m-d" }}
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>الأيام المتبقية:</h6>
+                            <p class="{% if license_info.days_remaining < 7 %}text-danger{% elif license_info.days_remaining < 30 %}text-warning{% else %}text-success{% endif %}">
+                                {{ license_info.days_remaining }} يوم
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center text-muted">
+                <small>
+                    تم إنشاء هذا التقرير في {{ "now"|date:"Y-m-d H:i:s" }} | 
+                    نظام أوساريك للحسابات v1.0.0
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function exportReport() {
+    // Simulate PDF export
+    alert('سيتم تصدير التقرير قريباً...');
+}
+</script>
+{% endblock %}

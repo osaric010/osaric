@@ -1,0 +1,299 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-plus-circle text-success me-2"></i>
+                    {{ title }}
+                </h2>
+                <div>
+                    <a href="{% url 'inventory:stock_increase_list' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للقائمة
+                    </a>
+                    {% if increase.status == 'DRAFT' %}
+                        <a href="{% url 'inventory:stock_increase_edit' increase.pk %}" class="btn btn-warning">
+                            <i class="fas fa-edit me-1"></i>
+                            تعديل
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- معلومات الإذن -->
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                معلومات الإذن
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">رقم الإذن:</label>
+                                    <div class="fw-bold">{{ increase.increase_number }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">التاريخ:</label>
+                                    <div class="fw-bold">{{ increase.date|date:"d/m/Y" }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">المخزن:</label>
+                                    <div class="fw-bold">{{ increase.warehouse.name }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">الحالة:</label>
+                                    <div>
+                                        {% if increase.status == 'DRAFT' %}
+                                            <span class="badge bg-secondary fs-6">{{ increase.get_status_display }}</span>
+                                        {% elif increase.status == 'APPROVED' %}
+                                            <span class="badge bg-info fs-6">{{ increase.get_status_display }}</span>
+                                        {% elif increase.status == 'APPLIED' %}
+                                            <span class="badge bg-success fs-6">{{ increase.get_status_display }}</span>
+                                        {% elif increase.status == 'CANCELLED' %}
+                                            <span class="badge bg-danger fs-6">{{ increase.get_status_display }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label text-muted">سبب الزيادة:</label>
+                                    <div class="fw-bold">{{ increase.reason }}</div>
+                                </div>
+                                {% if increase.notes %}
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label text-muted">ملاحظات:</label>
+                                        <div>{{ increase.notes }}</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                ملخص الإذن
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">إجمالي المبلغ:</label>
+                                <div class="h4 text-success">{{ increase.total_amount|floatformat:2 }} ر.س</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">عدد الأصناف:</label>
+                                <div class="fw-bold">{{ items.count }} صنف</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">أنشئ بواسطة:</label>
+                                <div>{{ increase.created_by.get_full_name|default:increase.created_by.username }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">تاريخ الإنشاء:</label>
+                                <div>{{ increase.created_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            {% if increase.approved_by %}
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">معتمد بواسطة:</label>
+                                    <div>{{ increase.approved_by.get_full_name|default:increase.approved_by.username }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">تاريخ الاعتماد:</label>
+                                    <div>{{ increase.approved_date|date:"d/m/Y H:i" }}</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- إجراءات -->
+                    {% if increase.status == 'DRAFT' %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">الإجراءات المتاحة</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-info w-100 mb-2" 
+                                        onclick="approveIncrease({{ increase.pk }})">
+                                    <i class="fas fa-check me-1"></i>
+                                    اعتماد الإذن
+                                </button>
+                                <button type="button" class="btn btn-danger w-100" 
+                                        onclick="deleteIncrease({{ increase.pk }}, '{{ increase.increase_number }}')">
+                                    <i class="fas fa-trash me-1"></i>
+                                    حذف الإذن
+                                </button>
+                            </div>
+                        </div>
+                    {% elif increase.status == 'APPROVED' %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">الإجراءات المتاحة</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-primary w-100" 
+                                        onclick="applyIncrease({{ increase.pk }})">
+                                    <i class="fas fa-play me-1"></i>
+                                    تطبيق على المخزون
+                                </button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- أصناف الإذن -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-boxes me-2"></i>
+                        أصناف الإذن
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>الصنف</th>
+                                        <th>الكمية</th>
+                                        <th>تكلفة الوحدة</th>
+                                        <th>إجمالي التكلفة</th>
+                                        <th>تاريخ الانتهاء</th>
+                                        <th>رقم الدفعة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ item.item.name }}</strong>
+                                                <br><small class="text-muted">{{ item.item.code }}</small>
+                                            </td>
+                                            <td>{{ item.quantity|floatformat:3 }} {{ item.item.unit.name|default:"وحدة" }}</td>
+                                            <td>{{ item.unit_cost|floatformat:2 }} ر.س</td>
+                                            <td><strong class="text-success">{{ item.total_cost|floatformat:2 }} ر.س</strong></td>
+                                            <td>
+                                                {% if item.expiry_date %}
+                                                    {{ item.expiry_date|date:"d/m/Y" }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.batch_number %}
+                                                    {{ item.batch_number }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-info">
+                                    <tr>
+                                        <td colspan="3"><strong>الإجمالي العام:</strong></td>
+                                        <td><strong class="text-success">{{ increase.total_amount|floatformat:2 }} ر.س</strong></td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد أصناف في هذا الإذن</h5>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function approveIncrease(increaseId) {
+    if (confirm('هل تريد اعتماد هذا الإذن؟')) {
+        fetch(`/inventory/stock-increases/${increaseId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الاعتماد');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الاعتماد');
+        });
+    }
+}
+
+function applyIncrease(increaseId) {
+    if (confirm('هل تريد تطبيق هذا الإذن على المخزون؟ لا يمكن التراجع عن هذا الإجراء.')) {
+        fetch(`/inventory/stock-increases/${increaseId}/apply/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء التطبيق');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء التطبيق');
+        });
+    }
+}
+
+function deleteIncrease(increaseId, increaseNumber) {
+    if (confirm(`هل أنت متأكد من حذف إذن الزيادة "${increaseNumber}"؟`)) {
+        fetch(`/inventory/stock-increases/${increaseId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/inventory/stock-increases/';
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-truck text-primary me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'reports:warehouses_reports' %}">تقارير المخازن</a></li>
+                            <li class="breadcrumb-item active">التحويلات بين المخازن التفصيلي</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">من مخزن</label>
+                    <select name="from_warehouse_id" class="form-select">
+                        <option value="">جميع المخازن</option>
+                        {% for warehouse in warehouses %}
+                        <option value="{{ warehouse.id }}" {% if selected_from_warehouse == warehouse.id|stringformat:"s" %}selected{% endif %}>
+                            {{ warehouse.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">إلى مخزن</label>
+                    <select name="to_warehouse_id" class="form-select">
+                        <option value="">جميع المخازن</option>
+                        {% for warehouse in warehouses %}
+                        <option value="{{ warehouse.id }}" {% if selected_to_warehouse == warehouse.id|stringformat:"s" %}selected{% endif %}>
+                            {{ warehouse.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>عرض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if transfers %}
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-lg-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_transfers }}</h4>
+                            <p class="mb-0">عدد التحويلات</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_amount|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي قيمة التحويلات</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_items }}</h4>
+                            <p class="mb-0">عدد الأصناف المحولة</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfers -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                تفاصيل التحويلات بين المخازن
+                <span class="badge bg-primary">{{ total_transfers }}</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>رقم التحويل</th>
+                            <th>التاريخ</th>
+                            <th>من مخزن</th>
+                            <th>إلى مخزن</th>
+                            <th>إجمالي القيمة</th>
+                            <th>الحالة</th>
+                            <th>المعتمد من</th>
+                            <th>ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transfer in transfers %}
+                        <tr>
+                            <td>
+                                <strong class="text-primary">{{ transfer.transfer_number|default:transfer.id }}</strong>
+                            </td>
+                            <td>{{ transfer.date|date:"Y-m-d" }}</td>
+                            <td>
+                                <strong class="text-danger">{{ transfer.from_warehouse.name }}</strong>
+                                {% if transfer.from_warehouse.location %}
+                                <small class="text-muted d-block">{{ transfer.from_warehouse.location }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-success">{{ transfer.to_warehouse.name }}</strong>
+                                {% if transfer.to_warehouse.location %}
+                                <small class="text-muted d-block">{{ transfer.to_warehouse.location }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-primary">{{ transfer.total_amount|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                {% if transfer.status == 'DRAFT' %}
+                                <span class="badge bg-secondary">مسودة</span>
+                                {% elif transfer.status == 'PENDING' %}
+                                <span class="badge bg-warning">معلق</span>
+                                {% elif transfer.status == 'APPROVED' %}
+                                <span class="badge bg-info">معتمد</span>
+                                {% elif transfer.status == 'TRANSFERRED' %}
+                                <span class="badge bg-success">محول</span>
+                                {% elif transfer.status == 'RECEIVED' %}
+                                <span class="badge bg-primary">مستلم</span>
+                                {% elif transfer.status == 'CANCELLED' %}
+                                <span class="badge bg-danger">ملغي</span>
+                                {% else %}
+                                <span class="badge bg-dark">{{ transfer.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if transfer.approved_by %}
+                                <strong>{{ transfer.approved_by.get_full_name|default:transfer.approved_by.username }}</strong>
+                                {% if transfer.approved_date %}
+                                <small class="text-muted d-block">{{ transfer.approved_date|date:"Y-m-d" }}</small>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if transfer.notes %}
+                                <small class="text-muted">{{ transfer.notes|truncatechars:50 }}</small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="4">الإجمالي</th>
+                            <th class="text-primary">{{ total_amount|floatformat:2 }}</th>
+                            <th colspan="3"></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">لا توجد تحويلات بين المخازن</h5>
+            <p class="text-muted">لا توجد تحويلات بين المخازن في الفترة المحددة</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .btn, .breadcrumb, .card-header {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

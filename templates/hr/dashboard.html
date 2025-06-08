@@ -1,0 +1,219 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}لوحة تحكم شؤون العاملين{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-users text-info me-2"></i>
+                        لوحة تحكم شؤون العاملين
+                    </h2>
+                    <p class="text-muted mb-0">إدارة شاملة لشؤون الموظفين والموارد البشرية</p>
+                </div>
+                <div>
+                    <a href="{% url 'hr:employee_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>
+                        إضافة موظف جديد
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_employees }}</h4>
+                            <p class="mb-0">إجمالي الموظفين</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-primary bg-opacity-75">
+                    <a href="{% url 'hr:employee_list' %}" class="text-white text-decoration-none">
+                        <small>عرض التفاصيل <i class="fas fa-arrow-left"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ active_employees }}</h4>
+                            <p class="mb-0">الموظفين النشطين</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-success bg-opacity-75">
+                    <a href="{% url 'hr:employee_list' %}?status=ACTIVE" class="text-white text-decoration-none">
+                        <small>عرض التفاصيل <i class="fas fa-arrow-left"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_departments }}</h4>
+                            <p class="mb-0">الأقسام</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-info bg-opacity-75">
+                    <a href="{% url 'hr:department_list' %}" class="text-white text-decoration-none">
+                        <small>عرض التفاصيل <i class="fas fa-arrow-left"></i></small>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ new_employees }}</h4>
+                            <p class="mb-0">موظفين جدد (30 يوم)</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-warning bg-opacity-75">
+                    <small>آخر 30 يوماً</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt text-warning me-2"></i>
+                        الإجراءات السريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'hr:salary_system_list' %}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center">
+                                <i class="fas fa-money-bill fs-2 mb-2"></i>
+                                <span>أنظمة صرف المرتبات</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'hr:department_list' %}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center">
+                                <i class="fas fa-sitemap fs-2 mb-2"></i>
+                                <span>إدارة الأقسام</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'hr:position_list' %}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center">
+                                <i class="fas fa-user-tie fs-2 mb-2"></i>
+                                <span>المناصب والوظائف</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'hr:employee_list' %}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center">
+                                <i class="fas fa-users fs-2 mb-2"></i>
+                                <span>إدارة الموظفين</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Statistics -->
+    {% if departments_stats %}
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar text-primary me-2"></i>
+                        توزيع الموظفين حسب الأقسام
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for dept in departments_stats %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>{{ dept.name }}</strong>
+                            <small class="text-muted d-block">{{ dept.code }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-primary fs-6">{{ dept.employee_count }} موظف</span>
+                        </div>
+                    </div>
+                    {% if not forloop.last %}
+                    <hr>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        معلومات إضافية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>إجمالي المناصب:</span>
+                            <strong>{{ total_positions }}</strong>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>أنظمة المرتبات:</span>
+                            <strong>{{ total_salary_systems }}</strong>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <small class="text-muted">
+                            آخر تحديث: {{ "now"|date:"Y-m-d H:i" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

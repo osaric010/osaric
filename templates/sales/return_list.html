@@ -1,0 +1,229 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-undo text-danger me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'sales:return_create' %}" class="btn btn-danger">
+                    <i class="fas fa-plus me-1"></i>
+                    إضافة مرتجع جديد
+                </a>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">البحث</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search_query }}" placeholder="البحث في رقم المرتجع أو اسم العميل">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">الحالة</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">جميع الحالات</option>
+                                {% for value, label in status_choices %}
+                                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search me-1"></i>
+                                بحث
+                            </button>
+                            <a href="{% url 'sales:return_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                مسح
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة مرتجعات المبيعات
+                        <span class="badge bg-danger ms-2">{{ page_obj.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم المرتجع</th>
+                                        <th>التاريخ</th>
+                                        <th>العميل</th>
+                                        <th>الفاتورة الأصلية</th>
+                                        <th>إجمالي المبلغ</th>
+                                        <th>سبب الإرجاع</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for return in page_obj %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ return.return_number }}</strong>
+                                            </td>
+                                            <td>{{ return.date|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <a href="#" class="text-decoration-none">
+                                                    {{ return.customer.name }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                {% if return.original_invoice %}
+                                                    <a href="{% url 'sales:invoice_detail' return.original_invoice.pk %}" 
+                                                       class="text-decoration-none">
+                                                        {{ return.original_invoice.invoice_number }}
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <strong class="text-danger">{{ return.total_amount|floatformat:2 }} ر.س</strong>
+                                            </td>
+                                            <td>
+                                                {% if return.reason %}
+                                                    <span class="badge bg-secondary">{{ return.get_reason_display }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if return.status == 'DRAFT' %}
+                                                    <span class="badge bg-secondary">{{ return.get_status_display }}</span>
+                                                {% elif return.status == 'CONFIRMED' %}
+                                                    <span class="badge bg-primary">{{ return.get_status_display }}</span>
+                                                {% elif return.status == 'PROCESSED' %}
+                                                    <span class="badge bg-success">{{ return.get_status_display }}</span>
+                                                {% elif return.status == 'CANCELLED' %}
+                                                    <span class="badge bg-dark">{{ return.get_status_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-light text-dark">{{ return.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="#" class="btn btn-sm btn-outline-info" title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if return.status == 'DRAFT' %}
+                                                        <a href="#" class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                            onclick="printReturn({{ return.pk }})" title="طباعة">
+                                                        <i class="fas fa-print"></i>
+                                                    </button>
+                                                    {% if return.status == 'DRAFT' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="deleteReturn({{ return.pk }}, '{{ return.return_number }}')" title="حذف">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-undo fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد مرتجعات مبيعات</h5>
+                            <p class="text-muted">ابدأ بإضافة مرتجع مبيعات جديد</p>
+                            <a href="{% url 'sales:return_create' %}" class="btn btn-danger">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة مرتجع جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function printReturn(returnId) {
+    alert('سيتم إضافة وظيفة الطباعة قريباً');
+}
+
+function deleteReturn(returnId, returnNumber) {
+    if (confirm(`هل أنت متأكد من حذف المرتجع "${returnNumber}"؟`)) {
+        fetch(`/sales/returns/${returnId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+</script>
+{% endblock %}

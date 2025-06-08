@@ -1,0 +1,109 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-hand-holding-usd text-success me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'branches:home' %}">الفروع</a></li>
+                            <li class="breadcrumb-item active">إيرادات تحصيلية</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <a href="{% url 'branches:collection_revenues_add' %}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>
+                        إضافة إيراد تحصيلي
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coming Soon -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-hand-holding-usd fa-4x text-success mb-4"></i>
+                    <h3 class="text-muted mb-3">إيرادات تحصيلية تخص الفروع</h3>
+                    <p class="text-muted mb-4">
+                        هذه الصفحة تحت التطوير. ستتيح لك تسجيل وإدارة الإيرادات التحصيلية التي تخص الفروع
+                        من مبيعات، خدمات، عمولات وغيرها من مصادر الإيرادات.
+                    </p>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
+                                    <h6>مبيعات</h6>
+                                    <p class="text-muted small">إيرادات من المبيعات</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-tools fa-2x text-info mb-2"></i>
+                                    <h6>خدمات</h6>
+                                    <p class="text-muted small">إيرادات من الخدمات</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-percentage fa-2x text-warning mb-2"></i>
+                                    <h6>عمولات</h6>
+                                    <p class="text-muted small">إيرادات من العمولات</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-plus-circle fa-2x text-success mb-2"></i>
+                                    <h6>أخرى</h6>
+                                    <p class="text-muted small">إيرادات متنوعة</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>معلومة:</strong> يتم ربط الإيرادات تلقائياً بالفرع المحدد
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-success">
+                                <i class="fas fa-chart-line me-2"></i>
+                                <strong>تقارير:</strong> متابعة الإيرادات لكل فرع بشكل منفصل
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'branches:collection_revenues_add' %}" class="btn btn-success btn-lg">
+                        <i class="fas fa-plus me-2"></i>
+                        تسجيل إيراد تحصيلي جديد
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

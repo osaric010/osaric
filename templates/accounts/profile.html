@@ -1,0 +1,210 @@
+{% extends 'base/base.html' %}
+
+{% block title %}الملف الشخصي - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    الملف الشخصي
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-4">
+                        <div class="user-avatar mx-auto mb-3" style="width: 120px; height: 120px; font-size: 3rem;">
+                            {% if user.first_name %}
+                                {{ user.first_name|first }}{{ user.last_name|first }}
+                            {% else %}
+                                {{ user.username|first|upper }}
+                            {% endif %}
+                        </div>
+                        <h4>{{ user.get_full_name|default:user.username }}</h4>
+                        <p class="text-muted">{{ user.email }}</p>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <h6 class="text-muted mb-3">معلومات الحساب</h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>اسم المستخدم:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                {{ user.username }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>الاسم الكامل:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                {{ user.get_full_name|default:"غير محدد" }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>البريد الإلكتروني:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                {{ user.email|default:"غير محدد" }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>تاريخ الانضمام:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                {{ user.date_joined|date:"d/m/Y" }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>آخر تسجيل دخول:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                {% if user.last_login %}
+                                    {{ user.last_login|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    لم يسجل دخول من قبل
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-sm-4">
+                                <strong>الصلاحيات:</strong>
+                            </div>
+                            <div class="col-sm-8">
+                                {% if user.is_superuser %}
+                                    <span class="badge bg-danger">مدير عام</span>
+                                {% elif user.is_staff %}
+                                    <span class="badge bg-warning">موظف</span>
+                                {% else %}
+                                    <span class="badge bg-info">مستخدم</span>
+                                {% endif %}
+                                
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">غير نشط</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex gap-2">
+                            <a href="#" class="btn btn-primary">
+                                <i class="fas fa-edit me-2"></i>
+                                تعديل الملف الشخصي
+                            </a>
+                            <a href="#" class="btn btn-outline-secondary">
+                                <i class="fas fa-key me-2"></i>
+                                تغيير كلمة المرور
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    النشاط الأخير
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">تسجيل دخول</h6>
+                            <p class="timeline-description text-muted">
+                                تم تسجيل الدخول بنجاح
+                            </p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                {% now "d/m/Y H:i" %}
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">إنشاء الحساب</h6>
+                            <p class="timeline-description text-muted">
+                                تم إنشاء الحساب بنجاح
+                            </p>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ user.date_joined|date:"d/m/Y H:i" }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -2.25rem;
+    top: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px #e9ecef;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border-left: 3px solid #dee2e6;
+}
+
+.timeline-title {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.timeline-description {
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}

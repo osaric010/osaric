@@ -1,0 +1,210 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-clipboard-list text-warning me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'purchases:order_create' %}" class="btn btn-warning">
+                    <i class="fas fa-plus me-1"></i>
+                    إضافة أمر شراء جديد
+                </a>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">البحث</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search_query }}" placeholder="البحث في رقم الأمر أو اسم المورد">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">الحالة</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">جميع الحالات</option>
+                                {% for value, label in status_choices %}
+                                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search me-1"></i>
+                                بحث
+                            </button>
+                            <a href="{% url 'purchases:order_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                مسح
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة أوامر الشراء
+                        <span class="badge bg-warning ms-2">{{ page_obj.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم الأمر</th>
+                                        <th>التاريخ</th>
+                                        <th>المورد</th>
+                                        <th>إجمالي المبلغ</th>
+                                        <th>تاريخ التسليم المتوقع</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for order in page_obj %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ order.order_number }}</strong>
+                                            </td>
+                                            <td>{{ order.date|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <a href="#" class="text-decoration-none">
+                                                    {{ order.supplier.name }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <strong class="text-success">{{ order.total_amount|floatformat:2 }} ر.س</strong>
+                                            </td>
+                                            <td>
+                                                {% if order.expected_delivery_date %}
+                                                    {{ order.expected_delivery_date|date:"d/m/Y" }}
+                                                    {% if order.is_overdue %}
+                                                        <br><span class="badge bg-danger">متأخر</span>
+                                                    {% elif order.days_until_delivery <= 3 %}
+                                                        <br><span class="badge bg-warning">{{ order.days_until_delivery }} أيام</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if order.status == 'DRAFT' %}
+                                                    <span class="badge bg-secondary">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'SENT' %}
+                                                    <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'CONFIRMED' %}
+                                                    <span class="badge bg-info">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'PARTIALLY_RECEIVED' %}
+                                                    <span class="badge bg-warning">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'RECEIVED' %}
+                                                    <span class="badge bg-success">{{ order.get_status_display }}</span>
+                                                {% elif order.status == 'CANCELLED' %}
+                                                    <span class="badge bg-dark">{{ order.get_status_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-light text-dark">{{ order.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'purchases:order_detail' order.pk %}" 
+                                                       class="btn btn-sm btn-outline-info" title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if order.status == 'DRAFT' %}
+                                                        <a href="#" class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                            onclick="printOrder({{ order.pk }})" title="طباعة">
+                                                        <i class="fas fa-print"></i>
+                                                    </button>
+                                                    {% if order.status in 'DRAFT,SENT' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                onclick="convertToInvoice({{ order.pk }})" title="تحويل لفاتورة">
+                                                            <i class="fas fa-exchange-alt"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد أوامر شراء</h5>
+                            <p class="text-muted">ابدأ بإضافة أمر شراء جديد</p>
+                            <a href="{% url 'purchases:order_create' %}" class="btn btn-warning">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة أمر شراء جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function printOrder(orderId) {
+    alert('سيتم إضافة وظيفة الطباعة قريباً');
+}
+
+function convertToInvoice(orderId) {
+    if (confirm('هل تريد تحويل هذا الأمر إلى فاتورة مشتريات؟')) {
+        alert('سيتم إضافة وظيفة التحويل قريباً');
+    }
+}
+</script>
+{% endblock %}

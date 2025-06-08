@@ -1,0 +1,261 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-boxes me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'definitions:item_list' %}">الأصناف</a></li>
+                <li class="breadcrumb-item active">{{ item.name }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'definitions:item_edit' item.pk %}" class="btn btn-primary">
+            <i class="fas fa-edit me-2"></i>
+            تعديل الصنف
+        </a>
+        <a href="{% url 'definitions:item_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-2"></i>
+            العودة للقائمة
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Basic Information -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات الصنف
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>كود الصنف:</strong></td>
+                                <td>{{ item.code }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>اسم الصنف:</strong></td>
+                                <td>{{ item.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الفئة:</strong></td>
+                                <td>
+                                    {% if item.category %}
+                                        <span class="badge bg-info">{{ item.category.name }}</span>
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>وحدة القياس:</strong></td>
+                                <td>{{ item.unit.name }} ({{ item.unit.symbol }})</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الباركود:</strong></td>
+                                <td>{{ item.barcode|default:"-" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless">
+                            <tr>
+                                <td><strong>سعر التكلفة:</strong></td>
+                                <td>{{ item.cost_price|floatformat:2 }} ج.م</td>
+                            </tr>
+                            <tr>
+                                <td><strong>سعر البيع:</strong></td>
+                                <td>{{ item.selling_price|floatformat:2 }} ج.م</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الحد الأدنى:</strong></td>
+                                <td>{{ item.min_stock|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الحد الأقصى:</strong></td>
+                                <td>{{ item.max_stock|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>الوزن:</strong></td>
+                                <td>{{ item.weight|default:"-" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                {% if item.description %}
+                <hr>
+                <div class="row">
+                    <div class="col-12">
+                        <h6>الوصف:</h6>
+                        <p class="text-muted">{{ item.description }}</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Additional Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    معلومات إضافية
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>تاريخ الإنشاء:</strong> {{ item.created_at|date:"d/m/Y H:i" }}</p>
+                        {% if item.created_by %}
+                            <p><strong>أنشئ بواسطة:</strong> {{ item.created_by.get_full_name|default:item.created_by.username }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        {% if item.updated_at %}
+                            <p><strong>تاريخ التحديث:</strong> {{ item.updated_at|date:"d/m/Y H:i" }}</p>
+                        {% endif %}
+                        {% if item.updated_by %}
+                            <p><strong>حُدث بواسطة:</strong> {{ item.updated_by.get_full_name|default:item.updated_by.username }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image and Quick Actions -->
+    <div class="col-lg-4">
+        <!-- Item Image -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-image me-2"></i>
+                    صورة الصنف
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}" class="img-fluid rounded" style="max-height: 200px;">
+                {% else %}
+                    <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="fas fa-image fa-3x text-muted"></i>
+                    </div>
+                    <p class="text-muted mt-2">لا توجد صورة</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    إجراءات سريعة
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'definitions:item_edit' item.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>
+                        تعديل الصنف
+                    </a>
+                    <button type="button" class="btn btn-outline-info">
+                        <i class="fas fa-warehouse me-2"></i>
+                        عرض المخزون
+                    </button>
+                    <button type="button" class="btn btn-outline-success">
+                        <i class="fas fa-chart-line me-2"></i>
+                        تقرير الحركة
+                    </button>
+                    <button type="button" 
+                            class="btn btn-outline-danger delete-btn" 
+                            data-id="{{ item.pk }}"
+                            data-name="{{ item.name }}">
+                        <i class="fas fa-trash me-2"></i>
+                        حذف الصنف
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف الصنف: <strong>{{ item.name }}</strong>؟</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    لا يمكن التراجع عن هذا الإجراء
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteBtn = document.querySelector('.delete-btn');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            deleteModal.show();
+        });
+    }
+
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            fetch(`/definitions/items/{{ item.pk }}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{% url "definitions:item_list" %}';
+                } else {
+                    alert('حدث خطأ أثناء الحذف');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الحذف');
+            });
+            deleteModal.hide();
+        });
+    }
+});
+</script>
+{% endblock %}

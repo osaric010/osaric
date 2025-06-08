@@ -1,0 +1,187 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-bullseye text-danger me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">إضافة مركز ربحية جديد</p>
+                </div>
+                <div>
+                    <a href="{% url 'accounting:profit_centers' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>
+                        بيانات مركز الربحية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="center_code" class="form-label">كود المركز <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="center_code" name="center_code" 
+                                       value="{% if profit_center %}{{ profit_center.center_code }}{% else %}{{ form_data.center_code|default:'' }}{% endif %}" required>
+                                <div class="form-text">كود فريد لمركز الربحية</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="center_name" class="form-label">اسم المركز <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="center_name" name="center_name" 
+                                       value="{% if profit_center %}{{ profit_center.center_name }}{% else %}{{ form_data.center_name|default:'' }}{% endif %}" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="manager" class="form-label">المدير المسؤول</label>
+                                <select class="form-select" id="manager" name="manager">
+                                    <option value="">اختر المدير المسؤول</option>
+                                    {% for user in users %}
+                                    <option value="{{ user.id }}" 
+                                            {% if profit_center and profit_center.manager.id == user.id %}selected{% elif form_data.manager|stringformat:"s" == user.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ user.get_full_name|default:user.username }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="parent_center" class="form-label">المركز الأب</label>
+                                <select class="form-select" id="parent_center" name="parent_center">
+                                    <option value="">لا يوجد (مركز رئيسي)</option>
+                                    {% for center in profit_centers %}
+                                    <option value="{{ center.id }}" 
+                                            {% if profit_center and profit_center.parent_center and profit_center.parent_center.id == center.id %}selected{% elif form_data.parent_center|stringformat:"s" == center.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ center.center_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">وصف المركز</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                      placeholder="وصف تفصيلي لمركز الربحية">{% if profit_center %}{{ profit_center.description }}{% else %}{{ form_data.description|default:'' }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="cost_center_code" class="form-label">كود مركز التكلفة</label>
+                                <input type="text" class="form-control" id="cost_center_code" name="cost_center_code" 
+                                       value="{% if profit_center %}{{ profit_center.cost_center_code }}{% else %}{{ form_data.cost_center_code|default:'' }}{% endif %}"
+                                       placeholder="كود مركز التكلفة المرتبط">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="budget_amount" class="form-label">الميزانية المخصصة</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="budget_amount" name="budget_amount" 
+                                           value="{% if profit_center %}{{ profit_center.budget_amount }}{% else %}{{ form_data.budget_amount|default:'' }}{% endif %}"
+                                           step="0.01" min="0" placeholder="0.00">
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" 
+                                           {% if profit_center %}{% if profit_center.is_active %}checked{% endif %}{% else %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_active">
+                                        مركز نشط
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="track_revenue" name="track_revenue" 
+                                           {% if profit_center and profit_center.track_revenue %}checked{% elif form_data.track_revenue %}checked{% endif %}>
+                                    <label class="form-check-label" for="track_revenue">
+                                        تتبع الإيرادات
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="track_expenses" name="track_expenses" 
+                                           {% if profit_center and profit_center.track_expenses %}checked{% elif form_data.track_expenses %}checked{% endif %}>
+                                    <label class="form-check-label" for="track_expenses">
+                                        تتبع المصروفات
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2" 
+                                      placeholder="ملاحظات إضافية (اختياري)">{% if profit_center %}{{ profit_center.notes }}{% else %}{{ form_data.notes|default:'' }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'accounting:profit_centers' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ مركز الربحية
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate center code if empty
+    const centerCodeInput = document.getElementById('center_code');
+    if (!centerCodeInput.value) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        centerCodeInput.value = `PC-${year}${month}${day}`;
+    }
+
+    // Prevent selecting self as parent
+    const parentCenterSelect = document.getElementById('parent_center');
+    const currentCenterId = '{% if profit_center %}{{ profit_center.id }}{% endif %}';
+    
+    if (currentCenterId && parentCenterSelect) {
+        Array.from(parentCenterSelect.options).forEach(option => {
+            if (option.value === currentCenterId) {
+                option.disabled = true;
+                option.textContent += ' (لا يمكن اختيار نفس المركز)';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

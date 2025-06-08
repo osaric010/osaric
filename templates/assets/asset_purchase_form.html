@@ -1,0 +1,371 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-shopping-cart text-primary me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'assets:asset_purchase_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <!-- معلومات الشراء الأساسية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات الشراء الأساسية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">رقم الشراء</label>
+                                <input type="text" class="form-control" name="purchase_number" 
+                                       placeholder="سيتم إنشاؤه تلقائياً" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">تاريخ الشراء</label>
+                                <input type="date" class="form-control" name="purchase_date" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">المورد</label>
+                                <input type="text" class="form-control" name="supplier" 
+                                       placeholder="اسم المورد" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">رقم الفاتورة</label>
+                                <input type="text" class="form-control" name="invoice_number" 
+                                       placeholder="رقم الفاتورة (اختياري)">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">إجمالي المبلغ</label>
+                                <input type="number" class="form-control" name="total_amount" 
+                                       step="0.01" min="0.01" placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الخزينة</label>
+                                <select class="form-select" name="treasury" required>
+                                    <option value="">اختر الخزينة</option>
+                                    <!-- سيتم ملؤها من الـ view -->
+                                </select>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">ملاحظات</label>
+                                <textarea class="form-control" name="notes" rows="3" 
+                                          placeholder="ملاحظات إضافية (اختياري)"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- تفاصيل الأصول المشتراة -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            تفاصيل الأصول المشتراة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="asset-items">
+                            <!-- عنصر أصل واحد -->
+                            <div class="asset-item border rounded p-3 mb-3">
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">كود الأصل</label>
+                                        <input type="text" class="form-control" name="asset_code[]" 
+                                               placeholder="كود الأصل" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">اسم الأصل</label>
+                                        <input type="text" class="form-control" name="asset_name[]" 
+                                               placeholder="اسم الأصل" required>
+                                    </div>
+                                    <div class="col-md-2 mb-3">
+                                        <label class="form-label">الكمية</label>
+                                        <input type="number" class="form-control quantity" name="quantity[]" 
+                                               value="1" min="1" required>
+                                    </div>
+                                    <div class="col-md-2 mb-3">
+                                        <label class="form-label">تكلفة الوحدة</label>
+                                        <input type="number" class="form-control unit-cost" name="unit_cost[]" 
+                                               step="0.01" min="0.01" placeholder="0.00" required>
+                                    </div>
+                                    <div class="col-md-2 mb-3">
+                                        <label class="form-label">إجمالي التكلفة</label>
+                                        <input type="number" class="form-control total-cost" name="total_cost[]" 
+                                               step="0.01" readonly>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">مجموعة الأصل</label>
+                                        <select class="form-select" name="asset_group[]" required>
+                                            <option value="">اختر مجموعة الأصل</option>
+                                            <!-- سيتم ملؤها من الـ view -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">العمر الإنتاجي (سنوات)</label>
+                                        <input type="number" class="form-control" name="useful_life[]" 
+                                               value="5" min="1" required>
+                                    </div>
+                                    <div class="col-md-2 mb-3 d-flex align-items-end">
+                                        <button type="button" class="btn btn-danger remove-item w-100">
+                                            <i class="fas fa-trash me-1"></i>
+                                            حذف
+                                        </button>
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label">وصف الأصل</label>
+                                        <textarea class="form-control" name="asset_description[]" rows="2" 
+                                                  placeholder="وصف تفصيلي للأصل"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="button" id="add-asset-item" class="btn btn-outline-primary">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة أصل آخر
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ملخص الشراء -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calculator me-2"></i>
+                            ملخص الشراء
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6>عدد الأصول</h6>
+                                    <span class="h4 text-primary" id="total-items">1</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6>إجمالي الكمية</h6>
+                                    <span class="h4 text-info" id="total-quantity">1</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6>إجمالي التكلفة</h6>
+                                    <span class="h4 text-success" id="grand-total">0.00 ر.س</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات مهمة -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            معلومات مهمة حول شراء الأصول
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        تسجيل الشراء
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>سيتم إنشاء سجل لكل أصل في النظام</li>
+                                        <li>سيتم خصم المبلغ من الخزينة المحددة</li>
+                                        <li>سيبدأ حساب الإهلاك من تاريخ الشراء</li>
+                                        <li>تأكد من صحة جميع البيانات</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-warning">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        نصائح مهمة
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>استخدم أكواد أصول فريدة</li>
+                                        <li>حدد مجموعة الأصل بدقة</li>
+                                        <li>قدر العمر الإنتاجي بعناية</li>
+                                        <li>احتفظ بفاتورة الشراء</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الحفظ -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'assets:asset_purchase_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {{ action }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديد تاريخ اليوم افتراضياً
+    const dateField = document.querySelector('input[name="purchase_date"]');
+    if (dateField && !dateField.value) {
+        dateField.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // حساب إجمالي التكلفة لكل عنصر
+    function calculateItemTotal(item) {
+        const quantity = parseFloat(item.querySelector('.quantity').value) || 0;
+        const unitCost = parseFloat(item.querySelector('.unit-cost').value) || 0;
+        const totalCost = quantity * unitCost;
+        item.querySelector('.total-cost').value = totalCost.toFixed(2);
+        updateSummary();
+    }
+    
+    // تحديث الملخص
+    function updateSummary() {
+        const items = document.querySelectorAll('.asset-item');
+        let totalItems = items.length;
+        let totalQuantity = 0;
+        let grandTotal = 0;
+        
+        items.forEach(item => {
+            const quantity = parseFloat(item.querySelector('.quantity').value) || 0;
+            const totalCost = parseFloat(item.querySelector('.total-cost').value) || 0;
+            totalQuantity += quantity;
+            grandTotal += totalCost;
+        });
+        
+        document.getElementById('total-items').textContent = totalItems;
+        document.getElementById('total-quantity').textContent = totalQuantity;
+        document.getElementById('grand-total').textContent = grandTotal.toFixed(2) + ' ر.س';
+        
+        // تحديث إجمالي المبلغ في النموذج
+        document.querySelector('input[name="total_amount"]').value = grandTotal.toFixed(2);
+    }
+    
+    // إضافة مستمعي الأحداث للعناصر الموجودة
+    function addEventListeners(item) {
+        const quantityInput = item.querySelector('.quantity');
+        const unitCostInput = item.querySelector('.unit-cost');
+        const removeBtn = item.querySelector('.remove-item');
+        
+        quantityInput.addEventListener('input', () => calculateItemTotal(item));
+        unitCostInput.addEventListener('input', () => calculateItemTotal(item));
+        
+        removeBtn.addEventListener('click', function() {
+            if (document.querySelectorAll('.asset-item').length > 1) {
+                item.remove();
+                updateSummary();
+            } else {
+                alert('يجب أن يكون هناك أصل واحد على الأقل');
+            }
+        });
+    }
+    
+    // إضافة مستمعي الأحداث للعنصر الأول
+    addEventListeners(document.querySelector('.asset-item'));
+    
+    // إضافة عنصر أصل جديد
+    document.getElementById('add-asset-item').addEventListener('click', function() {
+        const container = document.getElementById('asset-items');
+        const firstItem = container.querySelector('.asset-item');
+        const newItem = firstItem.cloneNode(true);
+        
+        // مسح القيم
+        newItem.querySelectorAll('input, textarea, select').forEach(input => {
+            if (input.type === 'number' && (input.name.includes('quantity') || input.name.includes('useful_life'))) {
+                input.value = input.name.includes('quantity') ? '1' : '5';
+            } else if (input.readOnly) {
+                input.value = '';
+            } else {
+                input.value = '';
+            }
+        });
+        
+        container.appendChild(newItem);
+        addEventListeners(newItem);
+        updateSummary();
+    });
+    
+    // تحديث أولي
+    updateSummary();
+    
+    // تحقق من صحة النموذج
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const supplier = document.querySelector('input[name="supplier"]').value.trim();
+            const treasury = document.querySelector('select[name="treasury"]').value;
+            const totalAmount = parseFloat(document.querySelector('input[name="total_amount"]').value);
+            
+            if (!supplier) {
+                e.preventDefault();
+                alert('يجب إدخال اسم المورد');
+                return false;
+            }
+            
+            if (!treasury) {
+                e.preventDefault();
+                alert('يجب اختيار الخزينة');
+                return false;
+            }
+            
+            if (!totalAmount || totalAmount <= 0) {
+                e.preventDefault();
+                alert('يجب أن يكون إجمالي المبلغ أكبر من صفر');
+                return false;
+            }
+            
+            // تحقق من بيانات الأصول
+            const items = document.querySelectorAll('.asset-item');
+            for (let item of items) {
+                const assetCode = item.querySelector('input[name="asset_code[]"]').value.trim();
+                const assetName = item.querySelector('input[name="asset_name[]"]').value.trim();
+                const assetGroup = item.querySelector('select[name="asset_group[]"]').value;
+                
+                if (!assetCode || !assetName || !assetGroup) {
+                    e.preventDefault();
+                    alert('يجب ملء جميع بيانات الأصول المطلوبة');
+                    return false;
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

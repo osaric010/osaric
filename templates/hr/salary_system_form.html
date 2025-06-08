@@ -1,0 +1,226 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-money-bill text-success me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'hr:dashboard' %}">شؤون العاملين</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'hr:salary_system_list' %}">أنظمة صرف المرتبات</a></li>
+                            <li class="breadcrumb-item active">{{ action }}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <a href="{% url 'hr:salary_system_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        بيانات نظام صرف المرتب
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- المعلومات الأساسية -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    المعلومات الأساسية
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.code.id_for_label }}" class="form-label">
+                                    كود النظام <span class="text-danger">*</span>
+                                </label>
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                <div class="text-danger small">{{ form.code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">
+                                    اسم النظام <span class="text-danger">*</span>
+                                </label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">
+                                    الوصف
+                                </label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- إعدادات النظام -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-cog me-2"></i>
+                                    إعدادات النظام
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.system_type.id_for_label }}" class="form-label">
+                                    نوع النظام <span class="text-danger">*</span>
+                                </label>
+                                {{ form.system_type }}
+                                {% if form.system_type.errors %}
+                                <div class="text-danger small">{{ form.system_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.currency.id_for_label }}" class="form-label">
+                                    العملة <span class="text-danger">*</span>
+                                </label>
+                                {{ form.currency }}
+                                {% if form.currency.errors %}
+                                <div class="text-danger small">{{ form.currency.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.basic_salary.id_for_label }}" class="form-label">
+                                    الراتب الأساسي <span class="text-danger">*</span>
+                                </label>
+                                {{ form.basic_salary }}
+                                {% if form.basic_salary.errors %}
+                                <div class="text-danger small">{{ form.basic_salary.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- العمل الإضافي -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-clock me-2"></i>
+                                    العمل الإضافي
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    {{ form.include_overtime }}
+                                    <label class="form-check-label" for="{{ form.include_overtime.id_for_label }}">
+                                        يشمل العمل الإضافي
+                                    </label>
+                                </div>
+                                {% if form.include_overtime.errors %}
+                                <div class="text-danger small">{{ form.include_overtime.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.overtime_rate.id_for_label }}" class="form-label">
+                                    معدل العمل الإضافي
+                                </label>
+                                {{ form.overtime_rate }}
+                                <small class="form-text text-muted">مضاعف الراتب الأساسي (مثال: 1.5 = 150%)</small>
+                                {% if form.overtime_rate.errors %}
+                                <div class="text-danger small">{{ form.overtime_rate.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- التأمينات والضرائب -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    التأمينات والضرائب
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.social_insurance_rate.id_for_label }}" class="form-label">
+                                    نسبة التأمينات الاجتماعية (%)
+                                </label>
+                                {{ form.social_insurance_rate }}
+                                {% if form.social_insurance_rate.errors %}
+                                <div class="text-danger small">{{ form.social_insurance_rate.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.tax_exemption.id_for_label }}" class="form-label">
+                                    الإعفاء الضريبي
+                                </label>
+                                {{ form.tax_exemption }}
+                                {% if form.tax_exemption.errors %}
+                                <div class="text-danger small">{{ form.tax_exemption.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'hr:salary_system_list' %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-2"></i>
+                                        إلغاء
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>
+                                        {{ action }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle overtime rate field based on include_overtime checkbox
+    const includeOvertimeCheckbox = document.getElementById('{{ form.include_overtime.id_for_label }}');
+    const overtimeRateField = document.getElementById('{{ form.overtime_rate.id_for_label }}');
+    
+    function toggleOvertimeRate() {
+        if (includeOvertimeCheckbox.checked) {
+            overtimeRateField.disabled = false;
+            overtimeRateField.parentElement.style.opacity = '1';
+        } else {
+            overtimeRateField.disabled = true;
+            overtimeRateField.parentElement.style.opacity = '0.5';
+        }
+    }
+    
+    includeOvertimeCheckbox.addEventListener('change', toggleOvertimeRate);
+    toggleOvertimeRate(); // Initial call
+});
+</script>
+{% endblock %}

@@ -1,0 +1,603 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}القوائم المنبثقة السهلة الاستخدام{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-mouse-pointer text-primary me-2"></i>
+                        القوائم المنبثقة السهلة الاستخدام
+                    </h2>
+                    <p class="text-muted mb-0">تصميم بسيط وسهل للوصول السريع لجميع الوظائف</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Introduction -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-success">
+                <h5 class="alert-heading">
+                    <i class="fas fa-check-circle me-2"></i>
+                    مرحباً بك في القوائم المنبثقة السهلة الاستخدام!
+                </h5>
+                <p class="mb-2">تم تطوير نظام قوائم منبثقة بسيط وسهل لتحسين تجربة التنقل:</p>
+                <ul class="mb-0">
+                    <li><strong>تصميم بسيط:</strong> واجهة نظيفة وواضحة بدون تعقيد</li>
+                    <li><strong>تنظيم ذكي:</strong> الوظائف مرتبة في أقسام ملونة ومنطقية</li>
+                    <li><strong>وصول سريع:</strong> تمرير الماوس أو نقرة واحدة للوصول</li>
+                    <li><strong>تفاعل سلس:</strong> تأثيرات بصرية جميلة ومريحة للعين</li>
+                    <li><strong>زر وصول سريع:</strong> زر عائم للوصول المباشر من أي مكان</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Guide -->
+    <div class="row mb-4">
+        <div class="col-lg-4">
+            <div class="card h-100 border-success">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-mouse me-2"></i>
+                        التنقل بالماوس (سطح المكتب)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0 small">
+                        <li class="mb-2">مرر الماوس فوق "المركز الرئيسي والفروع"</li>
+                        <li class="mb-2">ستظهر القائمة المنبثقة تلقائياً</li>
+                        <li class="mb-2">تصفح الأقسام الملونة</li>
+                        <li class="mb-2">مرر فوق أي عنصر لرؤية التأثير</li>
+                        <li class="mb-0">انقر على الوظيفة المطلوبة</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        التنقل على الهواتف
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0 small">
+                        <li class="mb-2">اضغط على "المركز الرئيسي والفروع"</li>
+                        <li class="mb-2">ستظهر القائمة في عمود واحد</li>
+                        <li class="mb-2">تمرر عبر الأقسام بسهولة</li>
+                        <li class="mb-2">كل قسم له لون مميز</li>
+                        <li class="mb-0">اضغط على الوظيفة المطلوبة</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100 border-warning">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-rocket me-2"></i>
+                        الزر العائم للوصول السريع
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0 small">
+                        <li class="mb-2">ابحث عن الزر العائم أسفل يسار الشاشة</li>
+                        <li class="mb-2">انقر عليه من أي صفحة</li>
+                        <li class="mb-2">سيفتح قائمة الفروع مباشرة</li>
+                        <li class="mb-2">يختفي عند فتح القائمة</li>
+                        <li class="mb-0">مفيد للوصول السريع</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Sections -->
+    <div class="row">
+        <div class="col-12 mb-3">
+            <h4 class="text-secondary">
+                <i class="fas fa-th-large me-2"></i>
+                أقسام Mega Menu المتاحة
+            </h4>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- الإدارة العامة -->
+        <div class="col-lg-3 mb-4">
+            <div class="card h-100 border-success">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        الإدارة العامة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-home text-success me-2"></i>لوحة تحكم الفروع</li>
+                        <li class="mb-2"><i class="fas fa-building text-success me-2"></i>تعريف الفروع</li>
+                        <li class="mb-2"><i class="fas fa-play-circle text-success me-2"></i>القيد الافتتاحي</li>
+                        <li class="mb-0"><i class="fas fa-truck text-success me-2"></i>بضاعة مرحلة للفروع</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- النقدية - الخزائن -->
+        <div class="col-lg-3 mb-4">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        النقدية - الخزائن
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-arrow-down text-primary me-2"></i>نقدية واردة للخزينة</li>
+                        <li class="mb-2"><i class="fas fa-plus text-primary me-2"></i>إضافة نقدية واردة</li>
+                        <li class="mb-2"><i class="fas fa-arrow-up text-primary me-2"></i>نقدية صادرة من الخزينة</li>
+                        <li class="mb-2"><i class="fas fa-plus text-primary me-2"></i>إضافة نقدية صادرة</li>
+                        <li class="mb-0"><i class="fas fa-info-circle text-primary me-2"></i>دليل الاستخدام</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- البنوك - خزائن الفروع -->
+        <div class="col-lg-3 mb-4">
+            <div class="card h-100 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-university me-2"></i>
+                        البنوك - خزائن الفروع
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-arrow-down text-info me-2"></i>إيداعات بنكية واردة</li>
+                        <li class="mb-2"><i class="fas fa-plus text-info me-2"></i>إضافة إيداع جديد</li>
+                        <li class="mb-2"><i class="fas fa-arrow-up text-info me-2"></i>مسحوبات بنكية صادرة</li>
+                        <li class="mb-0"><i class="fas fa-plus text-info me-2"></i>إضافة مسحوب جديد</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- البنوك - بنوك الفروع -->
+        <div class="col-lg-3 mb-4">
+            <div class="card h-100 border-warning">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>
+                        البنوك - بنوك الفروع
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-arrow-down text-warning me-2"></i>تحويلات واردة</li>
+                        <li class="mb-2"><i class="fas fa-plus text-warning me-2"></i>إضافة تحويل وارد</li>
+                        <li class="mb-2"><i class="fas fa-arrow-up text-warning me-2"></i>تحويلات صادرة</li>
+                        <li class="mb-0"><i class="fas fa-plus text-warning me-2"></i>إضافة تحويل صادر</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- الإيرادات التحصيلية -->
+        <div class="col-lg-3 mb-4">
+            <div class="card h-100 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-hand-holding-usd me-2"></i>
+                        الإيرادات التحصيلية
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-list text-danger me-2"></i>عرض الإيرادات التحصيلية</li>
+                        <li class="mb-0"><i class="fas fa-plus text-danger me-2"></i>إضافة إيراد تحصيلي</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- المصروفات المحملة على الفروع -->
+        <div class="col-lg-3 mb-4">
+            <div class="card h-100 border-secondary">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-receipt me-2"></i>
+                        المصروفات المحملة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-list text-secondary me-2"></i>عرض المصروفات المحملة</li>
+                        <li class="mb-0"><i class="fas fa-plus text-secondary me-2"></i>إضافة مصروف محمل</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- التقارير المتخصصة -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100 border-dark">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        التقارير المتخصصة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-file-alt text-dark me-2"></i>تقرير كشف حساب فرع</li>
+                        <li class="mb-2"><i class="fas fa-balance-scale text-dark me-2"></i>تقرير أرصدة الفروع</li>
+                        <li class="mb-0"><i class="fas fa-bell text-dark me-2"></i>تقرير إشعارات العمليات</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- الحسابات العامة -->
+    <div class="row mb-4">
+        <div class="col-12 mb-3">
+            <h4 class="text-purple">
+                <i class="fas fa-calculator me-2"></i>
+                الحسابات العامة
+            </h4>
+        </div>
+
+        <!-- تحويل رصيد بين الأشخاص -->
+        <div class="col-lg-3 mb-4">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>
+                        تحويل رصيد بين الأشخاص
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-0"><i class="fas fa-arrow-right-arrow-left text-primary me-2"></i>تحويل رصيد بين الأشخاص</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- دمج الحسابات الفرعية -->
+        <div class="col-lg-3 mb-4">
+            <div class="card h-100 border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-compress-arrows-alt me-2"></i>
+                        دمج الحسابات الفرعية
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-0"><i class="fas fa-compress text-info me-2"></i>دمج الحسابات الفرعية للأشخاص</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- القيود المحاسبية -->
+        <div class="col-lg-3 mb-4">
+            <div class="card h-100 border-success">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-book me-2"></i>
+                        القيود المحاسبية
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-list text-success me-2"></i>عرض القيود المحاسبية</li>
+                        <li class="mb-0"><i class="fas fa-plus text-success me-2"></i>إضافة قيد محاسبي</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- القيد الافتتاحي -->
+        <div class="col-lg-3 mb-4">
+            <div class="card h-100 border-warning">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-play-circle me-2"></i>
+                        القيد الافتتاحي
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><i class="fas fa-eye text-warning me-2"></i>عرض القيد الافتتاحي</li>
+                        <li class="mb-0"><i class="fas fa-cog text-warning me-2"></i>إعداد القيد الافتتاحي</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- الحساب الختامي -->
+        <div class="col-lg-12 mb-4">
+            <div class="card h-100 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        الحساب الختامي
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-0"><i class="fas fa-bullseye text-danger me-2"></i>مراكز الربحية</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-2">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-0"><i class="fas fa-chart-line text-danger me-2"></i>قائمة الدخل</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-2">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-0"><i class="fas fa-balance-scale text-danger me-2"></i>المركز المالي</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-3">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-0"><i class="fas fa-share-alt text-danger me-2"></i>توزيع الأرباح</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-3">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-0"><i class="fas fa-calendar-times text-danger me-2"></i>إنهاء فترة الحسابات</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- التقارير -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        التقارير
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-success">المبيعات:</h6>
+                    <ul class="small mb-3">
+                        <li>التقارير الأساسية → (تفصيلي، إجمالي، شهري، أرباح)</li>
+                        <li>الخصومات والعمولات → (خصومات، مندوبين، موظفين، حاسبة)</li>
+                    </ul>
+                    
+                    <h6 class="text-info">المشتريات:</h6>
+                    <ul class="small mb-3">
+                        <li>التقارير الأساسية → (تفصيلي، إجمالي، شهري، خصومات)</li>
+                        <li>أوامر التوريد → (قائمة، معلقة، منفذة، تحليل)</li>
+                    </ul>
+                    
+                    <h6 class="text-warning">المخازن:</h6>
+                    <ul class="small mb-0">
+                        <li>أذون الصرف → (تفصيلية، شهرية، تجديد)</li>
+                        <li>التحويلات → (تفصيلية، إجمالية)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- شؤون العاملين -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        شؤون العاملين
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-primary">الإعدادات الأساسية:</h6>
+                    <ul class="small mb-3">
+                        <li>أنظمة صرف المرتب</li>
+                        <li>الأقسام</li>
+                        <li>العاملين</li>
+                        <li>الإضافات والخصومات</li>
+                    </ul>
+                    
+                    <h6 class="text-success">الإضافات للمرتبات:</h6>
+                    <ul class="small mb-3">
+                        <li>إضافات ثابتة</li>
+                        <li>إضافات متغيرة</li>
+                        <li>ساعات عمل خارجي</li>
+                        <li>حاسبة الإضافات</li>
+                    </ul>
+                    
+                    <h6 class="text-danger">الخصومات من المرتبات:</h6>
+                    <ul class="small mb-0">
+                        <li>خصومات ثابتة</li>
+                        <li>خصومات متغيرة</li>
+                        <li>خصومات جزائية</li>
+                        <li>تقارير الخصومات</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="row">
+        <div class="col-12 mb-3">
+            <h4 class="text-secondary">
+                <i class="fas fa-star me-2"></i>
+                مميزات القوائم المنبثقة السهلة
+            </h4>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-center h-100 border-success">
+                <div class="card-body">
+                    <i class="fas fa-eye fa-2x text-success mb-3"></i>
+                    <h6>وضوح في التصميم</h6>
+                    <p class="small text-muted">تصميم نظيف وواضح بدون تعقيد أو ازدحام</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-center h-100 border-primary">
+                <div class="card-body">
+                    <i class="fas fa-tags fa-2x text-primary mb-3"></i>
+                    <h6>تصنيف بالألوان والعلامات</h6>
+                    <p class="small text-muted">كل وظيفة لها علامة ولون مميز للتمييز السريع</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-center h-100 border-info">
+                <div class="card-body">
+                    <i class="fas fa-hand-pointer fa-2x text-info mb-3"></i>
+                    <h6>تفاعل سهل</h6>
+                    <p class="small text-muted">تمرير الماوس أو نقرة واحدة للوصول</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-center h-100 border-warning">
+                <div class="card-body">
+                    <i class="fas fa-rocket fa-2x text-warning mb-3"></i>
+                    <h6>زر الوصول السريع</h6>
+                    <p class="small text-muted">زر عائم للوصول المباشر من أي صفحة</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-center h-100 border-secondary">
+                <div class="card-body">
+                    <i class="fas fa-magic fa-2x text-secondary mb-3"></i>
+                    <h6>تأثيرات بصرية جميلة</h6>
+                    <p class="small text-muted">انتقالات ناعمة وتأثيرات hover مريحة</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-center h-100 border-dark">
+                <div class="card-body">
+                    <i class="fas fa-keyboard fa-2x text-dark mb-3"></i>
+                    <h6>دعم لوحة المفاتيح</h6>
+                    <p class="small text-muted">إغلاق سريع بمفتاح Escape وتنقل بالمفاتيح</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-center h-100 border-danger">
+                <div class="card-body">
+                    <i class="fas fa-mobile-alt fa-2x text-danger mb-3"></i>
+                    <h6>متجاوب تماماً</h6>
+                    <p class="small text-muted">يعمل بكفاءة على جميع الأجهزة والشاشات</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-center h-100 border-primary">
+                <div class="card-body">
+                    <i class="fas fa-heart fa-2x text-primary mb-3"></i>
+                    <h6>تجربة مستخدم ممتازة</h6>
+                    <p class="small text-muted">واجهة بديهية ومريحة للاستخدام اليومي</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tips -->
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info border-info">
+                <h6 class="alert-heading">
+                    <i class="fas fa-lightbulb text-info me-2"></i>
+                    نصائح للاستخدام الأمثل للقوائم المنبثقة السهلة
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="mb-0">
+                            <li><strong>للحاسوب:</strong> مرر الماوس فوق "المركز الرئيسي والفروع"</li>
+                            <li><strong>للهواتف:</strong> اضغط على القسم لفتح القائمة</li>
+                            <li><strong>الألوان:</strong> كل قسم له لون مميز للتمييز السريع</li>
+                            <li><strong>العلامات:</strong> انتبه للعلامات الصغيرة (عرض، جديد، مساعدة)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="mb-0">
+                            <li><strong>الإغلاق:</strong> اضغط Escape أو انقر خارج القائمة</li>
+                            <li><strong>الزر العائم:</strong> استخدمه للوصول السريع من أي صفحة</li>
+                            <li><strong>التأثيرات:</strong> مرر الماوس لرؤية التأثيرات الجميلة</li>
+                            <li><strong>السرعة:</strong> نقرة واحدة للوصول لأي وظيفة</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="row">
+        <div class="col-lg-6 mb-3">
+            <div class="card bg-success text-white text-center h-100">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-mouse-pointer me-2"></i>
+                        جرب القائمة المنبثقة الآن!
+                    </h5>
+                    <p class="card-text">مرر الماوس أو انقر على "المركز الرئيسي والفروع" في القائمة الجانبية</p>
+                    <div class="mt-auto">
+                        <span class="badge bg-light text-success">سهل الاستخدام</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-3">
+            <div class="card bg-warning text-white text-center h-100">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h5 class="card-title">
+                        <i class="fas fa-rocket me-2"></i>
+                        جرب الزر العائم!
+                    </h5>
+                    <p class="card-text">ابحث عن الزر العائم أسفل يسار الشاشة للوصول السريع</p>
+                    <div class="mt-auto">
+                        <span class="badge bg-light text-warning">وصول سريع</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

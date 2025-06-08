@@ -1,0 +1,2288 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-card {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .settings-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .setting-item {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .setting-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+
+    .setting-item.has-changes {
+        border-left-color: #ffc107;
+        background: #fff3cd;
+    }
+
+    .setting-item.saving {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+
+    .setting-item.saved {
+        border-left-color: #198754;
+        background: #d1e7dd;
+    }
+
+    .setting-input.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .setting-actions {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .setting-status {
+        font-size: 0.875rem;
+    }
+
+    /* File Upload Styles */
+    .file-upload-container {
+        position: relative;
+    }
+
+    .file-input {
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .file-input:hover {
+        border-color: var(--primary-color);
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+    .file-preview {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+    }
+
+    .file-preview-new {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid var(--primary-color);
+    }
+
+    .current-file {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 10px;
+        border: 1px solid #dee2e6;
+    }
+
+    .file-name {
+        font-size: 0.9rem;
+        color: #495057;
+        font-weight: 500;
+    }
+
+    .file-upload-container .btn-danger {
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
+    }
+
+    .file-upload-container .btn-danger:hover {
+        opacity: 1;
+    }
+
+    .save-buttons {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .category-save-btn {
+        opacity: 0.8;
+        transition: all 0.3s ease;
+    }
+
+    .category-save-btn:hover {
+        opacity: 1;
+        transform: translateY(-1px);
+    }
+
+    #saveStatusBar {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .global-save-buttons {
+        position: sticky;
+        top: 10px;
+        z-index: 999;
+    }
+
+    .pulse-save {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+        }
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+    }
+
+    .password-strength {
+        height: 4px;
+        border-radius: 2px;
+        margin-top: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .strength-weak { background: #dc3545; }
+    .strength-medium { background: #ffc107; }
+    .strength-strong { background: #198754; }
+
+    .tab-content {
+        padding: 20px 0;
+    }
+
+    .nav-pills .nav-link {
+        border-radius: 25px;
+        padding: 10px 20px;
+        margin: 0 5px;
+        transition: all 0.3s ease;
+    }
+
+    .nav-pills .nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0">
+                        <i class="fas fa-cog text-primary me-3"></i>
+                        {{ title }}
+                    </h1>
+                    <p class="text-muted mb-0 mt-2">إدارة المستخدمين وإعدادات النظام</p>
+                </div>
+                <div class="d-flex gap-2 global-save-buttons">
+                    <button type="button" class="btn btn-success" id="saveAllBtn" onclick="saveAllSettings()"
+                            data-bs-toggle="tooltip" title="حفظ جميع الإعدادات (Ctrl+Shift+S)">
+                        <i class="fas fa-save me-2"></i>
+                        حفظ جميع الإعدادات
+                    </button>
+                    <button type="button" class="btn btn-warning" id="saveChangedBtn" onclick="saveChangedSettings()" style="display: none;"
+                            data-bs-toggle="tooltip" title="حفظ الإعدادات المعدلة فقط (Ctrl+S)">
+                        <i class="fas fa-edit me-2"></i>
+                        حفظ المعدل فقط
+                        <span class="badge bg-light text-dark ms-2" id="changedBadge">0</span>
+                    </button>
+                    <span class="badge bg-info fs-6 p-3 align-self-center">
+                        <i class="fas fa-users me-2"></i>
+                        {{ total_users }} مستخدم | {{ total_staff }} مدير
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Status Bar -->
+    <div class="row mb-3" id="saveStatusBar" style="display: none;">
+        <div class="col-12">
+            <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
+                <div>
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span id="saveStatusMessage">يوجد تغييرات غير محفوظة</span>
+                    <span id="changedCount" class="badge bg-warning ms-2">0</span>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-success me-2" onclick="saveChangedSettings()"
+                            data-bs-toggle="tooltip" title="حفظ التغييرات (Ctrl+S)">
+                        <i class="fas fa-save me-1"></i>
+                        حفظ الآن
+                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="discardChanges()"
+                            data-bs-toggle="tooltip" title="تجاهل التغييرات (Escape)">
+                        <i class="fas fa-times me-1"></i>
+                        تجاهل
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bar for Saving -->
+    <div class="row mb-3" id="saveProgressBar" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span id="saveProgressText">جاري الحفظ...</span>
+                        <span id="saveProgressPercent">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated"
+                             id="saveProgressValue" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <ul class="nav nav-pills justify-content-center" id="settingsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="users-tab" data-bs-toggle="pill" data-bs-target="#users" type="button" role="tab">
+                        <i class="fas fa-users me-2"></i>
+                        إدارة المستخدمين
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="password-tab" data-bs-toggle="pill" data-bs-target="#password" type="button" role="tab">
+                        <i class="fas fa-key me-2"></i>
+                        تغيير كلمة المرور
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="settings-tab" data-bs-toggle="pill" data-bs-target="#settings" type="button" role="tab">
+                        <i class="fas fa-cog me-2"></i>
+                        إعدادات النظام
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="permissions-tab" data-bs-toggle="pill" data-bs-target="#permissions" type="button" role="tab">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        الصلاحيات
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="advanced-tab" data-bs-toggle="pill" data-bs-target="#advanced" type="button" role="tab">
+                        <i class="fas fa-cogs me-2"></i>
+                        إعدادات متقدمة
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="row mb-3">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                {% if message.tags == 'error' %}
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                {% elif message.tags == 'success' %}
+                    <i class="fas fa-check-circle me-2"></i>
+                {% elif message.tags == 'warning' %}
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                {% else %}
+                    <i class="fas fa-info-circle me-2"></i>
+                {% endif %}
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="settingsTabContent">
+        <!-- إدارة المستخدمين -->
+        <div class="tab-pane fade show active" id="users" role="tabpanel">
+            <div class="row">
+                <!-- إضافة مستخدم جديد -->
+                <div class="col-lg-4 mb-4">
+                    <div class="card settings-card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user-plus me-2"></i>
+                                إضافة مستخدم جديد
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="create_user">
+
+                                <div class="mb-3">
+                                    <label class="form-label">اسم المستخدم:</label>
+                                    <input type="text" class="form-control" name="username" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">البريد الإلكتروني:</label>
+                                    <input type="email" class="form-control" name="email" required>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">الاسم الأول:</label>
+                                            <input type="text" class="form-control" name="first_name">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">الاسم الأخير:</label>
+                                            <input type="text" class="form-control" name="last_name">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">كلمة المرور:</label>
+                                    <input type="password" class="form-control" name="password" required>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="is_staff" id="is_staff">
+                                    <label class="form-check-label" for="is_staff">
+                                        مدير النظام
+                                    </label>
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-plus me-2"></i>
+                                    إضافة المستخدم
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- قائمة المستخدمين -->
+                <div class="col-lg-8 mb-4">
+                    <div class="card settings-card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-users me-2"></i>
+                                المستخدمين الحاليين ({{ total_users }})
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if users %}
+                                <div class="row">
+                                    {% for user in users %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="d-flex align-items-center p-3 border rounded">
+                                            <div class="user-avatar me-3">
+                                                {% if user.first_name %}
+                                                    {{ user.first_name|first }}{{ user.last_name|first }}
+                                                {% else %}
+                                                    {{ user.username|first|upper }}
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">{{ user.get_full_name|default:user.username }}</h6>
+                                                <small class="text-muted">{{ user.email }}</small>
+                                                <div class="mt-1">
+                                                    {% if user.is_superuser %}
+                                                        <span class="badge bg-danger">مدير عام</span>
+                                                    {% elif user.is_staff %}
+                                                        <span class="badge bg-warning">مدير</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">مستخدم</span>
+                                                    {% endif %}
+
+                                                    {% if user.is_active %}
+                                                        <span class="badge bg-success">نشط</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">معطل</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="dropdown">
+                                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-cog"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" onclick="editUser({{ user.id }}, '{{ user.username }}', '{{ user.email }}', '{{ user.first_name }}', '{{ user.last_name }}', {% if user.is_staff %}true{% else %}false{% endif %})">
+                                                            <i class="fas fa-edit me-2"></i>تعديل
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" onclick="resetPassword({{ user.id }}, '{{ user.username }}')">
+                                                            <i class="fas fa-key me-2"></i>إعادة تعيين كلمة المرور
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    {% if user != request.user %}
+                                                    <li>
+                                                        <form method="POST" style="display: inline;">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="action" value="toggle_user_status">
+                                                            <input type="hidden" name="user_id" value="{{ user.id }}">
+                                                            <button type="submit" class="dropdown-item {% if user.is_active %}text-danger{% else %}text-success{% endif %}"
+                                                                    onclick="return confirm('هل أنت متأكد؟')">
+                                                                <i class="fas fa-{% if user.is_active %}ban{% else %}check{% endif %} me-2"></i>
+                                                                {% if user.is_active %}تعطيل{% else %}تفعيل{% endif %}
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">لا يوجد مستخدمين</h5>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- تغيير كلمة المرور -->
+        <div class="tab-pane fade" id="password" role="tabpanel">
+            <div class="row justify-content-center">
+                <div class="col-lg-6">
+                    <div class="card settings-card">
+                        <div class="card-header bg-warning text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-key me-2"></i>
+                                تغيير كلمة المرور
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" id="passwordForm">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="change_password">
+
+                                <div class="mb-3">
+                                    <label class="form-label">كلمة المرور الحالية:</label>
+                                    <input type="password" class="form-control" name="old_password" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">كلمة المرور الجديدة:</label>
+                                    <input type="password" class="form-control" name="new_password" id="newPassword" required>
+                                    <div class="password-strength" id="passwordStrength"></div>
+                                    <small class="text-muted">يجب أن تحتوي على 8 أحرف على الأقل</small>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">تأكيد كلمة المرور:</label>
+                                    <input type="password" class="form-control" name="confirm_password" id="confirmPassword" required>
+                                    <div id="passwordMatch" class="mt-1"></div>
+                                </div>
+
+                                <button type="submit" class="btn btn-warning w-100" id="changePasswordBtn" disabled>
+                                    <i class="fas fa-save me-2"></i>
+                                    تغيير كلمة المرور
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- إعدادات النظام -->
+        <div class="tab-pane fade" id="settings" role="tabpanel">
+            <!-- أزرار التحكم -->
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-info btn-sm" onclick="previewChanges()">
+                            <i class="fas fa-eye me-1"></i>
+                            معاينة التغييرات
+                        </button>
+                        <button type="button" class="btn btn-warning btn-sm" onclick="resetToDefaults()">
+                            <i class="fas fa-undo me-1"></i>
+                            إعادة تعيين
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm" onclick="exportSettings()">
+                            <i class="fas fa-download me-1"></i>
+                            تصدير الإعدادات
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="importSettings()">
+                            <i class="fas fa-upload me-1"></i>
+                            استيراد الإعدادات
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                {% for category, settings in settings_by_category.items %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card settings-card">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-cog me-2"></i>
+                                    {{ category }}
+                                </h5>
+                                <div>
+                                    <button type="button" class="btn btn-light btn-sm me-2" onclick="saveCategorySettings('{{ category }}')">
+                                        <i class="fas fa-save me-1"></i>
+                                        حفظ الفئة
+                                    </button>
+                                    <button type="button" class="btn btn-outline-light btn-sm" onclick="resetCategorySettings('{{ category }}')">
+                                        <i class="fas fa-undo me-1"></i>
+                                        إعادة تعيين
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% for setting in settings %}
+                            <div class="setting-item">
+                                <form method="POST" class="setting-form" data-setting-key="{{ setting.key }}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="update_setting">
+                                    <input type="hidden" name="setting_key" value="{{ setting.key }}">
+
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1 me-3">
+                                            <h6 class="mb-1">
+                                                {{ setting.description|default:setting.key }}
+                                                {% if setting.description %}
+                                                <i class="fas fa-info-circle text-muted ms-1"
+                                                   data-bs-toggle="tooltip"
+                                                   title="النوع: {{ setting.get_value_type_display }} | المفتاح: {{ setting.key }}"></i>
+                                                {% endif %}
+                                            </h6>
+                                            <small class="text-muted">{{ setting.key }}</small>
+                                            <div class="setting-status mt-1" style="display: none;">
+                                                <small class="text-success">
+                                                    <i class="fas fa-check me-1"></i>
+                                                    تم الحفظ
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div style="min-width: 150px;">
+                                            {% if setting.value_type == 'BOOLEAN' %}
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input setting-input" type="checkbox"
+                                                           name="setting_value" value="true"
+                                                           {% if setting.value == 'true' %}checked{% endif %}
+                                                           {% if not setting.is_editable %}disabled{% endif %}
+                                                           data-setting-type="boolean">
+                                                </div>
+                                            {% elif setting.value_type == 'INTEGER' %}
+                                                <input type="number" class="form-control form-control-sm setting-input"
+                                                       name="setting_value" value="{{ setting.value }}"
+                                                       {% if not setting.is_editable %}readonly{% endif %}
+                                                       data-setting-type="number"
+                                                       min="0">
+                                            {% elif setting.value_type == 'FLOAT' %}
+                                                <input type="number" step="0.01" class="form-control form-control-sm setting-input"
+                                                       name="setting_value" value="{{ setting.value }}"
+                                                       {% if not setting.is_editable %}readonly{% endif %}
+                                                       data-setting-type="number"
+                                                       min="0">
+                                            {% elif setting.value_type == 'JSON' %}
+                                                <textarea class="form-control form-control-sm setting-input"
+                                                          name="setting_value" rows="3"
+                                                          {% if not setting.is_editable %}readonly{% endif %}
+                                                          data-setting-type="json"
+                                                          placeholder='{"key": "value"}'>{{ setting.value }}</textarea>
+                                                <div class="invalid-feedback">
+                                                    صيغة JSON غير صحيحة
+                                                </div>
+                                            {% elif setting.value_type == 'FILE' %}
+                                                <div class="file-upload-container">
+                                                    <input type="file" class="form-control setting-input file-input"
+                                                           name="setting_file"
+                                                           accept="image/*"
+                                                           {% if not setting.is_editable %}disabled{% endif %}
+                                                           data-setting-type="file">
+                                                    {% if setting.file_value %}
+                                                        <div class="current-file mt-2">
+                                                            <div class="d-flex align-items-center">
+                                                                <img src="{{ setting.file_value.url }}"
+                                                                     alt="شعار الشركة"
+                                                                     class="file-preview me-2">
+                                                                <div>
+                                                                    <small class="text-muted">الملف الحالي:</small><br>
+                                                                    <span class="file-name">{{ setting.file_value.name|slice:"15:" }}</span>
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-danger ms-auto"
+                                                                        onclick="removeFile('{{ setting.key }}')">
+                                                                    <i class="fas fa-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div class="file-preview-container mt-2" style="display: none;">
+                                                        <img class="file-preview-new" alt="معاينة">
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                {% if setting.key in 'default_currency,currency_symbol,system_language,timezone,inventory_tracking_method,barcode_type,print_template,report_export_format,backup_frequency,ui_theme,ui_animation_speed,ui_font_family' %}
+                                                    <select class="form-select form-select-sm setting-input"
+                                                            name="setting_value"
+                                                            {% if not setting.is_editable %}disabled{% endif %}
+                                                            data-setting-type="select">
+                                                        {% if setting.key == 'default_currency' %}
+                                                            <option value="SAR" {% if setting.value == 'SAR' %}selected{% endif %}>ريال سعودي (SAR)</option>
+                                                            <option value="USD" {% if setting.value == 'USD' %}selected{% endif %}>دولار أمريكي (USD)</option>
+                                                            <option value="EUR" {% if setting.value == 'EUR' %}selected{% endif %}>يورو (EUR)</option>
+                                                            <option value="AED" {% if setting.value == 'AED' %}selected{% endif %}>درهم إماراتي (AED)</option>
+                                                        {% elif setting.key == 'system_language' %}
+                                                            <option value="ar" {% if setting.value == 'ar' %}selected{% endif %}>العربية</option>
+                                                            <option value="en" {% if setting.value == 'en' %}selected{% endif %}>English</option>
+                                                        {% elif setting.key == 'timezone' %}
+                                                            <option value="Asia/Riyadh" {% if setting.value == 'Asia/Riyadh' %}selected{% endif %}>الرياض</option>
+                                                            <option value="Asia/Dubai" {% if setting.value == 'Asia/Dubai' %}selected{% endif %}>دبي</option>
+                                                            <option value="Asia/Kuwait" {% if setting.value == 'Asia/Kuwait' %}selected{% endif %}>الكويت</option>
+                                                            <option value="Asia/Qatar" {% if setting.value == 'Asia/Qatar' %}selected{% endif %}>قطر</option>
+                                                        {% elif setting.key == 'inventory_tracking_method' %}
+                                                            <option value="FIFO" {% if setting.value == 'FIFO' %}selected{% endif %}>الوارد أولاً صادر أولاً (FIFO)</option>
+                                                            <option value="LIFO" {% if setting.value == 'LIFO' %}selected{% endif %}>الوارد أخيراً صادر أولاً (LIFO)</option>
+                                                            <option value="AVERAGE" {% if setting.value == 'AVERAGE' %}selected{% endif %}>المتوسط المرجح</option>
+                                                            <option value="SPECIFIC" {% if setting.value == 'SPECIFIC' %}selected{% endif %}>التحديد المحدد</option>
+                                                        {% elif setting.key == 'barcode_type' %}
+                                                            <option value="CODE128" {% if setting.value == 'CODE128' %}selected{% endif %}>Code 128</option>
+                                                            <option value="CODE39" {% if setting.value == 'CODE39' %}selected{% endif %}>Code 39</option>
+                                                            <option value="EAN13" {% if setting.value == 'EAN13' %}selected{% endif %}>EAN-13</option>
+                                                            <option value="EAN8" {% if setting.value == 'EAN8' %}selected{% endif %}>EAN-8</option>
+                                                            <option value="QRCODE" {% if setting.value == 'QRCODE' %}selected{% endif %}>QR Code</option>
+                                                        {% elif setting.key == 'print_template' %}
+                                                            <option value="default" {% if setting.value == 'default' %}selected{% endif %}>افتراضي</option>
+                                                            <option value="modern" {% if setting.value == 'modern' %}selected{% endif %}>حديث</option>
+                                                            <option value="classic" {% if setting.value == 'classic' %}selected{% endif %}>كلاسيكي</option>
+                                                            <option value="minimal" {% if setting.value == 'minimal' %}selected{% endif %}>بسيط</option>
+                                                        {% elif setting.key == 'report_export_format' %}
+                                                            <option value="PDF" {% if setting.value == 'PDF' %}selected{% endif %}>PDF</option>
+                                                            <option value="EXCEL" {% if setting.value == 'EXCEL' %}selected{% endif %}>Excel</option>
+                                                            <option value="CSV" {% if setting.value == 'CSV' %}selected{% endif %}>CSV</option>
+                                                            <option value="HTML" {% if setting.value == 'HTML' %}selected{% endif %}>HTML</option>
+                                                        {% elif setting.key == 'backup_frequency' %}
+                                                            <option value="hourly" {% if setting.value == 'hourly' %}selected{% endif %}>كل ساعة</option>
+                                                            <option value="daily" {% if setting.value == 'daily' %}selected{% endif %}>يومياً</option>
+                                                            <option value="weekly" {% if setting.value == 'weekly' %}selected{% endif %}>أسبوعياً</option>
+                                                            <option value="monthly" {% if setting.value == 'monthly' %}selected{% endif %}>شهرياً</option>
+                                                        {% elif setting.key == 'ui_theme' %}
+                                                            <option value="default" {% if setting.value == 'default' %}selected{% endif %}>افتراضي</option>
+                                                            <option value="dark" {% if setting.value == 'dark' %}selected{% endif %}>داكن</option>
+                                                            <option value="light" {% if setting.value == 'light' %}selected{% endif %}>فاتح</option>
+                                                            <option value="blue" {% if setting.value == 'blue' %}selected{% endif %}>أزرق</option>
+                                                        {% elif setting.key == 'ui_animation_speed' %}
+                                                            <option value="slow" {% if setting.value == 'slow' %}selected{% endif %}>بطيء</option>
+                                                            <option value="normal" {% if setting.value == 'normal' %}selected{% endif %}>عادي</option>
+                                                            <option value="fast" {% if setting.value == 'fast' %}selected{% endif %}>سريع</option>
+                                                            <option value="none" {% if setting.value == 'none' %}selected{% endif %}>بدون حركة</option>
+                                                        {% elif setting.key == 'ui_font_family' %}
+                                                            <option value="Cairo, sans-serif" {% if setting.value == 'Cairo, sans-serif' %}selected{% endif %}>Cairo</option>
+                                                            <option value="Tajawal, sans-serif" {% if setting.value == 'Tajawal, sans-serif' %}selected{% endif %}>Tajawal</option>
+                                                            <option value="Amiri, serif" {% if setting.value == 'Amiri, serif' %}selected{% endif %}>Amiri</option>
+                                                            <option value="Noto Sans Arabic, sans-serif" {% if setting.value == 'Noto Sans Arabic, sans-serif' %}selected{% endif %}>Noto Sans Arabic</option>
+                                                            <option value="Almarai, sans-serif" {% if setting.value == 'Almarai, sans-serif' %}selected{% endif %}>Almarai</option>
+                                                        {% endif %}
+                                                    </select>
+                                                {% else %}
+                                                    {% if setting.key|slice:":3" == "ui_" and "color" in setting.key %}
+                                                        <div class="input-group">
+                                                            <input type="color" class="form-control form-control-color setting-input"
+                                                                   name="setting_value" value="{{ setting.value }}"
+                                                                   {% if not setting.is_editable %}readonly{% endif %}
+                                                                   data-setting-type="color"
+                                                                   style="width: 60px;">
+                                                            <input type="text" class="form-control form-control-sm"
+                                                                   value="{{ setting.value }}" readonly
+                                                                   style="background: {{ setting.value }}; color: white; text-shadow: 1px 1px 1px black;">
+                                                        </div>
+                                                    {% else %}
+                                                        <input type="text" class="form-control form-control-sm setting-input"
+                                                               name="setting_value" value="{{ setting.value }}"
+                                                               {% if not setting.is_editable %}readonly{% endif %}
+                                                               data-setting-type="text">
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    {% if not setting.is_editable %}
+                                    <small class="text-warning">
+                                        <i class="fas fa-lock me-1"></i>
+                                        إعداد نظام غير قابل للتعديل
+                                    </small>
+                                    {% endif %}
+
+                                    <div class="setting-actions mt-2" style="display: none;">
+                                        <button type="submit" class="btn btn-success btn-sm me-2">
+                                            <i class="fas fa-save me-1"></i>
+                                            حفظ
+                                        </button>
+                                        <button type="button" class="btn btn-secondary btn-sm cancel-setting">
+                                            <i class="fas fa-times me-1"></i>
+                                            إلغاء
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-cog fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد إعدادات</h5>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- الصلاحيات -->
+        <div class="tab-pane fade" id="permissions" role="tabpanel">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card settings-card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                إدارة الصلاحيات
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- صلاحيات المبيعات -->
+                                <div class="col-lg-4 mb-3">
+                                    <div class="card">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-shopping-cart me-2"></i>
+                                                المبيعات
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="sales_view">
+                                                <label class="form-check-label" for="sales_view">عرض</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="sales_add">
+                                                <label class="form-check-label" for="sales_add">إضافة</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="sales_edit">
+                                                <label class="form-check-label" for="sales_edit">تعديل</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="sales_delete">
+                                                <label class="form-check-label" for="sales_delete">حذف</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- صلاحيات المشتريات -->
+                                <div class="col-lg-4 mb-3">
+                                    <div class="card">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-shopping-bag me-2"></i>
+                                                المشتريات
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="purchases_view">
+                                                <label class="form-check-label" for="purchases_view">عرض</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="purchases_add">
+                                                <label class="form-check-label" for="purchases_add">إضافة</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="purchases_edit">
+                                                <label class="form-check-label" for="purchases_edit">تعديل</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="purchases_delete">
+                                                <label class="form-check-label" for="purchases_delete">حذف</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- صلاحيات التقارير -->
+                                <div class="col-lg-4 mb-3">
+                                    <div class="card">
+                                        <div class="card-header bg-warning text-white">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-chart-bar me-2"></i>
+                                                التقارير
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="reports_view">
+                                                <label class="form-check-label" for="reports_view">عرض</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="reports_export">
+                                                <label class="form-check-label" for="reports_export">تصدير</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="reports_print">
+                                                <label class="form-check-label" for="reports_print">طباعة</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="reports_advanced">
+                                                <label class="form-check-label" for="reports_advanced">تقارير متقدمة</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button class="btn btn-danger">
+                                    <i class="fas fa-save me-2"></i>
+                                    حفظ الصلاحيات
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- إعدادات متقدمة -->
+        <div class="tab-pane fade" id="advanced" role="tabpanel">
+            <div class="row">
+                <!-- أدوات النظام -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card settings-card">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-tools me-2"></i>
+                                أدوات النظام
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <button class="btn btn-warning w-100" onclick="clearCache()">
+                                        <i class="fas fa-broom me-2"></i>
+                                        مسح ذاكرة التخزين المؤقت
+                                    </button>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <button class="btn btn-info w-100" onclick="rebuildIndex()">
+                                        <i class="fas fa-database me-2"></i>
+                                        إعادة بناء فهارس قاعدة البيانات
+                                    </button>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <button class="btn btn-success w-100" onclick="optimizeDatabase()">
+                                        <i class="fas fa-tachometer-alt me-2"></i>
+                                        تحسين قاعدة البيانات
+                                    </button>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <button class="btn btn-primary w-100" onclick="generateReport()">
+                                        <i class="fas fa-chart-line me-2"></i>
+                                        تقرير حالة النظام
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- إعدادات الأداء -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card settings-card">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-rocket me-2"></i>
+                                إعدادات الأداء
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" class="performance-settings">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_performance">
+
+                                <div class="mb-3">
+                                    <label class="form-label">حجم ذاكرة التخزين المؤقت (MB):</label>
+                                    <input type="number" class="form-control" name="cache_size" value="128" min="64" max="1024">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">مهلة انتظار الاستعلام (ثانية):</label>
+                                    <input type="number" class="form-control" name="query_timeout" value="30" min="10" max="300">
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="enable_compression" id="enable_compression" checked>
+                                    <label class="form-check-label" for="enable_compression">
+                                        تفعيل ضغط البيانات
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="enable_caching" id="enable_caching" checked>
+                                    <label class="form-check-label" for="enable_caching">
+                                        تفعيل التخزين المؤقت
+                                    </label>
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-save me-2"></i>
+                                    حفظ إعدادات الأداء
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- إعدادات الأمان المتقدمة -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card settings-card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                إعدادات الأمان المتقدمة
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" class="security-settings">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_security">
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="enable_2fa" id="enable_2fa">
+                                    <label class="form-check-label" for="enable_2fa">
+                                        تفعيل المصادقة الثنائية
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="enable_ip_whitelist" id="enable_ip_whitelist">
+                                    <label class="form-check-label" for="enable_ip_whitelist">
+                                        تفعيل قائمة IP المسموحة
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="enable_audit_log" id="enable_audit_log" checked>
+                                    <label class="form-check-label" for="enable_audit_log">
+                                        تفعيل سجل المراجعة
+                                    </label>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">مستوى التشفير:</label>
+                                    <select class="form-select" name="encryption_level">
+                                        <option value="basic">أساسي</option>
+                                        <option value="standard" selected>قياسي</option>
+                                        <option value="advanced">متقدم</option>
+                                    </select>
+                                </div>
+
+                                <button type="submit" class="btn btn-danger w-100">
+                                    <i class="fas fa-save me-2"></i>
+                                    حفظ إعدادات الأمان
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- إعدادات التكامل -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card settings-card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-plug me-2"></i>
+                                إعدادات التكامل
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST" class="integration-settings">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_integration">
+
+                                <div class="mb-3">
+                                    <label class="form-label">API Key:</label>
+                                    <input type="text" class="form-control" name="api_key" placeholder="أدخل مفتاح API">
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="enable_api" id="enable_api">
+                                    <label class="form-check-label" for="enable_api">
+                                        تفعيل واجهة برمجة التطبيقات
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="enable_webhooks" id="enable_webhooks">
+                                    <label class="form-check-label" for="enable_webhooks">
+                                        تفعيل Webhooks
+                                    </label>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">معدل الطلبات (طلب/دقيقة):</label>
+                                    <input type="number" class="form-control" name="rate_limit" value="60" min="1" max="1000">
+                                </div>
+
+                                <button type="submit" class="btn btn-info w-100">
+                                    <i class="fas fa-save me-2"></i>
+                                    حفظ إعدادات التكامل
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات النظام -->
+                <div class="col-12 mb-4">
+                    <div class="card settings-card">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                معلومات النظام
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <h6>إصدار النظام:</h6>
+                                    <p class="text-primary">{{ settings_by_category.النظام.0.value|default:"1.0.0" }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <h6>تاريخ التثبيت:</h6>
+                                    <p class="text-info">{{ settings_by_category.النظام.1.value|default:"2024-01-01" }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <h6>إصدار قاعدة البيانات:</h6>
+                                    <p class="text-success">{{ settings_by_category.النظام.2.value|default:"1.0" }}</p>
+                                </div>
+                                <div class="col-md-3">
+                                    <h6>حالة النظام:</h6>
+                                    <span class="badge bg-success fs-6">نشط</span>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <h6>استخدام الذاكرة:</h6>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-info" style="width: 45%">45%</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6>استخدام المعالج:</h6>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-warning" style="width: 30%">30%</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <h6>مساحة القرص:</h6>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" style="width: 65%">65%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal لتعديل المستخدم -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تعديل المستخدم</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="editUserForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="edit_user">
+                <input type="hidden" name="user_id" id="editUserId">
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">اسم المستخدم:</label>
+                        <input type="text" class="form-control" name="username" id="editUsername" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">البريد الإلكتروني:</label>
+                        <input type="email" class="form-control" name="email" id="editEmail" required>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label">الاسم الأول:</label>
+                                <input type="text" class="form-control" name="first_name" id="editFirstName">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <label class="form-label">الاسم الأخير:</label>
+                                <input type="text" class="form-control" name="last_name" id="editLastName">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="is_staff" id="editIsStaff">
+                        <label class="form-check-label" for="editIsStaff">
+                            مدير النظام
+                        </label>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal لإعادة تعيين كلمة المرور -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إعادة تعيين كلمة المرور</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reset_password">
+                <input type="hidden" name="user_id" id="resetUserId">
+
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        سيتم إعادة تعيين كلمة مرور المستخدم <strong id="resetUsername"></strong>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">كلمة المرور الجديدة:</label>
+                        <input type="password" class="form-control" name="new_password" value="12345678" required>
+                        <small class="text-muted">كلمة المرور الافتراضية: 12345678</small>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning">إعادة تعيين</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Password strength checker
+    const newPassword = document.getElementById('newPassword');
+    const confirmPassword = document.getElementById('confirmPassword');
+    const passwordStrength = document.getElementById('passwordStrength');
+    const passwordMatch = document.getElementById('passwordMatch');
+    const changePasswordBtn = document.getElementById('changePasswordBtn');
+
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (/[a-z]/.test(password)) strength++;
+        if (/[A-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+        passwordStrength.className = 'password-strength ';
+        if (strength < 2) {
+            passwordStrength.classList.add('strength-weak');
+        } else if (strength < 4) {
+            passwordStrength.classList.add('strength-medium');
+        } else {
+            passwordStrength.classList.add('strength-strong');
+        }
+    }
+
+    function checkPasswordMatch() {
+        if (confirmPassword.value === '') {
+            passwordMatch.innerHTML = '';
+            return false;
+        }
+
+        if (newPassword.value === confirmPassword.value) {
+            passwordMatch.innerHTML = '<small class="text-success"><i class="fas fa-check me-1"></i>كلمات المرور متطابقة</small>';
+            return true;
+        } else {
+            passwordMatch.innerHTML = '<small class="text-danger"><i class="fas fa-times me-1"></i>كلمات المرور غير متطابقة</small>';
+            return false;
+        }
+    }
+
+    function updatePasswordButton() {
+        const isValid = newPassword.value.length >= 8 && checkPasswordMatch();
+        changePasswordBtn.disabled = !isValid;
+    }
+
+    if (newPassword) {
+        newPassword.addEventListener('input', function() {
+            checkPasswordStrength(this.value);
+            updatePasswordButton();
+        });
+    }
+
+    if (confirmPassword) {
+        confirmPassword.addEventListener('input', function() {
+            checkPasswordMatch();
+            updatePasswordButton();
+        });
+    }
+
+    // Enhanced settings management
+    const settingInputs = document.querySelectorAll('.setting-input');
+    const settingTimeouts = new Map();
+
+    settingInputs.forEach(input => {
+        const form = input.closest('.setting-form');
+        const settingKey = form.dataset.settingKey;
+        const settingType = input.dataset.settingType;
+        const statusDiv = form.querySelector('.setting-status');
+        const actionsDiv = form.querySelector('.setting-actions');
+        const cancelBtn = form.querySelector('.cancel-setting');
+
+        let originalValue = input.type === 'checkbox' ? input.checked : input.value;
+
+        function showActions() {
+            actionsDiv.style.display = 'block';
+            statusDiv.style.display = 'none';
+            form.classList.add('has-changes');
+            form.classList.remove('saved');
+        }
+
+        function hideActions() {
+            actionsDiv.style.display = 'none';
+            form.classList.remove('has-changes');
+        }
+
+        function showSaved() {
+            statusDiv.style.display = 'block';
+            hideActions();
+            form.classList.add('saved');
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+                form.classList.remove('saved');
+            }, 3000);
+        }
+
+        function showSaving() {
+            form.classList.add('saving');
+            statusDiv.innerHTML = '<small class="text-info"><i class="fas fa-spinner fa-spin me-1"></i>جاري الحفظ...</small>';
+            statusDiv.style.display = 'block';
+        }
+
+        function hideSaving() {
+            form.classList.remove('saving');
+        }
+
+        function resetValue() {
+            if (input.type === 'checkbox') {
+                input.checked = originalValue;
+            } else {
+                input.value = originalValue;
+            }
+            hideActions();
+        }
+
+        function handleChange() {
+            const currentValue = input.type === 'checkbox' ? input.checked : input.value;
+            const hasChanged = currentValue !== originalValue;
+
+            if (hasChanged) {
+                showActions();
+
+                // Auto-save for boolean values
+                if (settingType === 'boolean') {
+                    clearTimeout(settingTimeouts.get(settingKey));
+                    const timeout = setTimeout(() => {
+                        submitSetting(form, input);
+                    }, 500);
+                    settingTimeouts.set(settingKey, timeout);
+                }
+                // Auto-save for other types after delay
+                else {
+                    clearTimeout(settingTimeouts.get(settingKey));
+                    const timeout = setTimeout(() => {
+                        submitSetting(form, input);
+                    }, 2000);
+                    settingTimeouts.set(settingKey, timeout);
+                }
+            } else {
+                hideActions();
+            }
+        }
+
+        // Event listeners
+        if (input.type === 'checkbox') {
+            input.addEventListener('change', handleChange);
+        } else {
+            input.addEventListener('input', handleChange);
+            input.addEventListener('blur', () => {
+                // Validate JSON on blur
+                if (settingType === 'json' && input.value.trim()) {
+                    try {
+                        JSON.parse(input.value);
+                        input.classList.remove('is-invalid');
+                    } catch (e) {
+                        input.classList.add('is-invalid');
+                        return;
+                    }
+                }
+            });
+        }
+
+        // Cancel button
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', resetValue);
+        }
+
+        // Form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            submitSetting(form, input);
+        });
+    });
+
+    function submitSetting(form, input, callback) {
+        const settingKey = form.dataset.settingKey;
+        const statusDiv = form.querySelector('.setting-status');
+        const actionsDiv = form.querySelector('.setting-actions');
+
+        // Show saving state
+        showSaving();
+
+        // Validate JSON before submission
+        if (input.dataset.settingType === 'json' && input.value.trim()) {
+            try {
+                JSON.parse(input.value);
+                input.classList.remove('is-invalid');
+            } catch (e) {
+                input.classList.add('is-invalid');
+                hideSaving();
+                statusDiv.innerHTML = '<small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>صيغة JSON غير صحيحة</small>';
+                return;
+            }
+        }
+
+        // Prepare form data
+        const formData = new FormData(form);
+
+        // Handle boolean values
+        if (input.type === 'checkbox') {
+            formData.set('setting_value', input.checked ? 'true' : 'false');
+        }
+
+        // Submit via fetch
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            hideSaving();
+
+            if (data.success) {
+                // Update original value
+                settingInputs.forEach(inp => {
+                    if (inp.closest('.setting-form').dataset.settingKey === settingKey) {
+                        const settingInput = inp.closest('.setting-form').querySelector('.setting-input');
+                        if (settingInput.type === 'checkbox') {
+                            settingInput.originalValue = settingInput.checked;
+                        } else {
+                            settingInput.originalValue = settingInput.value;
+                        }
+                    }
+                });
+
+                // Update original value for current input
+                if (input.type === 'checkbox') {
+                    originalValue = input.checked;
+                } else {
+                    originalValue = input.value;
+                }
+
+                statusDiv.innerHTML = '<small class="text-success"><i class="fas fa-check me-1"></i>تم الحفظ</small>';
+                showSaved();
+
+                // Call callback if provided
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            } else {
+                statusDiv.innerHTML = `<small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>${data.message || 'حدث خطأ أثناء الحفظ'}</small>`;
+                statusDiv.style.display = 'block';
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        })
+        .catch(error => {
+            hideSaving();
+            console.error('Error:', error);
+            statusDiv.innerHTML = '<small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>حدث خطأ في الاتصال</small>';
+            statusDiv.style.display = 'block';
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        });
+
+        // Helper functions for this specific form
+        function showSaving() {
+            form.classList.add('saving');
+            statusDiv.innerHTML = '<small class="text-info"><i class="fas fa-spinner fa-spin me-1"></i>جاري الحفظ...</small>';
+            statusDiv.style.display = 'block';
+        }
+
+        function hideSaving() {
+            form.classList.remove('saving');
+        }
+
+        function showSaved() {
+            actionsDiv.style.display = 'none';
+            form.classList.remove('has-changes');
+            form.classList.add('saved');
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+                form.classList.remove('saved');
+            }, 3000);
+        }
+    }
+
+    // Color picker handling
+    document.addEventListener('DOMContentLoaded', function() {
+        const colorInputs = document.querySelectorAll('input[type="color"]');
+
+        colorInputs.forEach(function(colorInput) {
+            const textInput = colorInput.nextElementSibling;
+
+            colorInput.addEventListener('change', function() {
+                textInput.value = this.value;
+                textInput.style.background = this.value;
+
+                // Update the hidden input value
+                const form = this.closest('.setting-form');
+                const hiddenInput = form.querySelector('input[name="setting_value"]');
+                if (hiddenInput) {
+                    hiddenInput.value = this.value;
+                }
+
+                // Trigger change event for auto-save
+                this.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+
+            // Sync text input with color input
+            textInput.addEventListener('input', function() {
+                if (this.value.match(/^#[0-9A-F]{6}$/i)) {
+                    colorInput.value = this.value;
+                    this.style.background = this.value;
+                }
+            });
+        });
+    }
+
+    // Functions for user management
+    window.editUser = function(id, username, email, firstName, lastName, isStaff) {
+        document.getElementById('editUserId').value = id;
+        document.getElementById('editUsername').value = username;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editFirstName').value = firstName;
+        document.getElementById('editLastName').value = lastName;
+        document.getElementById('editIsStaff').checked = isStaff;
+
+        new bootstrap.Modal(document.getElementById('editUserModal')).show();
+    };
+
+    window.resetPassword = function(id, username) {
+        document.getElementById('resetUserId').value = id;
+        document.getElementById('resetUsername').textContent = username;
+
+        new bootstrap.Modal(document.getElementById('resetPasswordModal')).show();
+    };
+
+    // Function to handle boolean settings
+    window.submitSettingForm = function(checkbox) {
+        const form = checkbox.closest('form');
+        if (!checkbox.checked) {
+            // Add hidden input for false value
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'setting_value';
+            hiddenInput.value = 'false';
+            form.appendChild(hiddenInput);
+        }
+        form.submit();
+    };
+
+    // Advanced tools functions
+    window.clearCache = function() {
+        if (confirm('هل أنت متأكد من مسح ذاكرة التخزين المؤقت؟')) {
+            // Simulate cache clearing
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري المسح...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                alert('تم مسح ذاكرة التخزين المؤقت بنجاح');
+            }, 2000);
+        }
+    };
+
+    window.rebuildIndex = function() {
+        if (confirm('هل أنت متأكد من إعادة بناء فهارس قاعدة البيانات؟ قد يستغرق هذا وقتاً طويلاً.')) {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري إعادة البناء...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                alert('تم إعادة بناء الفهارس بنجاح');
+            }, 5000);
+        }
+    };
+
+    window.optimizeDatabase = function() {
+        if (confirm('هل أنت متأكد من تحسين قاعدة البيانات؟')) {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري التحسين...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                alert('تم تحسين قاعدة البيانات بنجاح');
+            }, 3000);
+        }
+    };
+
+    window.generateReport = function() {
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري إنشاء التقرير...';
+        btn.disabled = true;
+
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            // Simulate opening report
+            window.open('/services/system-report/', '_blank');
+        }, 2000);
+    };
+
+    // Global variables for tracking changes
+    let changedSettings = new Set();
+    let originalValues = new Map();
+
+    // Initialize original values
+    document.querySelectorAll('.setting-input').forEach(function(input) {
+        const form = input.closest('.setting-form');
+        const key = form.dataset.settingKey;
+
+        if (input.type === 'checkbox') {
+            originalValues.set(key, input.checked);
+        } else {
+            originalValues.set(key, input.value);
+        }
+    });
+
+    // Save Functions
+    window.saveAllSettings = function() {
+        if (confirm('هل أنت متأكد من حفظ جميع الإعدادات؟')) {
+            const forms = document.querySelectorAll('.setting-form');
+            let savedCount = 0;
+            let totalForms = forms.length;
+
+            showSaveProgress('جاري حفظ جميع الإعدادات...', 0, totalForms);
+
+            forms.forEach(function(form, index) {
+                const input = form.querySelector('.setting-input');
+                if (input && form.querySelector('[name="setting_key"]').value) {
+                    setTimeout(() => {
+                        submitSetting(form, input, function() {
+                            savedCount++;
+                            updateSaveProgress(savedCount, totalForms);
+
+                            if (savedCount === totalForms) {
+                                hideSaveProgress();
+                                showGlobalNotification(`تم حفظ ${savedCount} إعداد بنجاح`, 'success');
+                                changedSettings.clear();
+                                updateSaveStatusBar();
+                            }
+                        });
+                    }, index * 100); // تأخير بسيط لتجنب الحمل الزائد
+                }
+            });
+        }
+    };
+
+    window.saveChangedSettings = function() {
+        if (changedSettings.size === 0) {
+            showGlobalNotification('لا توجد تغييرات للحفظ', 'info');
+            return;
+        }
+
+        if (confirm(`هل أنت متأكد من حفظ ${changedSettings.size} إعداد معدل؟`)) {
+            let savedCount = 0;
+            let totalChanges = changedSettings.size;
+            const settingsArray = Array.from(changedSettings);
+
+            showSaveProgress(`جاري حفظ ${totalChanges} إعداد معدل...`, 0, totalChanges);
+
+            settingsArray.forEach(function(settingKey, index) {
+                const form = document.querySelector(`[data-setting-key="${settingKey}"]`);
+                if (form) {
+                    const input = form.querySelector('.setting-input');
+                    setTimeout(() => {
+                        submitSetting(form, input, function() {
+                            savedCount++;
+                            changedSettings.delete(settingKey);
+                            updateSaveProgress(savedCount, totalChanges);
+
+                            if (savedCount === totalChanges) {
+                                hideSaveProgress();
+                                showGlobalNotification(`تم حفظ ${savedCount} إعداد بنجاح`, 'success');
+                                updateSaveStatusBar();
+                            }
+                        });
+                    }, index * 100);
+                }
+            });
+        }
+    };
+
+    window.saveCategorySettings = function(category) {
+        const categoryForms = Array.from(document.querySelectorAll('.setting-form')).filter(form => {
+            return form.closest('.card').querySelector('.card-header h5').textContent.trim().includes(category);
+        });
+
+        if (categoryForms.length === 0) {
+            showGlobalNotification('لا توجد إعدادات في هذه الفئة', 'warning');
+            return;
+        }
+
+        if (confirm(`هل أنت متأكد من حفظ جميع إعدادات فئة "${category}"؟`)) {
+            let savedCount = 0;
+            let totalForms = categoryForms.length;
+
+            showGlobalSaving(`جاري حفظ إعدادات ${category}...`);
+
+            categoryForms.forEach(function(form, index) {
+                const input = form.querySelector('.setting-input');
+                setTimeout(() => {
+                    submitSetting(form, input, function() {
+                        savedCount++;
+                        if (savedCount === totalForms) {
+                            hideGlobalSaving();
+                            showGlobalNotification(`تم حفظ ${savedCount} إعداد من فئة "${category}" بنجاح`, 'success');
+                        }
+                    });
+                }, index * 100);
+            });
+        }
+    };
+
+    window.resetCategorySettings = function(category) {
+        const categoryForms = Array.from(document.querySelectorAll('.setting-form')).filter(form => {
+            return form.closest('.card').querySelector('.card-header h5').textContent.trim().includes(category);
+        });
+
+        if (confirm(`هل أنت متأكد من إعادة تعيين جميع إعدادات فئة "${category}" للقيم الأصلية؟`)) {
+            categoryForms.forEach(function(form) {
+                const input = form.querySelector('.setting-input');
+                const key = form.dataset.settingKey;
+                const originalValue = originalValues.get(key);
+
+                if (input && originalValue !== undefined) {
+                    if (input.type === 'checkbox') {
+                        input.checked = originalValue;
+                    } else {
+                        input.value = originalValue;
+                    }
+
+                    // Remove from changed settings
+                    changedSettings.delete(key);
+
+                    // Hide actions
+                    const actionsDiv = form.querySelector('.setting-actions');
+                    if (actionsDiv) {
+                        actionsDiv.style.display = 'none';
+                    }
+
+                    // Remove visual indicators
+                    form.classList.remove('has-changes');
+                }
+            });
+
+            updateSaveStatusBar();
+            showGlobalNotification(`تم إعادة تعيين إعدادات فئة "${category}"`, 'info');
+        }
+    };
+
+    window.discardChanges = function() {
+        if (confirm('هل أنت متأكد من تجاهل جميع التغييرات؟')) {
+            changedSettings.forEach(function(settingKey) {
+                const form = document.querySelector(`[data-setting-key="${settingKey}"]`);
+                if (form) {
+                    const input = form.querySelector('.setting-input');
+                    const originalValue = originalValues.get(settingKey);
+
+                    if (input && originalValue !== undefined) {
+                        if (input.type === 'checkbox') {
+                            input.checked = originalValue;
+                        } else {
+                            input.value = originalValue;
+                        }
+
+                        // Hide actions
+                        const actionsDiv = form.querySelector('.setting-actions');
+                        if (actionsDiv) {
+                            actionsDiv.style.display = 'none';
+                        }
+
+                        // Remove visual indicators
+                        form.classList.remove('has-changes');
+                    }
+                }
+            });
+
+            changedSettings.clear();
+            updateSaveStatusBar();
+            showGlobalNotification('تم تجاهل جميع التغييرات', 'info');
+        }
+    };
+
+    // Helper functions
+    function updateSaveStatusBar() {
+        const statusBar = document.getElementById('saveStatusBar');
+        const countBadge = document.getElementById('changedCount');
+        const message = document.getElementById('saveStatusMessage');
+        const saveChangedBtn = document.getElementById('saveChangedBtn');
+        const changedBadge = document.getElementById('changedBadge');
+
+        if (changedSettings.size > 0) {
+            statusBar.style.display = 'block';
+            countBadge.textContent = changedSettings.size;
+            message.textContent = `يوجد ${changedSettings.size} إعداد معدل غير محفوظ`;
+
+            // Show and update the save changed button
+            saveChangedBtn.style.display = 'inline-block';
+            changedBadge.textContent = changedSettings.size;
+
+            // Add pulse effect
+            saveChangedBtn.classList.add('pulse-save');
+        } else {
+            statusBar.style.display = 'none';
+            saveChangedBtn.style.display = 'none';
+            saveChangedBtn.classList.remove('pulse-save');
+        }
+    }
+
+    function showGlobalSaving(message) {
+        const statusBar = document.getElementById('saveStatusBar');
+        const statusMessage = document.getElementById('saveStatusMessage');
+
+        statusBar.style.display = 'block';
+        statusBar.className = 'row mb-3';
+        statusBar.querySelector('.alert').className = 'alert alert-info d-flex justify-content-between align-items-center mb-0';
+        statusMessage.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${message}`;
+        statusBar.querySelector('.alert > div:last-child').style.display = 'none';
+    }
+
+    function hideGlobalSaving() {
+        const statusBar = document.getElementById('saveStatusBar');
+        statusBar.querySelector('.alert > div:last-child').style.display = 'block';
+        updateSaveStatusBar();
+    }
+
+    function showSaveProgress(message, current, total) {
+        const progressBar = document.getElementById('saveProgressBar');
+        const progressText = document.getElementById('saveProgressText');
+        const progressPercent = document.getElementById('saveProgressPercent');
+        const progressValue = document.getElementById('saveProgressValue');
+
+        progressBar.style.display = 'block';
+        progressText.textContent = message;
+
+        const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
+        progressPercent.textContent = `${percentage}%`;
+        progressValue.style.width = `${percentage}%`;
+        progressValue.setAttribute('aria-valuenow', percentage);
+    }
+
+    function updateSaveProgress(current, total) {
+        const progressPercent = document.getElementById('saveProgressPercent');
+        const progressValue = document.getElementById('saveProgressValue');
+        const progressText = document.getElementById('saveProgressText');
+
+        const percentage = Math.round((current / total) * 100);
+        progressPercent.textContent = `${percentage}%`;
+        progressValue.style.width = `${percentage}%`;
+        progressValue.setAttribute('aria-valuenow', percentage);
+        progressText.textContent = `تم حفظ ${current} من ${total} إعداد`;
+    }
+
+    function hideSaveProgress() {
+        const progressBar = document.getElementById('saveProgressBar');
+        setTimeout(() => {
+            progressBar.style.display = 'none';
+        }, 1000);
+    }
+
+    function showGlobalNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 350px; max-width: 500px;';
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    // Track changes in settings
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('setting-input')) {
+            const form = e.target.closest('.setting-form');
+            const key = form.dataset.settingKey;
+            const originalValue = originalValues.get(key);
+            let currentValue;
+
+            if (e.target.type === 'checkbox') {
+                currentValue = e.target.checked;
+            } else {
+                currentValue = e.target.value;
+            }
+
+            if (currentValue !== originalValue) {
+                changedSettings.add(key);
+                form.classList.add('has-changes');
+            } else {
+                changedSettings.delete(key);
+                form.classList.remove('has-changes');
+            }
+
+            updateSaveStatusBar();
+        }
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+S: Save changed settings
+        if (e.ctrlKey && e.key === 's') {
+            e.preventDefault();
+            if (changedSettings.size > 0) {
+                saveChangedSettings();
+            } else {
+                showGlobalNotification('لا توجد تغييرات للحفظ', 'info');
+            }
+        }
+
+        // Ctrl+Shift+S: Save all settings
+        if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+            e.preventDefault();
+            saveAllSettings();
+        }
+
+        // Escape: Discard changes
+        if (e.key === 'Escape' && changedSettings.size > 0) {
+            discardChanges();
+        }
+    });
+
+    // UI Settings Functions
+    window.previewChanges = function() {
+        // Apply current settings temporarily for preview
+        const forms = document.querySelectorAll('.setting-form');
+        const changes = {};
+
+        forms.forEach(function(form) {
+            const input = form.querySelector('.setting-input');
+            const key = form.dataset.settingKey;
+
+            if (input) {
+                if (input.type === 'checkbox') {
+                    changes[key] = input.checked;
+                } else {
+                    changes[key] = input.value;
+                }
+            }
+        });
+
+        // Apply UI changes temporarily
+        applyUIChanges(changes);
+
+        // Show preview notification
+        showNotification('تم تطبيق المعاينة مؤقتاً. قم بحفظ الإعدادات لجعل التغييرات دائمة.', 'info');
+    };
+
+    window.resetToDefaults = function() {
+        if (confirm('هل أنت متأكد من إعادة تعيين جميع الإعدادات للقيم الافتراضية؟')) {
+            // Reset all UI settings to defaults
+            const defaults = {
+                'ui_theme': 'default',
+                'ui_primary_color': '#0d6efd',
+                'ui_secondary_color': '#6c757d',
+                'ui_success_color': '#198754',
+                'ui_danger_color': '#dc3545',
+                'ui_warning_color': '#ffc107',
+                'ui_info_color': '#0dcaf0',
+                'ui_font_family': 'Cairo, sans-serif',
+                'ui_font_size': '14',
+                'ui_border_radius': '8',
+                'ui_enable_dark_mode': false,
+                'ui_enable_animations': true,
+                'ui_compact_mode': false,
+                'ui_table_striped': true,
+                'ui_table_hover': true
+            };
+
+            // Update form inputs
+            Object.keys(defaults).forEach(function(key) {
+                const form = document.querySelector(`[data-setting-key="${key}"]`);
+                if (form) {
+                    const input = form.querySelector('.setting-input');
+                    if (input) {
+                        if (input.type === 'checkbox') {
+                            input.checked = defaults[key];
+                        } else {
+                            input.value = defaults[key];
+                        }
+
+                        // Trigger change event
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+            });
+
+            showNotification('تم إعادة تعيين الإعدادات للقيم الافتراضية', 'success');
+        }
+    };
+
+    window.exportSettings = function() {
+        // Collect all settings
+        const settings = {};
+        const forms = document.querySelectorAll('.setting-form');
+
+        forms.forEach(function(form) {
+            const input = form.querySelector('.setting-input');
+            const key = form.dataset.settingKey;
+
+            if (input) {
+                if (input.type === 'checkbox') {
+                    settings[key] = input.checked;
+                } else {
+                    settings[key] = input.value;
+                }
+            }
+        });
+
+        // Create and download JSON file
+        const dataStr = JSON.stringify(settings, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'system_settings_' + new Date().toISOString().split('T')[0] + '.json';
+        link.click();
+        URL.revokeObjectURL(url);
+
+        showNotification('تم تصدير الإعدادات بنجاح', 'success');
+    };
+
+    window.importSettings = function() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const settings = JSON.parse(e.target.result);
+
+                        // Apply imported settings
+                        Object.keys(settings).forEach(function(key) {
+                            const form = document.querySelector(`[data-setting-key="${key}"]`);
+                            if (form) {
+                                const input = form.querySelector('.setting-input');
+                                if (input) {
+                                    if (input.type === 'checkbox') {
+                                        input.checked = settings[key];
+                                    } else {
+                                        input.value = settings[key];
+                                    }
+
+                                    // Trigger change event
+                                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                                }
+                            }
+                        });
+
+                        showNotification('تم استيراد الإعدادات بنجاح', 'success');
+                    } catch (error) {
+                        showNotification('خطأ في قراءة ملف الإعدادات', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        };
+
+        input.click();
+    };
+
+    function applyUIChanges(changes) {
+        // Apply color changes
+        if (changes.ui_primary_color) {
+            document.documentElement.style.setProperty('--primary-color', changes.ui_primary_color);
+        }
+        if (changes.ui_secondary_color) {
+            document.documentElement.style.setProperty('--secondary-color', changes.ui_secondary_color);
+        }
+        if (changes.ui_success_color) {
+            document.documentElement.style.setProperty('--success-color', changes.ui_success_color);
+        }
+        if (changes.ui_danger_color) {
+            document.documentElement.style.setProperty('--danger-color', changes.ui_danger_color);
+        }
+        if (changes.ui_warning_color) {
+            document.documentElement.style.setProperty('--warning-color', changes.ui_warning_color);
+        }
+        if (changes.ui_info_color) {
+            document.documentElement.style.setProperty('--info-color', changes.ui_info_color);
+        }
+
+        // Apply font changes
+        if (changes.ui_font_family) {
+            document.documentElement.style.setProperty('--font-family', changes.ui_font_family);
+        }
+        if (changes.ui_font_size) {
+            document.documentElement.style.setProperty('--font-size', changes.ui_font_size + 'px');
+        }
+        if (changes.ui_border_radius) {
+            document.documentElement.style.setProperty('--border-radius', changes.ui_border_radius + 'px');
+        }
+
+        // Apply dark mode
+        if (changes.ui_enable_dark_mode !== undefined) {
+            if (changes.ui_enable_dark_mode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        }
+
+        // Apply compact mode
+        if (changes.ui_compact_mode !== undefined) {
+            if (changes.ui_compact_mode) {
+                document.body.classList.add('compact-mode');
+            } else {
+                document.body.classList.remove('compact-mode');
+            }
+        }
+    }
+
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+    // Handle file preview
+    function handleFilePreview(fileInput) {
+        const file = fileInput.files[0];
+        const previewContainer = fileInput.closest('.file-upload-container').querySelector('.file-preview-container');
+        const previewImg = previewContainer.querySelector('.file-preview-new');
+
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            previewContainer.style.display = 'none';
+        }
+    }
+
+    // Remove file function
+    window.removeFile = function(settingKey) {
+        if (confirm('هل أنت متأكد من حذف هذا الملف؟')) {
+            const form = document.querySelector(`[data-setting-key="${settingKey}"]`);
+            if (form) {
+                // Create hidden input to indicate file removal
+                const removeInput = document.createElement('input');
+                removeInput.type = 'hidden';
+                removeInput.name = 'remove_file';
+                removeInput.value = 'true';
+                form.appendChild(removeInput);
+
+                // Hide current file display
+                const currentFile = form.querySelector('.current-file');
+                if (currentFile) {
+                    currentFile.style.display = 'none';
+                }
+
+                // Mark as changed
+                changedSettings.add(settingKey);
+                form.classList.add('has-changes');
+                updateSaveStatusBar();
+
+                showGlobalNotification('سيتم حذف الملف عند الحفظ', 'warning');
+            }
+        }
+    };
+
+    // Handle file input changes
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('file-input')) {
+            handleFilePreview(e.target);
+
+            const form = e.target.closest('.setting-form');
+            const key = form.dataset.settingKey;
+
+            if (e.target.files.length > 0) {
+                changedSettings.add(key);
+                form.classList.add('has-changes');
+            } else {
+                changedSettings.delete(key);
+                form.classList.remove('has-changes');
+            }
+
+            updateSaveStatusBar();
+        }
+    });
+});
+</script>
+{% endblock %}

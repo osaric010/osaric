@@ -1,0 +1,338 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-tools text-warning me-2"></i>
+                    {{ title }}
+                </h2>
+                <div>
+                    <a href="{% url 'assets:home' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للأصول
+                    </a>
+                    <a href="{% url 'assets:asset_maintenance_create' %}" class="btn btn-warning">
+                        <i class="fas fa-plus me-1"></i>
+                        إضافة صيانة جديدة
+                    </a>
+                </div>
+            </div>
+
+            <!-- فلاتر البحث -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="search" 
+                                       value="{{ search_query }}"
+                                       placeholder="البحث في سجلات الصيانة (رقم الصيانة، اسم الأصل)">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="maintenance_type">
+                                <option value="">جميع الأنواع</option>
+                                <option value="PREVENTIVE" {% if type_filter == "PREVENTIVE" %}selected{% endif %}>وقائية</option>
+                                <option value="CORRECTIVE" {% if type_filter == "CORRECTIVE" %}selected{% endif %}>إصلاحية</option>
+                                <option value="EMERGENCY" {% if type_filter == "EMERGENCY" %}selected{% endif %}>طارئة</option>
+                                <option value="SCHEDULED" {% if type_filter == "SCHEDULED" %}selected{% endif %}>مجدولة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" name="status">
+                                <option value="">جميع الحالات</option>
+                                <option value="PENDING" {% if status_filter == "PENDING" %}selected{% endif %}>في الانتظار</option>
+                                <option value="IN_PROGRESS" {% if status_filter == "IN_PROGRESS" %}selected{% endif %}>قيد التنفيذ</option>
+                                <option value="COMPLETED" {% if status_filter == "COMPLETED" %}selected{% endif %}>مكتملة</option>
+                                <option value="CANCELLED" {% if status_filter == "CANCELLED" %}selected{% endif %}>ملغية</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                                <a href="{% url 'assets:asset_maintenance_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- قائمة سجلات الصيانة -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        سجلات صيانة الأصول الثابتة
+                        {% if page_obj %}
+                            <span class="badge bg-warning ms-2">{{ page_obj.paginator.count }}</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم الصيانة</th>
+                                        <th>تاريخ الصيانة</th>
+                                        <th>الأصل</th>
+                                        <th>نوع الصيانة</th>
+                                        <th>الوصف</th>
+                                        <th>التكلفة</th>
+                                        <th>المقاول/الفني</th>
+                                        <th>الحالة</th>
+                                        <th>الصيانة التالية</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for maintenance in page_obj %}
+                                        <tr>
+                                            <td><strong>{{ maintenance.maintenance_number }}</strong></td>
+                                            <td>{{ maintenance.maintenance_date|date:"d/m/Y" }}</td>
+                                            <td>
+                                                <div>
+                                                    <strong>{{ maintenance.asset.name }}</strong>
+                                                    <br><small class="text-muted">{{ maintenance.asset.asset_code }}</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if maintenance.maintenance_type == 'PREVENTIVE' %}
+                                                    <span class="badge bg-success">{{ maintenance.get_maintenance_type_display }}</span>
+                                                {% elif maintenance.maintenance_type == 'CORRECTIVE' %}
+                                                    <span class="badge bg-warning">{{ maintenance.get_maintenance_type_display }}</span>
+                                                {% elif maintenance.maintenance_type == 'EMERGENCY' %}
+                                                    <span class="badge bg-danger">{{ maintenance.get_maintenance_type_display }}</span>
+                                                {% elif maintenance.maintenance_type == 'SCHEDULED' %}
+                                                    <span class="badge bg-info">{{ maintenance.get_maintenance_type_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="text-truncate" style="max-width: 200px;" title="{{ maintenance.description }}">
+                                                    {{ maintenance.description|truncatechars:50 }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="text-warning fw-bold">
+                                                    {{ maintenance.cost|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if maintenance.contractor %}
+                                                    {{ maintenance.contractor }}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if maintenance.status == 'PENDING' %}
+                                                    <span class="badge bg-secondary">{{ maintenance.get_status_display }}</span>
+                                                {% elif maintenance.status == 'IN_PROGRESS' %}
+                                                    <span class="badge bg-primary">{{ maintenance.get_status_display }}</span>
+                                                {% elif maintenance.status == 'COMPLETED' %}
+                                                    <span class="badge bg-success">{{ maintenance.get_status_display }}</span>
+                                                {% elif maintenance.status == 'CANCELLED' %}
+                                                    <span class="badge bg-danger">{{ maintenance.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if maintenance.next_maintenance_date %}
+                                                    {{ maintenance.next_maintenance_date|date:"d/m/Y" }}
+                                                    {% if maintenance.next_maintenance_date <= today %}
+                                                        <br><span class="badge bg-danger">مطلوب</span>
+                                                    {% elif maintenance.next_maintenance_date <= next_week %}
+                                                        <br><span class="badge bg-warning">قريب</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'assets:asset_maintenance_detail' maintenance.pk %}" 
+                                                       class="btn btn-outline-info" 
+                                                       title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if maintenance.status != 'COMPLETED' %}
+                                                        <a href="{% url 'assets:asset_maintenance_edit' maintenance.pk %}" 
+                                                           class="btn btn-outline-primary" 
+                                                           title="تعديل">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                    <button type="button" 
+                                                            class="btn btn-outline-danger delete-btn" 
+                                                            data-id="{{ maintenance.pk }}"
+                                                            data-name="{{ maintenance.maintenance_number }}"
+                                                            title="حذف">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    <button type="button" 
+                                                            class="btn btn-outline-secondary print-btn" 
+                                                            data-id="{{ maintenance.pk }}"
+                                                            title="طباعة">
+                                                        <i class="fas fa-print"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد سجلات صيانة</h5>
+                            <p class="text-muted">لم يتم العثور على أي سجلات صيانة مطابقة لمعايير البحث</p>
+                            <a href="{% url 'assets:asset_maintenance_create' %}" class="btn btn-warning">
+                                <i class="fas fa-plus me-2"></i>
+                                إضافة صيانة جديدة
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- معلومات إضافية -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات حول صيانة الأصول الثابتة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-tools me-2"></i>
+                                أنواع الصيانة
+                            </h6>
+                            <ul class="mb-0">
+                                <li><strong>وقائية:</strong> صيانة دورية لمنع الأعطال</li>
+                                <li><strong>إصلاحية:</strong> إصلاح أعطال موجودة</li>
+                                <li><strong>طارئة:</strong> صيانة عاجلة لأعطال حرجة</li>
+                                <li><strong>مجدولة:</strong> صيانة مخططة مسبقاً</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                نصائح مهمة
+                            </h6>
+                            <ul class="mb-0">
+                                <li>جدولة الصيانة الوقائية بانتظام</li>
+                                <li>توثيق جميع أعمال الصيانة</li>
+                                <li>متابعة مواعيد الصيانة القادمة</li>
+                                <li>الاحتفاظ بسجلات التكاليف</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// حذف سجل صيانة
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const maintenanceId = this.getAttribute('data-id');
+            const maintenanceNumber = this.getAttribute('data-name');
+            
+            if (confirm(`هل أنت متأكد من حذف سجل الصيانة "${maintenanceNumber}"؟`)) {
+                fetch(`/assets/maintenance/${maintenanceId}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'حدث خطأ أثناء الحذف');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('حدث خطأ أثناء الحذف');
+                });
+            }
+        });
+    });
+
+    // طباعة سجل صيانة
+    const printButtons = document.querySelectorAll('.print-btn');
+    printButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const maintenanceId = this.getAttribute('data-id');
+            // يمكن إضافة رابط الطباعة هنا
+            alert('سيتم إضافة وظيفة الطباعة قريباً');
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,458 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-clipboard-check text-info me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'inventory:physical_inventory_create' %}" class="btn btn-info">
+                    <i class="fas fa-plus me-1"></i>
+                    إنشاء جرد جديد
+                </a>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="row mb-4">
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                                    <i class="fas fa-list fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ total_inventories }}</h4>
+                            <p class="card-text text-muted">إجمالي الجرد</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-secondary bg-opacity-10 p-3">
+                                    <i class="fas fa-edit fa-2x text-secondary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ draft_inventories }}</h4>
+                            <p class="card-text text-muted">مسودات</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                                    <i class="fas fa-play fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ in_progress_inventories }}</h4>
+                            <p class="card-text text-muted">قيد التنفيذ</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                                    <i class="fas fa-check fa-2x text-info"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ completed_inventories }}</h4>
+                            <p class="card-text text-muted">مكتملة</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                                    <i class="fas fa-check-double fa-2x text-success"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ approved_inventories }}</h4>
+                            <p class="card-text text-muted">معتمدة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- فلاتر البحث -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-2">
+                            {{ form.search.label_tag }}
+                            {{ form.search }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.warehouse.label_tag }}
+                            {{ form.warehouse }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.inventory_type.label_tag }}
+                            {{ form.inventory_type }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.status.label_tag }}
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_from.label_tag }}
+                            {{ form.date_from }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_to.label_tag }}
+                            {{ form.date_to }}
+                        </div>
+                        <div class="col-12 d-flex justify-content-between align-items-center">
+                            <div class="form-check">
+                                {{ form.discrepancies_only }}
+                                <label class="form-check-label" for="{{ form.discrepancies_only.id_for_label }}">
+                                    {{ form.discrepancies_only.label }}
+                                </label>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-search me-1"></i>
+                                    بحث
+                                </button>
+                                <a href="{% url 'inventory:physical_inventory_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>
+                                    إعادة تعيين
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- قائمة الجرد -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة الجرد الفعلي
+                        <span class="badge bg-info ms-2">{{ page_obj.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم الجرد</th>
+                                        <th>التاريخ</th>
+                                        <th>المخزن</th>
+                                        <th>نوع الجرد</th>
+                                        <th>سبب الجرد</th>
+                                        <th>عدد الأصناف</th>
+                                        <th>عدد الفروقات</th>
+                                        <th>قيمة الفروقات</th>
+                                        <th>نسبة الدقة</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for inventory in page_obj %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ inventory.inventory_number }}</strong>
+                                            </td>
+                                            <td>{{ inventory.date|date:"d/m/Y" }}</td>
+                                            <td>{{ inventory.warehouse.name }}</td>
+                                            <td>
+                                                <span class="badge bg-primary bg-opacity-10 text-primary">
+                                                    {{ inventory.get_inventory_type_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ inventory.reason|truncatechars:40 }}</td>
+                                            <td>
+                                                <span class="badge bg-info">{{ inventory.total_items_counted }}</span>
+                                            </td>
+                                            <td>
+                                                {% if inventory.total_discrepancies > 0 %}
+                                                    <span class="badge bg-warning">{{ inventory.total_discrepancies }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">0</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if inventory.total_value_difference != 0 %}
+                                                    <span class="{% if inventory.total_value_difference > 0 %}text-success{% else %}text-danger{% endif %}">
+                                                        {% if inventory.total_value_difference > 0 %}+{% endif %}{{ inventory.total_value_difference|floatformat:2 }} ر.س
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted">0.00 ر.س</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if inventory.status in 'COMPLETED,APPROVED' %}
+                                                    <div class="progress" style="height: 20px;">
+                                                        <div class="progress-bar 
+                                                            {% if inventory.accuracy_percentage >= 95 %}bg-success
+                                                            {% elif inventory.accuracy_percentage >= 85 %}bg-warning
+                                                            {% else %}bg-danger{% endif %}" 
+                                                            role="progressbar" 
+                                                            style="width: {{ inventory.accuracy_percentage }}%">
+                                                            {{ inventory.accuracy_percentage|floatformat:1 }}%
+                                                        </div>
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if inventory.status == 'DRAFT' %}
+                                                    <span class="badge bg-secondary">{{ inventory.get_status_display }}</span>
+                                                {% elif inventory.status == 'IN_PROGRESS' %}
+                                                    <span class="badge bg-warning">{{ inventory.get_status_display }}</span>
+                                                {% elif inventory.status == 'COMPLETED' %}
+                                                    <span class="badge bg-info">{{ inventory.get_status_display }}</span>
+                                                {% elif inventory.status == 'APPROVED' %}
+                                                    <span class="badge bg-success">{{ inventory.get_status_display }}</span>
+                                                {% elif inventory.status == 'CANCELLED' %}
+                                                    <span class="badge bg-danger">{{ inventory.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'inventory:physical_inventory_detail' inventory.pk %}" 
+                                                       class="btn btn-sm btn-outline-info" title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if inventory.status == 'DRAFT' %}
+                                                        <a href="{% url 'inventory:physical_inventory_edit' inventory.pk %}" 
+                                                           class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                onclick="startInventory({{ inventory.pk }})" title="بدء الجرد">
+                                                            <i class="fas fa-play"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="deleteInventory({{ inventory.pk }}, '{{ inventory.inventory_number }}')" title="حذف">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% elif inventory.status == 'IN_PROGRESS' %}
+                                                        <a href="{% url 'inventory:physical_inventory_count' inventory.pk %}" 
+                                                           class="btn btn-sm btn-outline-primary" title="جرد الأصناف">
+                                                            <i class="fas fa-clipboard-list"></i>
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-outline-info" 
+                                                                onclick="completeInventory({{ inventory.pk }})" title="إكمال الجرد">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                                onclick="cancelInventory({{ inventory.pk }})" title="إلغاء">
+                                                            <i class="fas fa-ban"></i>
+                                                        </button>
+                                                    {% elif inventory.status == 'COMPLETED' %}
+                                                        <a href="{% url 'inventory:physical_inventory_report' inventory.pk %}" 
+                                                           class="btn btn-sm btn-outline-primary" title="تقرير الجرد">
+                                                            <i class="fas fa-file-alt"></i>
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                onclick="approveInventory({{ inventory.pk }})" title="اعتماد وتطبيق الفروقات">
+                                                            <i class="fas fa-check-double"></i>
+                                                        </button>
+                                                    {% elif inventory.status == 'APPROVED' %}
+                                                        <a href="{% url 'inventory:physical_inventory_report' inventory.pk %}" 
+                                                           class="btn btn-sm btn-outline-primary" title="تقرير الجرد">
+                                                            <i class="fas fa-file-alt"></i>
+                                                        </a>
+                                                    {% elif inventory.status == 'CANCELLED' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="deleteInventory({{ inventory.pk }}, '{{ inventory.inventory_number }}')" title="حذف">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-clipboard-check fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا يوجد جرد فعلي</h5>
+                            <p class="text-muted">ابدأ بإنشاء جرد جديد</p>
+                            <a href="{% url 'inventory:physical_inventory_create' %}" class="btn btn-info">
+                                <i class="fas fa-plus me-1"></i>
+                                إنشاء جرد جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function startInventory(inventoryId) {
+    if (confirm('هل تريد بدء هذا الجرد؟ سيتم إنشاء قائمة بجميع الأصناف الموجودة في المخزن.')) {
+        fetch(`/inventory/physical-inventory/${inventoryId}/start/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء بدء الجرد');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء بدء الجرد');
+        });
+    }
+}
+
+function completeInventory(inventoryId) {
+    if (confirm('هل تريد إكمال هذا الجرد؟ تأكد من جرد جميع الأصناف المطلوبة.')) {
+        fetch(`/inventory/physical-inventory/${inventoryId}/complete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء إكمال الجرد');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء إكمال الجرد');
+        });
+    }
+}
+
+function approveInventory(inventoryId) {
+    if (confirm('هل تريد اعتماد هذا الجرد؟ سيتم تطبيق جميع الفروقات على المخزون ولا يمكن التراجع.')) {
+        fetch(`/inventory/physical-inventory/${inventoryId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء اعتماد الجرد');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء اعتماد الجرد');
+        });
+    }
+}
+
+function cancelInventory(inventoryId) {
+    if (confirm('هل تريد إلغاء هذا الجرد؟')) {
+        fetch(`/inventory/physical-inventory/${inventoryId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإلغاء');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإلغاء');
+        });
+    }
+}
+
+function deleteInventory(inventoryId, inventoryNumber) {
+    if (confirm(`هل أنت متأكد من حذف الجرد "${inventoryNumber}"؟`)) {
+        fetch(`/inventory/physical-inventory/${inventoryId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+</script>
+{% endblock %}

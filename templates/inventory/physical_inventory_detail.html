@@ -1,0 +1,492 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-clipboard-check text-info me-2"></i>
+                    {{ title }}
+                </h2>
+                <div>
+                    <a href="{% url 'inventory:physical_inventory_list' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للقائمة
+                    </a>
+                    {% if inventory.status == 'DRAFT' %}
+                        <a href="{% url 'inventory:physical_inventory_edit' inventory.pk %}" class="btn btn-info">
+                            <i class="fas fa-edit me-1"></i>
+                            تعديل
+                        </a>
+                    {% elif inventory.status == 'IN_PROGRESS' %}
+                        <a href="{% url 'inventory:physical_inventory_count' inventory.pk %}" class="btn btn-primary">
+                            <i class="fas fa-clipboard-list me-1"></i>
+                            جرد الأصناف
+                        </a>
+                    {% elif inventory.status in 'COMPLETED,APPROVED' %}
+                        <a href="{% url 'inventory:physical_inventory_report' inventory.pk %}" class="btn btn-success">
+                            <i class="fas fa-file-alt me-1"></i>
+                            تقرير الجرد
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- معلومات الجرد -->
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                معلومات الجرد
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">رقم الجرد:</label>
+                                    <div class="fw-bold">{{ inventory.inventory_number }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">تاريخ الجرد:</label>
+                                    <div class="fw-bold">{{ inventory.date|date:"d/m/Y" }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">المخزن:</label>
+                                    <div class="fw-bold">{{ inventory.warehouse.name }}</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">نوع الجرد:</label>
+                                    <div>
+                                        <span class="badge bg-primary fs-6">{{ inventory.get_inventory_type_display }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-muted">الحالة:</label>
+                                    <div>
+                                        {% if inventory.status == 'DRAFT' %}
+                                            <span class="badge bg-secondary fs-6">{{ inventory.get_status_display }}</span>
+                                        {% elif inventory.status == 'IN_PROGRESS' %}
+                                            <span class="badge bg-warning fs-6">{{ inventory.get_status_display }}</span>
+                                        {% elif inventory.status == 'COMPLETED' %}
+                                            <span class="badge bg-info fs-6">{{ inventory.get_status_display }}</span>
+                                        {% elif inventory.status == 'APPROVED' %}
+                                            <span class="badge bg-success fs-6">{{ inventory.get_status_display }}</span>
+                                        {% elif inventory.status == 'CANCELLED' %}
+                                            <span class="badge bg-danger fs-6">{{ inventory.get_status_display }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label class="form-label text-muted">سبب الجرد:</label>
+                                    <div class="fw-bold">{{ inventory.reason }}</div>
+                                </div>
+                                {% if inventory.notes %}
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label text-muted">ملاحظات:</label>
+                                        <div>{{ inventory.notes }}</div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <!-- إحصائيات الجرد -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">إحصائيات الجرد</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">عدد الأصناف المجردة:</label>
+                                <div class="h5 text-info">{{ inventory.total_items_counted }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">عدد الفروقات:</label>
+                                <div class="h5 {% if inventory.total_discrepancies > 0 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ inventory.total_discrepancies }}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">قيمة الفروقات:</label>
+                                <div class="h5 {% if inventory.total_value_difference > 0 %}text-success{% elif inventory.total_value_difference < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                    {% if inventory.total_value_difference > 0 %}+{% endif %}{{ inventory.total_value_difference|floatformat:2 }} ر.س
+                                </div>
+                            </div>
+                            {% if inventory.status in 'COMPLETED,APPROVED' %}
+                                <hr>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">نسبة الدقة:</label>
+                                    <div class="progress mb-2" style="height: 25px;">
+                                        <div class="progress-bar 
+                                            {% if inventory.accuracy_percentage >= 95 %}bg-success
+                                            {% elif inventory.accuracy_percentage >= 85 %}bg-warning
+                                            {% else %}bg-danger{% endif %}" 
+                                            role="progressbar" 
+                                            style="width: {{ inventory.accuracy_percentage }}%">
+                                            {{ inventory.accuracy_percentage|floatformat:1 }}%
+                                        </div>
+                                    </div>
+                                    <div class="h5 {% if inventory.accuracy_percentage >= 95 %}text-success{% elif inventory.accuracy_percentage >= 85 %}text-warning{% else %}text-danger{% endif %}">
+                                        {{ inventory.accuracy_percentage|floatformat:1 }}%
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- معلومات إضافية -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">معلومات إضافية</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label text-muted">أنشئ بواسطة:</label>
+                                <div>{{ inventory.created_by.get_full_name|default:inventory.created_by.username }}</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted">تاريخ الإنشاء:</label>
+                                <div>{{ inventory.created_at|date:"d/m/Y H:i" }}</div>
+                            </div>
+                            {% if inventory.started_by %}
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">بدأ الجرد بواسطة:</label>
+                                    <div>{{ inventory.started_by.get_full_name|default:inventory.started_by.username }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">تاريخ بدء الجرد:</label>
+                                    <div>{{ inventory.started_date|date:"d/m/Y H:i" }}</div>
+                                </div>
+                            {% endif %}
+                            {% if inventory.completed_by %}
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">أكمل الجرد بواسطة:</label>
+                                    <div>{{ inventory.completed_by.get_full_name|default:inventory.completed_by.username }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">تاريخ إكمال الجرد:</label>
+                                    <div>{{ inventory.completed_date|date:"d/m/Y H:i" }}</div>
+                                </div>
+                            {% endif %}
+                            {% if inventory.approved_by %}
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">معتمد بواسطة:</label>
+                                    <div>{{ inventory.approved_by.get_full_name|default:inventory.approved_by.username }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-muted">تاريخ الاعتماد:</label>
+                                    <div>{{ inventory.approved_date|date:"d/m/Y H:i" }}</div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- إجراءات -->
+                    {% if inventory.status == 'DRAFT' %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">الإجراءات المتاحة</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-success w-100 mb-2" 
+                                        onclick="startInventory({{ inventory.pk }})">
+                                    <i class="fas fa-play me-1"></i>
+                                    بدء الجرد
+                                </button>
+                                <button type="button" class="btn btn-danger w-100" 
+                                        onclick="deleteInventory({{ inventory.pk }}, '{{ inventory.inventory_number }}')">
+                                    <i class="fas fa-trash me-1"></i>
+                                    حذف الجرد
+                                </button>
+                            </div>
+                        </div>
+                    {% elif inventory.status == 'IN_PROGRESS' %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">الإجراءات المتاحة</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-info w-100 mb-2" 
+                                        onclick="completeInventory({{ inventory.pk }})">
+                                    <i class="fas fa-check me-1"></i>
+                                    إكمال الجرد
+                                </button>
+                                <button type="button" class="btn btn-secondary w-100" 
+                                        onclick="cancelInventory({{ inventory.pk }})">
+                                    <i class="fas fa-ban me-1"></i>
+                                    إلغاء الجرد
+                                </button>
+                            </div>
+                        </div>
+                    {% elif inventory.status == 'COMPLETED' %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">الإجراءات المتاحة</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-success w-100" 
+                                        onclick="approveInventory({{ inventory.pk }})">
+                                    <i class="fas fa-check-double me-1"></i>
+                                    اعتماد وتطبيق الفروقات
+                                </button>
+                            </div>
+                        </div>
+                    {% elif inventory.status == 'CANCELLED' %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">الإجراءات المتاحة</h6>
+                            </div>
+                            <div class="card-body">
+                                <button type="button" class="btn btn-danger w-100" 
+                                        onclick="deleteInventory({{ inventory.pk }}, '{{ inventory.inventory_number }}')">
+                                    <i class="fas fa-trash me-1"></i>
+                                    حذف الجرد
+                                </button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- أصناف الجرد -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-boxes text-warning me-2"></i>
+                        أصناف الجرد
+                        {% if items %}
+                            <span class="badge bg-warning ms-2">{{ items.count }}</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>الصنف</th>
+                                        <th>الكمية في النظام</th>
+                                        <th>الكمية المجردة</th>
+                                        <th>الفرق</th>
+                                        <th>قيمة الفرق</th>
+                                        <th>الموقع</th>
+                                        <th>حالة الجرد</th>
+                                        <th>جرد بواسطة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ item.item.name }}</strong>
+                                                <br><small class="text-muted">{{ item.item.code }}</small>
+                                            </td>
+                                            <td>{{ item.system_quantity|floatformat:3 }}</td>
+                                            <td>
+                                                {% if item.counted_quantity is not None %}
+                                                    {{ item.counted_quantity|floatformat:3 }}
+                                                {% else %}
+                                                    <span class="text-muted">لم يجرد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.counted_quantity is not None %}
+                                                    <span class="{% if item.difference_quantity > 0 %}text-success{% elif item.difference_quantity < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                                        {% if item.difference_quantity > 0 %}+{% endif %}{{ item.difference_quantity|floatformat:3 }}
+                                                        {% if item.difference_quantity != 0 %}
+                                                            <small>({{ item.discrepancy_type_display }})</small>
+                                                        {% endif %}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.counted_quantity is not None %}
+                                                    <span class="{% if item.difference_value > 0 %}text-success{% elif item.difference_value < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                                        {% if item.difference_value > 0 %}+{% endif %}{{ item.difference_value|floatformat:2 }} ر.س
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.location %}
+                                                    {{ item.location }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.is_counted %}
+                                                    <span class="badge bg-success">تم الجرد</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">لم يجرد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.counted_by %}
+                                                    {{ item.counted_by.get_full_name|default:item.counted_by.username }}
+                                                    <br><small class="text-muted">{{ item.counted_date|date:"d/m/Y H:i" }}</small>
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            {% if inventory.status == 'DRAFT' %}
+                                <i class="fas fa-play fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">لم يبدأ الجرد بعد</h5>
+                                <p class="text-muted">اضغط على "بدء الجرد" لإنشاء قائمة الأصناف</p>
+                                <button type="button" class="btn btn-success" onclick="startInventory({{ inventory.pk }})">
+                                    <i class="fas fa-play me-1"></i>
+                                    بدء الجرد
+                                </button>
+                            {% else %}
+                                <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">لا توجد أصناف في هذا الجرد</h5>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function startInventory(inventoryId) {
+    if (confirm('هل تريد بدء هذا الجرد؟ سيتم إنشاء قائمة بجميع الأصناف الموجودة في المخزن.')) {
+        fetch(`/inventory/physical-inventory/${inventoryId}/start/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء بدء الجرد');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء بدء الجرد');
+        });
+    }
+}
+
+function completeInventory(inventoryId) {
+    if (confirm('هل تريد إكمال هذا الجرد؟ تأكد من جرد جميع الأصناف المطلوبة.')) {
+        fetch(`/inventory/physical-inventory/${inventoryId}/complete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء إكمال الجرد');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء إكمال الجرد');
+        });
+    }
+}
+
+function approveInventory(inventoryId) {
+    if (confirm('هل تريد اعتماد هذا الجرد؟ سيتم تطبيق جميع الفروقات على المخزون ولا يمكن التراجع.')) {
+        fetch(`/inventory/physical-inventory/${inventoryId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء اعتماد الجرد');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء اعتماد الجرد');
+        });
+    }
+}
+
+function cancelInventory(inventoryId) {
+    if (confirm('هل تريد إلغاء هذا الجرد؟')) {
+        fetch(`/inventory/physical-inventory/${inventoryId}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الإلغاء');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الإلغاء');
+        });
+    }
+}
+
+function deleteInventory(inventoryId, inventoryNumber) {
+    if (confirm(`هل أنت متأكد من حذف الجرد "${inventoryNumber}"؟`)) {
+        fetch(`/inventory/physical-inventory/${inventoryId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/inventory/physical-inventory/';
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+</script>
+{% endblock %}

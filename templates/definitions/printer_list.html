@@ -1,0 +1,277 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-print text-dark me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'definitions:printer_create' %}" class="btn btn-dark">
+                    <i class="fas fa-plus me-1"></i>
+                    إضافة طابعة جديدة
+                </a>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">البحث</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search_query }}" placeholder="البحث في الكود أو الاسم أو الموديل">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="printer_type" class="form-label">نوع الطابعة</label>
+                            <select class="form-select" id="printer_type" name="printer_type">
+                                <option value="">جميع الأنواع</option>
+                                {% for value, label in printer_types %}
+                                    <option value="{{ value }}" {% if printer_type_filter == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="connection_type" class="form-label">نوع الاتصال</label>
+                            <select class="form-select" id="connection_type" name="connection_type">
+                                <option value="">جميع الاتصالات</option>
+                                {% for value, label in connection_types %}
+                                    <option value="{{ value }}" {% if connection_type_filter == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="usage_type" class="form-label">نوع الاستخدام</label>
+                            <select class="form-select" id="usage_type" name="usage_type">
+                                <option value="">جميع الاستخدامات</option>
+                                {% for value, label in usage_types %}
+                                    <option value="{{ value }}" {% if usage_type_filter == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search me-1"></i>
+                                بحث
+                            </button>
+                            <a href="{% url 'definitions:printer_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                مسح
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة الطابعات
+                        <span class="badge bg-dark ms-2">{{ page_obj.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>الكود</th>
+                                        <th>اسم الطابعة</th>
+                                        <th>النوع</th>
+                                        <th>الاتصال</th>
+                                        <th>الموقع</th>
+                                        <th>المسؤول</th>
+                                        <th>الحالة</th>
+                                        <th>الضمان</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for printer in page_obj %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ printer.code }}</strong>
+                                                {% if printer.is_default %}
+                                                    <br><span class="badge bg-primary">افتراضية</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'definitions:printer_detail' printer.pk %}" 
+                                                   class="text-decoration-none">
+                                                    {{ printer.name }}
+                                                </a>
+                                                {% if printer.brand %}
+                                                    <br><small class="text-muted">{{ printer.brand }}</small>
+                                                {% endif %}
+                                                {% if printer.model %}
+                                                    <small class="text-muted">{{ printer.model }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ printer.get_printer_type_display }}</span>
+                                                <br><small class="text-muted">{{ printer.get_usage_type_display }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ printer.get_connection_type_display }}</span>
+                                                {% if printer.is_network_printer and printer.ip_address %}
+                                                    <br><small class="text-muted">{{ printer.connection_string }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if printer.location %}
+                                                    {{ printer.location }}
+                                                    {% if printer.department %}
+                                                        <br><small class="text-muted">{{ printer.department }}</small>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if printer.responsible_user %}
+                                                    {{ printer.responsible_user.get_full_name|default:printer.responsible_user.username }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="d-flex flex-column gap-1">
+                                                    {% if printer.is_shared %}
+                                                        <span class="badge bg-success">مشتركة</span>
+                                                    {% endif %}
+                                                    {% if printer.color_support %}
+                                                        <span class="badge bg-warning">ألوان</span>
+                                                    {% endif %}
+                                                    {% if printer.duplex_support %}
+                                                        <span class="badge bg-info">وجهين</span>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if printer.warranty_status == 'ساري' %}
+                                                    <span class="badge bg-success">{{ printer.warranty_status }}</span>
+                                                {% elif printer.warranty_status == 'منتهي' %}
+                                                    <span class="badge bg-danger">{{ printer.warranty_status }}</span>
+                                                {% elif 'ينتهي خلال' in printer.warranty_status %}
+                                                    <span class="badge bg-warning">{{ printer.warranty_status }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">{{ printer.warranty_status }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'definitions:printer_detail' printer.pk %}" 
+                                                       class="btn btn-sm btn-outline-info" title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'definitions:printer_edit' printer.pk %}" 
+                                                       class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-success" 
+                                                            onclick="testPrinter({{ printer.pk }})" title="اختبار الطباعة">
+                                                        <i class="fas fa-print"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                            onclick="deletePrinter({{ printer.pk }}, '{{ printer.name }}')" title="حذف">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if printer_type_filter %}&printer_type={{ printer_type_filter }}{% endif %}{% if connection_type_filter %}&connection_type={{ connection_type_filter }}{% endif %}{% if usage_type_filter %}&usage_type={{ usage_type_filter }}{% endif %}">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if printer_type_filter %}&printer_type={{ printer_type_filter }}{% endif %}{% if connection_type_filter %}&connection_type={{ connection_type_filter }}{% endif %}{% if usage_type_filter %}&usage_type={{ usage_type_filter }}{% endif %}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if printer_type_filter %}&printer_type={{ printer_type_filter }}{% endif %}{% if connection_type_filter %}&connection_type={{ connection_type_filter }}{% endif %}{% if usage_type_filter %}&usage_type={{ usage_type_filter }}{% endif %}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if printer_type_filter %}&printer_type={{ printer_type_filter }}{% endif %}{% if connection_type_filter %}&connection_type={{ connection_type_filter }}{% endif %}{% if usage_type_filter %}&usage_type={{ usage_type_filter }}{% endif %}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-print fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد طابعات</h5>
+                            <p class="text-muted">ابدأ بإضافة طابعة جديدة</p>
+                            <a href="{% url 'definitions:printer_create' %}" class="btn btn-dark">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة طابعة جديدة
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deletePrinter(printerId, printerName) {
+    if (confirm(`هل أنت متأكد من حذف الطابعة "${printerName}"؟`)) {
+        fetch(`/definitions/printers/${printerId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+
+function testPrinter(printerId) {
+    alert('سيتم إضافة وظيفة اختبار الطباعة قريباً');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,247 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-truck text-warning me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'branches:home' %}">الفروع</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'branches:goods_transfer' %}">بضاعة مرحلة</a></li>
+                            <li class="breadcrumb-item active">{{ title }}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <a href="{% url 'branches:goods_transfer' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        بيانات تحويل البضاعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- رقم التحويل -->
+                            <div class="col-md-6 mb-3">
+                                <label for="transfer_number" class="form-label">رقم التحويل <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="transfer_number" name="transfer_number"
+                                       value="{% if transfer %}{{ transfer.transfer_number }}{% elif form_data %}{{ form_data.transfer_number }}{% else %}GT-{{ 'now'|date:'Y' }}-{% endif %}" required>
+                                <div class="form-text">سيتم إنشاء رقم تلقائي إذا ترك فارغاً</div>
+                            </div>
+
+                            <!-- الفرع -->
+                            <div class="col-md-6 mb-3">
+                                <label for="branch" class="form-label">الفرع المستقبل <span class="text-danger">*</span></label>
+                                <select class="form-select" id="branch" name="branch" required>
+                                    <option value="">اختر الفرع</option>
+                                    {% for branch in branches %}
+                                    <option value="{{ branch.id }}"
+                                            {% if transfer and transfer.branch.id == branch.id %}selected
+                                            {% elif form_data and form_data.branch == branch.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ branch.name }} ({{ branch.code }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- تاريخ التحويل -->
+                            <div class="col-md-6 mb-3">
+                                <label for="transfer_date" class="form-label">تاريخ التحويل <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="transfer_date" name="transfer_date"
+                                       value="{% if transfer %}{{ transfer.transfer_date|date:'Y-m-d' }}{% elif form_data %}{{ form_data.transfer_date }}{% endif %}" required>
+                            </div>
+
+                            <!-- إجمالي المبلغ -->
+                            <div class="col-md-6 mb-3">
+                                <label for="total_amount" class="form-label">إجمالي قيمة البضاعة <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="total_amount" name="total_amount"
+                                           step="0.01" min="0.01"
+                                           value="{% if transfer %}{{ transfer.total_amount }}{% elif form_data %}{{ form_data.total_amount }}{% endif %}" required>
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+
+                            <!-- الحالة -->
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">حالة التحويل <span class="text-danger">*</span></label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="PENDING" {% if transfer and transfer.status == 'PENDING' %}selected{% elif form_data and form_data.status == 'PENDING' %}selected{% elif not transfer %}selected{% endif %}>معلق</option>
+                                    <option value="APPROVED" {% if transfer and transfer.status == 'APPROVED' %}selected{% elif form_data and form_data.status == 'APPROVED' %}selected{% endif %}>معتمد</option>
+                                    <option value="TRANSFERRED" {% if transfer and transfer.status == 'TRANSFERRED' %}selected{% elif form_data and form_data.status == 'TRANSFERRED' %}selected{% endif %}>محول</option>
+                                    <option value="RECEIVED" {% if transfer and transfer.status == 'RECEIVED' %}selected{% elif form_data and form_data.status == 'RECEIVED' %}selected{% endif %}>مستلم</option>
+                                    <option value="CANCELLED" {% if transfer and transfer.status == 'CANCELLED' %}selected{% elif form_data and form_data.status == 'CANCELLED' %}selected{% endif %}>ملغي</option>
+                                </select>
+                            </div>
+
+                            <!-- ملاحظات -->
+                            <div class="col-md-12 mb-3">
+                                <label for="notes" class="form-label">ملاحظات</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3"
+                                          placeholder="تفاصيل البضاعة المحولة وأي ملاحظات أخرى">{% if transfer %}{{ transfer.notes }}{% elif form_data %}{{ form_data.notes }}{% endif %}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Status Info -->
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>معلومات حول حالات التحويل:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="mb-0">
+                                        <li><strong>معلق:</strong> في انتظار الموافقة</li>
+                                        <li><strong>معتمد:</strong> تم اعتماد التحويل</li>
+                                        <li><strong>محول:</strong> في الطريق للفرع</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="mb-0">
+                                        <li><strong>مستلم:</strong> تم الاستلام بالفرع</li>
+                                        <li><strong>ملغي:</strong> تم إلغاء التحويل</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Summary Card -->
+                        <div class="card bg-light mb-3" id="summaryCard" style="display: none;">
+                            <div class="card-body">
+                                <h6 class="card-title">ملخص التحويل:</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>الفرع:</strong> <span id="summaryBranch"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>القيمة:</strong> <span id="summaryAmount"></span> ريال
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>التاريخ:</strong> <span id="summaryDate"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>الحالة:</strong> <span id="summaryStatus"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'branches:goods_transfer' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ التحويل
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    document.getElementById('transfer_date').value = new Date().toISOString().split('T')[0];
+    
+    // Auto-generate transfer number
+    function generateTransferNumber() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const time = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+        return `GT-${year}-${month}${day}-${time}`;
+    }
+    
+    // Set auto-generated number if field is empty
+    const transferNumberInput = document.getElementById('transfer_number');
+    if (!transferNumberInput.value || transferNumberInput.value === 'GT-{{ "now"|date:"Y" }}-') {
+        transferNumberInput.value = generateTransferNumber();
+    }
+    
+    // Status descriptions
+    const statusDescriptions = {
+        'PENDING': 'معلق',
+        'APPROVED': 'معتمد',
+        'TRANSFERRED': 'محول',
+        'RECEIVED': 'مستلم',
+        'CANCELLED': 'ملغي'
+    };
+    
+    // Update summary when form changes
+    function updateSummary() {
+        const branchSelect = document.getElementById('branch');
+        const branch = branchSelect.options[branchSelect.selectedIndex].text;
+        const amount = document.getElementById('total_amount').value;
+        const date = document.getElementById('transfer_date').value;
+        const status = document.getElementById('status').value;
+        
+        if (branchSelect.value && amount && date && status) {
+            document.getElementById('summaryBranch').textContent = branch;
+            document.getElementById('summaryAmount').textContent = parseFloat(amount).toLocaleString();
+            document.getElementById('summaryDate').textContent = date;
+            document.getElementById('summaryStatus').textContent = statusDescriptions[status];
+            document.getElementById('summaryCard').style.display = 'block';
+        } else {
+            document.getElementById('summaryCard').style.display = 'none';
+        }
+    }
+    
+    // Add event listeners
+    ['branch', 'total_amount', 'transfer_date', 'status'].forEach(id => {
+        document.getElementById(id).addEventListener('change', updateSummary);
+        document.getElementById(id).addEventListener('input', updateSummary);
+    });
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const amount = parseFloat(document.getElementById('total_amount').value);
+        if (amount <= 0) {
+            alert('يجب أن تكون قيمة البضاعة أكبر من صفر');
+            e.preventDefault();
+            return;
+        }
+        
+        const transferDate = new Date(document.getElementById('transfer_date').value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (transferDate < today) {
+            if (!confirm('تاريخ التحويل في الماضي. هل تريد المتابعة؟')) {
+                e.preventDefault();
+                return;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

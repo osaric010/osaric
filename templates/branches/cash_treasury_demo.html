@@ -1,0 +1,241 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}النقدية - الخزائن - عرض توضيحي{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-money-bill-wave text-success me-2"></i>
+                        النقدية - الخزائن
+                    </h2>
+                    <p class="text-muted mb-0">عرض توضيحي للنوافذ المنبثقة والوظائف المتاحة</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Instructions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>
+                    كيفية الوصول للنوافذ المنبثقة
+                </h5>
+                <p class="mb-2">للوصول إلى النوافذ المنبثقة للنقدية - الخزائن:</p>
+                <ol class="mb-0">
+                    <li>انقر على <strong>"الفروع"</strong> في القائمة الجانبية</li>
+                    <li>مرر الماوس فوق <strong>"النقدية - الخزائن"</strong></li>
+                    <li>ستظهر النافذة المنبثقة مع جميع الخيارات المتاحة</li>
+                    <li>انقر على الخيار المطلوب للانتقال إليه</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Options -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-arrow-down me-2"></i>
+                        النقدية الواردة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">إدارة النقدية الواردة للخزينة من خزائن الفروع</p>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>عرض قائمة الحركات الواردة</li>
+                        <li><i class="fas fa-check text-success me-2"></i>إضافة حركة نقدية واردة جديدة</li>
+                        <li><i class="fas fa-check text-success me-2"></i>فلترة وبحث متقدم</li>
+                        <li><i class="fas fa-check text-success me-2"></i>إحصائيات فورية</li>
+                    </ul>
+                    <a href="{% url 'branches:cash_received' %}" class="btn btn-success">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        الانتقال للصفحة
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-arrow-up me-2"></i>
+                        النقدية الصادرة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">إدارة النقدية الصادرة من الخزينة إلى خزائن الفروع</p>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-check text-success me-2"></i>عرض قائمة الحركات الصادرة</li>
+                        <li><i class="fas fa-check text-success me-2"></i>إضافة حركة نقدية صادرة جديدة</li>
+                        <li><i class="fas fa-check text-success me-2"></i>فلترة وبحث متقدم</li>
+                        <li><i class="fas fa-check text-success me-2"></i>إحصائيات فورية</li>
+                    </ul>
+                    <a href="{% url 'branches:cash_sent' %}" class="btn btn-danger">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        الانتقال للصفحة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bank Operations -->
+    <div class="row">
+        <div class="col-12 mb-3">
+            <h4 class="text-primary">
+                <i class="fas fa-university me-2"></i>
+                العمليات البنكية
+            </h4>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-university me-2"></i>
+                        البنوك - خزائن الفروع
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">إدارة الحركات البنكية بين البنوك وخزائن الفروع</p>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <h6 class="text-success">الإيداعات البنكية:</h6>
+                            <a href="{% url 'branches:bank_deposits_from_branches' %}" class="btn btn-sm btn-outline-success me-2 mb-2">
+                                إيداعات من خزائن الفروع
+                            </a>
+                        </div>
+                        <div class="col-12">
+                            <h6 class="text-warning">المسحوبات البنكية:</h6>
+                            <a href="{% url 'branches:bank_withdrawals_to_branches' %}" class="btn btn-sm btn-outline-warning me-2 mb-2">
+                                مسحوبات لخزائن الفروع
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-university me-2"></i>
+                        البنوك - بنوك الفروع
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">إدارة التحويلات البنكية بين بنوك الفروع والمركز</p>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <h6 class="text-success">التحويلات الواردة:</h6>
+                            <a href="{% url 'branches:bank_deposits_from_branch_banks' %}" class="btn btn-sm btn-outline-success me-2 mb-2">
+                                من بنوك الفروع
+                            </a>
+                        </div>
+                        <div class="col-12">
+                            <h6 class="text-warning">التحويلات الصادرة:</h6>
+                            <a href="{% url 'branches:bank_withdrawals_to_branch_banks' %}" class="btn btn-sm btn-outline-warning me-2 mb-2">
+                                إلى بنوك الفروع
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="row">
+        <div class="col-12 mb-3">
+            <h4 class="text-secondary">
+                <i class="fas fa-star me-2"></i>
+                المميزات المتاحة
+            </h4>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-search fa-2x text-primary mb-3"></i>
+                    <h6>بحث وفلترة متقدمة</h6>
+                    <p class="small text-muted">بحث في جميع الحقول مع فلترة حسب الفرع والتاريخ</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-chart-bar fa-2x text-success mb-3"></i>
+                    <h6>إحصائيات فورية</h6>
+                    <p class="small text-muted">عرض إجمالي الحركات والمبالغ في الوقت الفعلي</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-file-alt fa-2x text-info mb-3"></i>
+                    <h6>توثيق شامل</h6>
+                    <p class="small text-muted">تسجيل تفصيلي لجميع الحركات مع البيانات والملاحظات</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-users fa-2x text-warning mb-3"></i>
+                    <h6>تتبع المستخدمين</h6>
+                    <p class="small text-muted">تسجيل المستخدم المنشئ لكل حركة مع التاريخ والوقت</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Help -->
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-light border">
+                <h6 class="alert-heading">
+                    <i class="fas fa-lightbulb text-warning me-2"></i>
+                    نصائح للتنقل
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="mb-0">
+                            <li>استخدم النوافذ المنبثقة للوصول السريع</li>
+                            <li>النوافذ تدعم التنقل بالماوس واللمس</li>
+                            <li>يمكن إغلاق النوافذ بالضغط على Escape</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="mb-0">
+                            <li>النوافذ متجاوبة مع جميع الشاشات</li>
+                            <li>تأثيرات بصرية سلسة ومريحة للعين</li>
+                            <li>ألوان مميزة لكل نوع من الحركات</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

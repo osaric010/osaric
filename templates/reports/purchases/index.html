@@ -1,0 +1,91 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-truck text-secondary me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item active">تقارير المشتريات</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Grid -->
+    <div class="row">
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-list-alt fa-3x text-info"></i>
+                    </div>
+                    <h6 class="card-title">تقرير تفصيلي</h6>
+                    <a href="{% url 'reports:purchases_detailed_report' %}" class="btn btn-info btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-calendar fa-3x text-primary"></i>
+                    </div>
+                    <h6 class="card-title">مشتريات شهرية</h6>
+                    <a href="{% url 'reports:purchases_monthly_report' %}" class="btn btn-primary btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-pie fa-3x text-success"></i>
+                    </div>
+                    <h6 class="card-title">تقرير إجمالي</h6>
+                    <a href="{% url 'reports:purchases_summary_report' %}" class="btn btn-success btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-percentage fa-3x text-warning"></i>
+                    </div>
+                    <h6 class="card-title">خصومات المشتريات</h6>
+                    <a href="{% url 'reports:purchases_discounts_report' %}" class="btn btn-warning btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-clipboard-list fa-3x text-info"></i>
+                    </div>
+                    <h6 class="card-title">أوامر التوريد</h6>
+                    <a href="{% url 'reports:supply_orders_report' %}" class="btn btn-info btn-sm">عرض التقرير</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

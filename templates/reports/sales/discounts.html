@@ -1,0 +1,207 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-percentage text-warning me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'reports:sales_reports' %}">تقارير المبيعات</a></li>
+                            <li class="breadcrumb-item active">الخصومات</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>عرض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if invoices %}
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-lg-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_discount|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي الخصومات</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_invoices }}</h4>
+                            <p class="mb-0">عدد الفواتير</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-file-invoice"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ average_discount|floatformat:2 }}</h4>
+                            <p class="mb-0">متوسط الخصم</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoices with Discounts -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                فواتير المبيعات مع الخصومات
+                <span class="badge bg-warning">{{ total_invoices }}</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>رقم الفاتورة</th>
+                            <th>التاريخ</th>
+                            <th>العميل</th>
+                            <th>المبلغ الفرعي</th>
+                            <th>مبلغ الخصم</th>
+                            <th>نسبة الخصم</th>
+                            <th>المبلغ بعد الخصم</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice_data in invoices %}
+                        <tr>
+                            <td>
+                                <strong class="text-primary">{{ invoice_data.invoice.invoice_number }}</strong>
+                            </td>
+                            <td>{{ invoice_data.invoice.date|date:"Y-m-d" }}</td>
+                            <td>
+                                <strong>{{ invoice_data.invoice.customer.name }}</strong>
+                                {% if invoice_data.invoice.customer.phone %}
+                                <small class="text-muted d-block">{{ invoice_data.invoice.customer.phone }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ invoice_data.invoice.subtotal|floatformat:2 }}</td>
+                            <td class="text-warning">
+                                <strong>{{ invoice_data.invoice.discount_amount|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning">
+                                    {{ invoice_data.discount_percentage|floatformat:1 }}%
+                                </span>
+                            </td>
+                            <td>
+                                <strong class="text-success">
+                                    {{ invoice_data.amount_after_discount|floatformat:2 }}
+                                </strong>
+                            </td>
+                            <td>
+                                {% if invoice_data.invoice.status == 'DRAFT' %}
+                                <span class="badge bg-secondary">مسودة</span>
+                                {% elif invoice_data.invoice.status == 'CONFIRMED' %}
+                                <span class="badge bg-success">مؤكدة</span>
+                                {% elif invoice_data.invoice.status == 'CANCELLED' %}
+                                <span class="badge bg-danger">ملغية</span>
+                                {% else %}
+                                <span class="badge bg-primary">{{ invoice_data.invoice.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="4">الإجمالي</th>
+                            <th class="text-warning">{{ total_discount|floatformat:2 }}</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-percentage fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">لا توجد خصومات</h5>
+            <p class="text-muted">لا توجد فواتير مبيعات بخصومات في الفترة المحددة</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .btn, .breadcrumb, .card-header {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

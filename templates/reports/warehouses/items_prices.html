@@ -1,0 +1,250 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-tags text-warning me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'reports:warehouses_reports' %}">تقارير المخازن</a></li>
+                            <li class="breadcrumb-item active">أسعار الأصناف</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">الفئة</label>
+                    <select name="category_id" class="form-select">
+                        <option value="">جميع الفئات</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">البحث في الاسم أو الكود</label>
+                    <input type="text" name="search" class="form-control" value="{{ search_query }}" placeholder="ابحث عن صنف...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">ترتيب حسب</label>
+                    <select name="sort_by" class="form-select">
+                        <option value="name" {% if sort_by == 'name' %}selected{% endif %}>الاسم</option>
+                        <option value="code" {% if sort_by == 'code' %}selected{% endif %}>الكود</option>
+                        <option value="cost_price" {% if sort_by == 'cost_price' %}selected{% endif %}>سعر التكلفة</option>
+                        <option value="selling_price" {% if sort_by == 'selling_price' %}selected{% endif %}>سعر البيع</option>
+                        <option value="profit_margin" {% if sort_by == 'profit_margin' %}selected{% endif %}>هامش الربح</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>عرض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if items %}
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-lg-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_items }}</h4>
+                            <p class="mb-0">عدد الأصناف</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ avg_cost_price|floatformat:2 }}</h4>
+                            <p class="mb-0">متوسط سعر التكلفة</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ avg_selling_price|floatformat:2 }}</h4>
+                            <p class="mb-0">متوسط سعر البيع</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ avg_profit_margin|floatformat:1 }}%</h4>
+                            <p class="mb-0">متوسط هامش الربح</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Prices -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                أسعار الأصناف
+                <span class="badge bg-primary">{{ total_items }}</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>كود الصنف</th>
+                            <th>اسم الصنف</th>
+                            <th>الفئة</th>
+                            <th>الوحدة</th>
+                            <th>سعر التكلفة</th>
+                            <th>سعر البيع</th>
+                            <th>هامش الربح</th>
+                            <th>نسبة الربح</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>
+                                <strong class="text-primary">{{ item.code }}</strong>
+                            </td>
+                            <td>
+                                <strong>{{ item.name }}</strong>
+                                {% if item.description %}
+                                <small class="text-muted d-block">{{ item.description|truncatechars:50 }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.category %}
+                                <span class="badge bg-secondary">{{ item.category.name }}</span>
+                                {% else %}
+                                <span class="text-muted">غير محدد</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ item.unit.name }}</span>
+                            </td>
+                            <td>
+                                <strong class="text-warning">{{ item.cost_price|default:0|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                <strong class="text-success">{{ item.selling_price|default:0|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                {% if item.cost_price and item.selling_price %}
+                                {% with profit=item.selling_price|add:item.cost_price|add:"-"|add:item.cost_price %}
+                                <strong class="{% if profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {% widthratio item.selling_price 1 1 %}{% widthratio item.cost_price 1 -1 %}
+                                </strong>
+                                {% endwith %}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.cost_price and item.selling_price and item.cost_price > 0 %}
+                                {% with profit_margin=item.selling_price|floatformat:2|add:"-"|add:item.cost_price|floatformat:2 %}
+                                <span class="badge {% if item.selling_price > item.cost_price %}bg-success{% elif item.selling_price == item.cost_price %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {% widthratio item.selling_price item.cost_price 100 %}%
+                                </span>
+                                {% endwith %}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.is_active %}
+                                <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                <span class="badge bg-danger">غير نشط</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">لا توجد أصناف</h5>
+            <p class="text-muted">لا توجد أصناف تطابق معايير البحث المحددة</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .btn, .breadcrumb, .card-header {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

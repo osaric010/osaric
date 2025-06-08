@@ -1,0 +1,294 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-sync-alt text-info me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'assets:asset_renewal_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <!-- معلومات التجديد الأساسية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات التجديد الأساسية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">رقم التجديد</label>
+                                <input type="text" class="form-control" name="renewal_number" 
+                                       placeholder="سيتم إنشاؤه تلقائياً" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">تاريخ التجديد</label>
+                                <input type="date" class="form-control" name="renewal_date" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الأصل</label>
+                                <select class="form-select" name="asset" required>
+                                    <option value="">اختر الأصل</option>
+                                    <!-- سيتم ملؤها من الـ view -->
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">نوع التجديد</label>
+                                <select class="form-select" name="renewal_type" required>
+                                    <option value="">اختر نوع التجديد</option>
+                                    <option value="MAINTENANCE">صيانة</option>
+                                    <option value="UPGRADE">ترقية</option>
+                                    <option value="REPAIR">إصلاح</option>
+                                    <option value="REPLACEMENT">استبدال جزء</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">التكلفة</label>
+                                <input type="number" class="form-control" name="cost" 
+                                       step="0.01" min="0.01" placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الخزينة</label>
+                                <select class="form-select" name="treasury" required>
+                                    <option value="">اختر الخزينة</option>
+                                    <!-- سيتم ملؤها من الـ view -->
+                                </select>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">وصف التجديد</label>
+                                <textarea class="form-control" name="description" rows="3" 
+                                          placeholder="وصف تفصيلي لعملية التجديد" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات المورد/المقاول -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-user-tie me-2"></i>
+                            معلومات المورد/المقاول
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">المورد/المقاول</label>
+                                <input type="text" class="form-control" name="supplier" 
+                                       placeholder="اسم المورد أو المقاول">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">رقم الفاتورة</label>
+                                <input type="text" class="form-control" name="invoice_number" 
+                                       placeholder="رقم الفاتورة">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- تأثير على العمر الإنتاجي -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-plus me-2"></i>
+                            تأثير على العمر الإنتاجي
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="extends_useful_life" 
+                                           id="extends_useful_life">
+                                    <label class="form-check-label" for="extends_useful_life">
+                                        يمدد العمر الإنتاجي للأصل
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">سنوات إضافية</label>
+                                <input type="number" class="form-control" name="additional_years" 
+                                       value="0" min="0" disabled>
+                                <div class="form-text">عدد السنوات الإضافية للعمر الإنتاجي</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ملاحظات إضافية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-sticky-note me-2"></i>
+                            ملاحظات إضافية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label class="form-label">ملاحظات</label>
+                                <textarea class="form-control" name="notes" rows="3" 
+                                          placeholder="ملاحظات إضافية حول التجديد"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات مهمة -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات مهمة حول تجديد الأصول
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-sync-alt me-2"></i>
+                                        أنواع التجديد
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li><strong>صيانة:</strong> صيانة دورية أو وقائية</li>
+                                        <li><strong>ترقية:</strong> تحسين أداء أو إضافة مميزات</li>
+                                        <li><strong>إصلاح:</strong> إصلاح عطل أو تلف</li>
+                                        <li><strong>استبدال جزء:</strong> تغيير قطع معينة</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-warning">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        نصائح مهمة
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>وثق جميع عمليات التجديد بدقة</li>
+                                        <li>احتفظ بفواتير وإيصالات التجديد</li>
+                                        <li>حدد إذا كان التجديد يمدد العمر الإنتاجي</li>
+                                        <li>سيتم خصم التكلفة من الخزينة المحددة</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الحفظ -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'assets:asset_renewal_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-info">
+                                <i class="fas fa-save me-1"></i>
+                                {{ action }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديد تاريخ اليوم افتراضياً
+    const dateField = document.querySelector('input[name="renewal_date"]');
+    if (dateField && !dateField.value) {
+        dateField.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // تفعيل/إلغاء تفعيل حقل السنوات الإضافية
+    const extendsLifeCheckbox = document.getElementById('extends_useful_life');
+    const additionalYearsField = document.querySelector('input[name="additional_years"]');
+    
+    extendsLifeCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            additionalYearsField.disabled = false;
+            additionalYearsField.required = true;
+            additionalYearsField.min = "1";
+            additionalYearsField.value = "1";
+        } else {
+            additionalYearsField.disabled = true;
+            additionalYearsField.required = false;
+            additionalYearsField.min = "0";
+            additionalYearsField.value = "0";
+        }
+    });
+    
+    // تحقق من صحة النموذج
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const asset = document.querySelector('select[name="asset"]').value;
+            const renewalType = document.querySelector('select[name="renewal_type"]').value;
+            const cost = parseFloat(document.querySelector('input[name="cost"]').value);
+            const treasury = document.querySelector('select[name="treasury"]').value;
+            const description = document.querySelector('textarea[name="description"]').value.trim();
+            
+            if (!asset) {
+                e.preventDefault();
+                alert('يجب اختيار الأصل');
+                return false;
+            }
+            
+            if (!renewalType) {
+                e.preventDefault();
+                alert('يجب اختيار نوع التجديد');
+                return false;
+            }
+            
+            if (!cost || cost <= 0) {
+                e.preventDefault();
+                alert('يجب إدخال تكلفة صحيحة');
+                return false;
+            }
+            
+            if (!treasury) {
+                e.preventDefault();
+                alert('يجب اختيار الخزينة');
+                return false;
+            }
+            
+            if (!description) {
+                e.preventDefault();
+                alert('يجب إدخال وصف التجديد');
+                return false;
+            }
+            
+            // تحقق من السنوات الإضافية إذا كان التجديد يمدد العمر
+            if (extendsLifeCheckbox.checked) {
+                const additionalYears = parseInt(additionalYearsField.value);
+                if (!additionalYears || additionalYears <= 0) {
+                    e.preventDefault();
+                    alert('يجب تحديد عدد السنوات الإضافية');
+                    return false;
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

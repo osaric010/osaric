@@ -1,0 +1,234 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-coins text-success me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'reports:treasury_reports' %}">تقارير الخزينة</a></li>
+                            <li class="breadcrumb-item active">الإيرادات</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-outline-primary">
+                        <i class="fas fa-print me-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">فئة الإيراد</label>
+                    <select name="category" class="form-select">
+                        <option value="">جميع الفئات</option>
+                        <option value="SALES" {% if selected_category == 'SALES' %}selected{% endif %}>إيرادات مبيعات</option>
+                        <option value="SERVICES" {% if selected_category == 'SERVICES' %}selected{% endif %}>إيرادات خدمات</option>
+                        <option value="INVESTMENT" {% if selected_category == 'INVESTMENT' %}selected{% endif %}>إيرادات استثمارية</option>
+                        <option value="FINANCIAL" {% if selected_category == 'FINANCIAL' %}selected{% endif %}>إيرادات مالية</option>
+                        <option value="OTHER" {% if selected_category == 'OTHER' %}selected{% endif %}>أخرى</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>عرض
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if revenues %}
+    <!-- Summary -->
+    <div class="row mb-4">
+        <div class="col-lg-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_amount|floatformat:2 }}</h4>
+                            <p class="mb-0">إجمالي الإيرادات</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-coins"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_revenues }}</h4>
+                            <p class="mb-0">عدد الإيرادات</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ average_revenue|floatformat:2 }}</h4>
+                            <p class="mb-0">متوسط الإيراد</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-calculator"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenues -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                تفاصيل الإيرادات
+                <span class="badge bg-success">{{ total_revenues }}</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>التاريخ</th>
+                            <th>البيان</th>
+                            <th>الفئة</th>
+                            <th>المبلغ</th>
+                            <th>طريقة الاستلام</th>
+                            <th>الحالة</th>
+                            <th>ملاحظات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for revenue in revenues %}
+                        <tr>
+                            <td>{{ revenue.transaction_date|date:"Y-m-d" }}</td>
+                            <td>
+                                <strong>{{ revenue.description }}</strong>
+                                {% if revenue.reference_number %}
+                                <small class="text-muted d-block">مرجع: {{ revenue.reference_number }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if revenue.category == 'SALES' %}
+                                <span class="badge bg-primary">مبيعات</span>
+                                {% elif revenue.category == 'SERVICES' %}
+                                <span class="badge bg-info">خدمات</span>
+                                {% elif revenue.category == 'INVESTMENT' %}
+                                <span class="badge bg-success">استثمارية</span>
+                                {% elif revenue.category == 'FINANCIAL' %}
+                                <span class="badge bg-warning">مالية</span>
+                                {% else %}
+                                <span class="badge bg-secondary">أخرى</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-success">{{ revenue.amount|floatformat:2 }}</strong>
+                            </td>
+                            <td>
+                                {% if revenue.payment_method == 'CASH' %}
+                                <span class="badge bg-success">نقدي</span>
+                                {% elif revenue.payment_method == 'BANK' %}
+                                <span class="badge bg-primary">بنكي</span>
+                                {% elif revenue.payment_method == 'CHECK' %}
+                                <span class="badge bg-info">شيك</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ revenue.payment_method }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if revenue.status == 'PENDING' %}
+                                <span class="badge bg-warning">معلق</span>
+                                {% elif revenue.status == 'CONFIRMED' %}
+                                <span class="badge bg-success">مؤكد</span>
+                                {% elif revenue.status == 'RECEIVED' %}
+                                <span class="badge bg-primary">مستلم</span>
+                                {% elif revenue.status == 'CANCELLED' %}
+                                <span class="badge bg-danger">ملغي</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ revenue.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if revenue.notes %}
+                                <small class="text-muted">{{ revenue.notes|truncatechars:50 }}</small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="3">الإجمالي</th>
+                            <th class="text-success">{{ total_amount|floatformat:2 }}</th>
+                            <th colspan="3"></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="fas fa-coins fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">لا توجد إيرادات</h5>
+            <p class="text-muted">لا توجد إيرادات في الفترة المحددة</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    .btn, .breadcrumb, .card-header {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

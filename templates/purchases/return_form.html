@@ -1,0 +1,154 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-undo text-danger me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'purchases:return_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        بيانات مرتجع المشتريات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- المعلومات الأساسية -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-danger border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    المعلومات الأساسية
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.return_number.id_for_label }}" class="form-label">{{ form.return_number.label }}</label>
+                                {{ form.return_number }}
+                                {% if form.return_number.errors %}
+                                    <div class="text-danger small">{{ form.return_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date.id_for_label }}" class="form-label">{{ form.date.label }}</label>
+                                {{ form.date }}
+                                {% if form.date.errors %}
+                                    <div class="text-danger small">{{ form.date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.supplier.id_for_label }}" class="form-label">{{ form.supplier.label }}</label>
+                                {{ form.supplier }}
+                                {% if form.supplier.errors %}
+                                    <div class="text-danger small">{{ form.supplier.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.warehouse.id_for_label }}" class="form-label">{{ form.warehouse.label }}</label>
+                                {{ form.warehouse }}
+                                {% if form.warehouse.errors %}
+                                    <div class="text-danger small">{{ form.warehouse.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- الفاتورة الأصلية وسبب الإرجاع -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-danger border-bottom pb-2 mb-3">
+                                    <i class="fas fa-file-invoice me-1"></i>
+                                    الفاتورة الأصلية وسبب الإرجاع
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.original_invoice.id_for_label }}" class="form-label">{{ form.original_invoice.label }}</label>
+                                {{ form.original_invoice }}
+                                {% if form.original_invoice.errors %}
+                                    <div class="text-danger small">{{ form.original_invoice.errors.0 }}</div>
+                                {% endif %}
+                                <small class="text-muted">اختياري - يمكن ترك هذا الحقل فارغاً</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.reason.id_for_label }}" class="form-label">{{ form.reason.label }}</label>
+                                {{ form.reason }}
+                                {% if form.reason.errors %}
+                                    <div class="text-danger small">{{ form.reason.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- أزرار الحفظ -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'purchases:return_list' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i>
+                                        إلغاء
+                                    </a>
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-save me-1"></i>
+                                        {{ action }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ملاحظة -->
+            <div class="alert alert-info mt-4">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>ملاحظة:</strong> بعد حفظ المرتجع، يمكنك إضافة الأصناف المرتجعة من صفحة التفاصيل.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// تحديد تاريخ اليوم افتراضياً
+document.addEventListener('DOMContentLoaded', function() {
+    const dateField = document.getElementById('{{ form.date.id_for_label }}');
+    if (!dateField.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateField.value = today;
+    }
+});
+
+// تحديث قائمة الفواتير عند تغيير المورد
+document.getElementById('{{ form.supplier.id_for_label }}').addEventListener('change', function() {
+    const supplierId = this.value;
+    const invoiceSelect = document.getElementById('{{ form.original_invoice.id_for_label }}');
+    
+    if (supplierId) {
+        // يمكن إضافة AJAX لتحديث قائمة الفواتير حسب المورد
+        console.log('تحديث قائمة الفواتير للمورد:', supplierId);
+    } else {
+        // مسح قائمة الفواتير
+        invoiceSelect.innerHTML = '<option value="">اختر الفاتورة الأصلية</option>';
+    }
+});
+</script>
+{% endblock %}

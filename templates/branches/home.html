@@ -1,0 +1,600 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .bg-gradient-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+
+    .function-card {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .function-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        text-decoration: none;
+    }
+
+    .function-card.btn-outline-success:hover {
+        border-color: #28a745;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+
+    .function-card.btn-outline-primary:hover {
+        border-color: #007bff;
+        background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+        color: white;
+    }
+
+    .function-card.btn-outline-info:hover {
+        border-color: #17a2b8;
+        background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+        color: white;
+    }
+
+    .function-card.btn-outline-warning:hover {
+        border-color: #ffc107;
+        background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+        color: white;
+    }
+
+    .function-card.btn-outline-danger:hover {
+        border-color: #dc3545;
+        background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+        color: white;
+    }
+
+    .function-card.btn-outline-secondary:hover {
+        border-color: #6c757d;
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+    }
+
+    .function-card.btn-outline-dark:hover {
+        border-color: #343a40;
+        background: linear-gradient(135deg, #343a40 0%, #212529 100%);
+        color: white;
+    }
+
+    .stats-card {
+        transition: all 0.3s ease;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    .section-header {
+        position: relative;
+        padding-left: 1rem;
+    }
+
+    .section-header::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: currentColor;
+        border-radius: 2px;
+    }
+
+    .activity-item {
+        transition: all 0.2s ease;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .activity-item:hover {
+        background: rgba(0,0,0,0.05);
+        transform: translateX(-5px);
+    }
+
+    .badge-large {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-sitemap text-success me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">إدارة الفروع والحركات بين المركز الرئيسي والفروع</p>
+                </div>
+                <div>
+                    <a href="{% url 'branches:branch_add' %}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>
+                        إضافة فرع جديد
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_branches }}</h4>
+                            <p class="mb-0">إجمالي الفروع</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-building"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ active_branches }}</h4>
+                            <p class="mb-0">الفروع النشطة</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ recent_cash_movements|length }}</h4>
+                            <p class="mb-0">حركات نقدية حديثة</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ recent_bank_movements|length }}</h4>
+                            <p class="mb-0">حركات بنكية حديثة</p>
+                        </div>
+                        <div class="fs-1 opacity-75">
+                            <i class="fas fa-university"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- All Branch Functions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-th-large me-2"></i>
+                        جميع وظائف الفروع - وصول سريع
+                    </h5>
+                    <p class="mb-0 small opacity-75">جميع الوظائف المتاحة في قائمة الفروع الجانبية</p>
+                </div>
+                <div class="card-body">
+                    <!-- الإدارة العامة -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-success border-bottom border-success pb-2 mb-3 section-header">
+                                <i class="fas fa-cogs me-2"></i>
+                                الإدارة العامة
+                            </h6>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:home' %}" class="btn btn-outline-success function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-home fa-2x mb-2"></i>
+                                <span class="fw-bold">لوحة تحكم الفروع</span>
+                                <small class="mt-1">رئيسي</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:branch_list' %}" class="btn btn-outline-success function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-building fa-2x mb-2"></i>
+                                <span class="fw-bold">تعريف الفروع</span>
+                                <small class="mt-1">إعداد</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:opening_balance' %}" class="btn btn-outline-success function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-play-circle fa-2x mb-2"></i>
+                                <span class="fw-bold">القيد الافتتاحي</span>
+                                <small class="mt-1">مالي</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:goods_transfer' %}" class="btn btn-outline-success function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-truck fa-2x mb-2"></i>
+                                <span class="fw-bold">بضاعة مرحلة للفروع</span>
+                                <small class="mt-1">نقل</small>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- النقدية - الخزائن -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom border-primary pb-2 mb-3 section-header">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                النقدية - الخزائن
+                            </h6>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:cash_received' %}" class="btn btn-outline-primary function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-arrow-down fa-2x mb-2"></i>
+                                <span class="fw-bold">نقدية واردة للخزينة</span>
+                                <small class="mt-1">عرض</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:cash_received_add' %}" class="btn btn-outline-primary function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-plus fa-2x mb-2"></i>
+                                <span class="fw-bold">إضافة نقدية واردة</span>
+                                <small class="mt-1">جديد</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:cash_sent' %}" class="btn btn-outline-primary function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                                <span class="fw-bold">نقدية صادرة من الخزينة</span>
+                                <small class="mt-1">عرض</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:cash_sent_add' %}" class="btn btn-outline-primary function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-plus fa-2x mb-2"></i>
+                                <span class="fw-bold">إضافة نقدية صادرة</span>
+                                <small class="mt-1">جديد</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:cash_treasury_demo' %}" class="btn btn-outline-primary function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-info-circle fa-2x mb-2"></i>
+                                <span class="fw-bold">دليل الاستخدام</span>
+                                <small class="mt-1">مساعدة</small>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- البنوك - خزائن الفروع -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-info border-bottom border-info pb-2 mb-3 section-header">
+                                <i class="fas fa-university me-2"></i>
+                                البنوك - خزائن الفروع
+                            </h6>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:bank_deposits_from_branches' %}" class="btn btn-outline-info function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-arrow-down fa-2x mb-2"></i>
+                                <span class="fw-bold">إيداعات بنكية واردة</span>
+                                <small class="mt-1">عرض</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:bank_deposits_from_branches_add' %}" class="btn btn-outline-info function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-plus fa-2x mb-2"></i>
+                                <span class="fw-bold">إضافة إيداع جديد</span>
+                                <small class="mt-1">جديد</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:bank_withdrawals_to_branches' %}" class="btn btn-outline-info function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                                <span class="fw-bold">مسحوبات بنكية صادرة</span>
+                                <small class="mt-1">عرض</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:bank_withdrawals_to_branches_add' %}" class="btn btn-outline-info function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-plus fa-2x mb-2"></i>
+                                <span class="fw-bold">إضافة مسحوب جديد</span>
+                                <small class="mt-1">جديد</small>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- البنوك - بنوك الفروع -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-warning border-bottom border-warning pb-2 mb-3 section-header">
+                                <i class="fas fa-exchange-alt me-2"></i>
+                                البنوك - بنوك الفروع
+                            </h6>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:bank_deposits_from_branch_banks' %}" class="btn btn-outline-warning function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-arrow-down fa-2x mb-2"></i>
+                                <span class="fw-bold">تحويلات واردة</span>
+                                <small class="mt-1">عرض</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:bank_deposits_from_branch_banks_add' %}" class="btn btn-outline-warning function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-plus fa-2x mb-2"></i>
+                                <span class="fw-bold">إضافة تحويل وارد</span>
+                                <small class="mt-1">جديد</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:bank_withdrawals_to_branch_banks' %}" class="btn btn-outline-warning function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                                <span class="fw-bold">تحويلات صادرة</span>
+                                <small class="mt-1">عرض</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:bank_withdrawals_to_branch_banks_add' %}" class="btn btn-outline-warning function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-plus fa-2x mb-2"></i>
+                                <span class="fw-bold">إضافة تحويل صادر</span>
+                                <small class="mt-1">جديد</small>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- الإيرادات التحصيلية -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-danger border-bottom border-danger pb-2 mb-3 section-header">
+                                <i class="fas fa-hand-holding-usd me-2"></i>
+                                الإيرادات التحصيلية
+                            </h6>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:collection_revenues' %}" class="btn btn-outline-danger function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-list fa-2x mb-2"></i>
+                                <span class="fw-bold">عرض الإيرادات التحصيلية</span>
+                                <small class="mt-1">عرض</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:collection_revenues_add' %}" class="btn btn-outline-danger function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-plus fa-2x mb-2"></i>
+                                <span class="fw-bold">إضافة إيراد تحصيلي</span>
+                                <small class="mt-1">جديد</small>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- المصروفات المحملة على الفروع -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-secondary border-bottom border-secondary pb-2 mb-3 section-header">
+                                <i class="fas fa-receipt me-2"></i>
+                                المصروفات المحملة على الفروع
+                            </h6>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:branch_expenses' %}" class="btn btn-outline-secondary function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-list fa-2x mb-2"></i>
+                                <span class="fw-bold">عرض المصروفات المحملة</span>
+                                <small class="mt-1">عرض</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:branch_expenses_add' %}" class="btn btn-outline-secondary function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-plus fa-2x mb-2"></i>
+                                <span class="fw-bold">إضافة مصروف محمل</span>
+                                <small class="mt-1">جديد</small>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- التقارير المتخصصة -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-dark border-bottom border-dark pb-2 mb-3 section-header">
+                                <i class="fas fa-chart-line me-2"></i>
+                                التقارير المتخصصة
+                            </h6>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:branch_account_statement' %}" class="btn btn-outline-dark function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-file-alt fa-2x mb-2"></i>
+                                <span class="fw-bold">كشف حساب فرع</span>
+                                <small class="mt-1">تقرير</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:branches_balances_report' %}" class="btn btn-outline-dark function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-balance-scale fa-2x mb-2"></i>
+                                <span class="fw-bold">تقرير أرصدة الفروع</span>
+                                <small class="mt-1">تقرير</small>
+                            </a>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <a href="{% url 'branches:branch_notifications_report' %}" class="btn btn-outline-dark function-card w-100 h-100 d-flex flex-column justify-content-center p-3">
+                                <i class="fas fa-bell fa-2x mb-2"></i>
+                                <span class="fw-bold">إشعارات العمليات</span>
+                                <small class="mt-1">تقرير</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Reports and Tools -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-gradient-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        تقارير وأدوات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="card border-primary h-100 stats-card">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-line fa-2x text-primary mb-2"></i>
+                                    <h6 class="card-title">تقارير النقدية</h6>
+                                    <p class="card-text small text-muted">تقارير شاملة للحركات النقدية</p>
+                                    <a href="#" class="btn btn-outline-primary btn-sm">عرض التقارير</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="card border-info h-100 stats-card">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-pie fa-2x text-info mb-2"></i>
+                                    <h6 class="card-title">تقارير البنوك</h6>
+                                    <p class="card-text small text-muted">تقارير الحركات البنكية</p>
+                                    <a href="#" class="btn btn-outline-info btn-sm">عرض التقارير</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="card border-success h-100 stats-card">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-calculator fa-2x text-success mb-2"></i>
+                                    <h6 class="card-title">حاسبة الأرصدة</h6>
+                                    <p class="card-text small text-muted">حساب أرصدة الفروع</p>
+                                    <a href="#" class="btn btn-outline-success btn-sm">فتح الحاسبة</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="card border-warning h-100 stats-card">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-file-export fa-2x text-warning mb-2"></i>
+                                    <h6 class="card-title">تصدير البيانات</h6>
+                                    <p class="card-text small text-muted">تصدير بيانات الفروع</p>
+                                    <a href="#" class="btn btn-outline-warning btn-sm">تصدير</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        آخر الحركات النقدية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_cash_movements %}
+                    <div class="list-group list-group-flush">
+                        {% for movement in recent_cash_movements %}
+                        <div class="activity-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 text-primary">{{ movement.movement_number }}</h6>
+                                <p class="mb-1 fw-bold">{{ movement.branch.name }}</p>
+                                <small class="text-muted">{{ movement.movement_date }}</small>
+                            </div>
+                            <span class="badge bg-primary badge-large">{{ movement.amount }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'branches:cash_received' %}" class="btn btn-outline-primary btn-sm me-2">
+                            <i class="fas fa-eye me-1"></i>عرض الكل
+                        </a>
+                        <a href="{% url 'branches:cash_received_add' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>إضافة جديد
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">لا توجد حركات نقدية حديثة</p>
+                        <a href="{% url 'branches:cash_received_add' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>إضافة حركة نقدية
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-university me-2"></i>
+                        آخر الحركات البنكية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_bank_movements %}
+                    <div class="list-group list-group-flush">
+                        {% for movement in recent_bank_movements %}
+                        <div class="activity-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 text-info">{{ movement.movement_number }}</h6>
+                                <p class="mb-1 fw-bold">{{ movement.branch.name }}</p>
+                                <small class="text-muted">{{ movement.movement_date }}</small>
+                            </div>
+                            <span class="badge bg-info badge-large">{{ movement.amount }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'branches:bank_deposits_from_branches' %}" class="btn btn-outline-info btn-sm me-2">
+                            <i class="fas fa-eye me-1"></i>عرض الكل
+                        </a>
+                        <a href="{% url 'branches:bank_deposits_from_branches_add' %}" class="btn btn-info btn-sm">
+                            <i class="fas fa-plus me-1"></i>إضافة جديد
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-university fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">لا توجد حركات بنكية حديثة</p>
+                        <a href="{% url 'branches:bank_deposits_from_branches_add' %}" class="btn btn-info">
+                            <i class="fas fa-plus me-2"></i>إضافة حركة بنكية
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

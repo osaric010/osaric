@@ -1,0 +1,478 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-clipboard-check text-info me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'inventory:physical_inventory_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <!-- معلومات الجرد الأساسية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات الجرد الأساسية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.inventory_number.id_for_label }}" class="form-label">{{ form.inventory_number.label }}</label>
+                                {{ form.inventory_number }}
+                                {% if form.inventory_number.errors %}
+                                    <div class="text-danger small">{{ form.inventory_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.date.id_for_label }}" class="form-label">{{ form.date.label }}</label>
+                                {{ form.date }}
+                                {% if form.date.errors %}
+                                    <div class="text-danger small">{{ form.date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.warehouse.id_for_label }}" class="form-label">{{ form.warehouse.label }}</label>
+                                {{ form.warehouse }}
+                                {% if form.warehouse.errors %}
+                                    <div class="text-danger small">{{ form.warehouse.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.inventory_type.id_for_label }}" class="form-label">{{ form.inventory_type.label }}</label>
+                                {{ form.inventory_type }}
+                                {% if form.inventory_type.errors %}
+                                    <div class="text-danger small">{{ form.inventory_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.reason.id_for_label }}" class="form-label">{{ form.reason.label }}</label>
+                                {{ form.reason }}
+                                {% if form.reason.errors %}
+                                    <div class="text-danger small">{{ form.reason.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معاينة أصناف المخزن -->
+                <div class="card mb-4" id="warehouse-items-preview" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-boxes text-info me-2"></i>
+                            الأصناف الموجودة في المخزن
+                            <span class="badge bg-info ms-2" id="items-count">0</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6 class="text-muted">إجمالي الأصناف</h6>
+                                    <h4 class="text-info" id="total-items">0</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6 class="text-muted">إجمالي القيمة</h6>
+                                    <h4 class="text-success" id="total-value">0.00 ج.م</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h6 class="text-muted">المخزن المختار</h6>
+                                    <h4 class="text-primary" id="selected-warehouse">-</h4>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>كود الصنف</th>
+                                        <th>اسم الصنف</th>
+                                        <th>الفئة</th>
+                                        <th>الوحدة</th>
+                                        <th>الكمية الحالية</th>
+                                        <th>متوسط التكلفة</th>
+                                        <th>القيمة الإجمالية</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="warehouse-items-table">
+                                    <!-- سيتم ملء البيانات بواسطة JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>ملاحظة:</strong> هذه الأصناف سيتم إدراجها في الجرد عند بدء عملية الجرد.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات إضافية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info me-2"></i>
+                            معلومات مهمة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        أنواع الجرد
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li><strong>جرد شامل:</strong> جرد جميع الأصناف في المخزن</li>
+                                        <li><strong>جرد جزئي:</strong> جرد أصناف محددة فقط</li>
+                                        <li><strong>جرد دوري:</strong> جرد منتظم حسب الجدولة</li>
+                                        <li><strong>جرد عشوائي:</strong> جرد مفاجئ لأصناف عشوائية</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-warning">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        خطوات الجرد
+                                    </h6>
+                                    <ol class="mb-0">
+                                        <li>إنشاء الجرد وتحديد المعلومات الأساسية</li>
+                                        <li>بدء الجرد (سيتم إنشاء قائمة الأصناف تلقائياً)</li>
+                                        <li>جرد الأصناف وتسجيل الكميات الفعلية</li>
+                                        <li>إكمال الجرد ومراجعة الفروقات</li>
+                                        <li>اعتماد الجرد وتطبيق الفروقات على المخزون</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ملاحظات مهمة -->
+                <div class="card mb-4">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            تنبيهات مهمة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-danger mb-3">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                تأثير الجرد على المخزون
+                            </h6>
+                            <ul class="mb-0">
+                                <li>عند <strong>بدء الجرد</strong>: سيتم إنشاء قائمة بجميع الأصناف الموجودة في المخزن المحدد</li>
+                                <li>عند <strong>اعتماد الجرد</strong>: سيتم تطبيق جميع الفروقات على المخزون الفعلي</li>
+                                <li>الفروقات الموجبة ستزيد من المخزون والسالبة ستقلل منه</li>
+                                <li>لا يمكن التراجع عن الجرد المعتمد</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="alert alert-warning mb-0">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-clock me-2"></i>
+                                توقيت الجرد
+                            </h6>
+                            <ul class="mb-0">
+                                <li>يُنصح بإجراء الجرد في أوقات قليلة الحركة</li>
+                                <li>تأكد من عدم وجود حركات مخزون أثناء الجرد</li>
+                                <li>قم بإيقاف العمليات في المخزن المحدد أثناء الجرد</li>
+                                <li>تأكد من دقة العد قبل إكمال الجرد</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الحفظ -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'inventory:physical_inventory_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-info">
+                                <i class="fas fa-save me-1"></i>
+                                {{ action }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديد تاريخ اليوم افتراضياً
+    const dateField = document.querySelector('input[type="date"][name="date"]');
+    if (dateField && !dateField.value) {
+        dateField.value = new Date().toISOString().split('T')[0];
+    }
+    
+    // تحديد نوع الجرد الافتراضي
+    const inventoryTypeField = document.querySelector('select[name="inventory_type"]');
+    if (inventoryTypeField && !inventoryTypeField.value) {
+        inventoryTypeField.value = 'FULL';
+    }
+    
+    // إضافة تأكيد عند تغيير المخزن وجلب الأصناف
+    const warehouseField = document.querySelector('select[name="warehouse"]');
+    const warehouseItemsPreview = document.getElementById('warehouse-items-preview');
+
+    if (warehouseField) {
+        warehouseField.addEventListener('change', function() {
+            if (this.value) {
+                const selectedOption = this.options[this.selectedIndex];
+                const warehouseName = selectedOption.text;
+
+                // جلب أصناف المخزن
+                loadWarehouseItems(this.value, warehouseName);
+            } else {
+                // إخفاء معاينة الأصناف
+                warehouseItemsPreview.style.display = 'none';
+            }
+        });
+    }
+
+    // دالة جلب أصناف المخزن
+    function loadWarehouseItems(warehouseId, warehouseName) {
+        // إظهار مؤشر التحميل
+        const itemsTable = document.getElementById('warehouse-items-table');
+        itemsTable.innerHTML = '<tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin me-2"></i>جاري تحميل الأصناف...</td></tr>';
+        warehouseItemsPreview.style.display = 'block';
+
+        // تحديث اسم المخزن
+        document.getElementById('selected-warehouse').textContent = warehouseName;
+
+        // جلب البيانات من الخادم
+        fetch(`/inventory/warehouse/${warehouseId}/items/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayWarehouseItems(data);
+                } else {
+                    showError('حدث خطأ أثناء جلب أصناف المخزن: ' + (data.error || 'خطأ غير معروف'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('حدث خطأ في الاتصال بالخادم');
+            });
+    }
+
+    // دالة عرض أصناف المخزن
+    function displayWarehouseItems(data) {
+        const itemsTable = document.getElementById('warehouse-items-table');
+        const totalItemsElement = document.getElementById('total-items');
+        const totalValueElement = document.getElementById('total-value');
+        const itemsCountElement = document.getElementById('items-count');
+
+        // تحديث الإحصائيات
+        totalItemsElement.textContent = data.items_count;
+        totalValueElement.textContent = data.total_value.toFixed(2) + ' ج.م';
+        itemsCountElement.textContent = data.items_count;
+
+        // مسح الجدول
+        itemsTable.innerHTML = '';
+
+        if (data.items.length === 0) {
+            itemsTable.innerHTML = '<tr><td colspan="7" class="text-center text-muted">لا توجد أصناف في هذا المخزن</td></tr>';
+            return;
+        }
+
+        // إضافة الأصناف للجدول
+        data.items.forEach(item => {
+            const row = document.createElement('tr');
+
+            // تحديد لون الصف حسب مستوى المخزون
+            let rowClass = '';
+            if (item.current_quantity <= item.reorder_point && item.reorder_point > 0) {
+                rowClass = 'table-danger';
+            } else if (item.current_quantity <= item.min_stock_level && item.min_stock_level > 0) {
+                rowClass = 'table-warning';
+            }
+
+            if (rowClass) {
+                row.className = rowClass;
+            }
+
+            row.innerHTML = `
+                <td><strong>${item.code}</strong></td>
+                <td>
+                    ${item.name}
+                    ${item.current_quantity <= item.reorder_point && item.reorder_point > 0 ?
+                        '<br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> أقل من نقطة إعادة الطلب</small>' : ''}
+                </td>
+                <td><span class="badge bg-secondary">${item.category || '-'}</span></td>
+                <td>${item.unit || '-'}</td>
+                <td>
+                    <strong>${item.current_quantity}</strong>
+                    ${item.min_stock_level > 0 ? `<br><small class="text-muted">الحد الأدنى: ${item.min_stock_level}</small>` : ''}
+                </td>
+                <td>${item.average_cost.toFixed(2)} ج.م</td>
+                <td><strong>${item.total_value.toFixed(2)} ج.م</strong></td>
+            `;
+
+            itemsTable.appendChild(row);
+        });
+    }
+
+    // دالة عرض الأخطاء
+    function showError(message) {
+        const itemsTable = document.getElementById('warehouse-items-table');
+        itemsTable.innerHTML = `<tr><td colspan="7" class="text-center text-danger"><i class="fas fa-exclamation-triangle me-2"></i>${message}</td></tr>`;
+    }
+    
+    // إضافة تحقق من صحة النموذج
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const warehouse = document.querySelector('select[name="warehouse"]').value;
+            const reason = document.querySelector('input[name="reason"]').value.trim();
+
+            if (!warehouse) {
+                e.preventDefault();
+                alert('يجب اختيار المخزن');
+                return false;
+            }
+
+            if (!reason) {
+                e.preventDefault();
+                alert('يجب تحديد سبب الجرد');
+                return false;
+            }
+
+            // التحقق من وجود أصناف في المخزن
+            const totalItems = document.getElementById('total-items').textContent;
+            if (totalItems === '0') {
+                if (!confirm('المخزن المختار لا يحتوي على أصناف. هل تريد المتابعة؟')) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+
+            // تأكيد نهائي
+            const warehouseName = document.querySelector('select[name="warehouse"] option:checked').text;
+            const confirmMessage = `هل أنت متأكد من إنشاء جرد للمخزن "${warehouseName}"؟\n\nسيتم جرد ${totalItems} صنف بقيمة إجمالية ${document.getElementById('total-value').textContent}`;
+
+            if (!confirm(confirmMessage)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+});
+</script>
+
+<style>
+.alert-heading {
+    margin-bottom: 0.5rem;
+}
+
+.alert ul, .alert ol {
+    padding-left: 1.5rem;
+}
+
+.alert li {
+    margin-bottom: 0.25rem;
+}
+
+.card-header.bg-danger {
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+/* تحسينات جدول الأصناف */
+#warehouse-items-preview .table-responsive {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+}
+
+#warehouse-items-preview .table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+#warehouse-items-preview .table td {
+    font-size: 0.875rem;
+    vertical-align: middle;
+}
+
+#warehouse-items-preview .table-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+#warehouse-items-preview .table-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+/* تحسينات الإحصائيات */
+#warehouse-items-preview .text-center h4 {
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+#warehouse-items-preview .text-center h6 {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* تحسينات الشارات */
+.badge {
+    font-size: 0.75rem;
+}
+
+/* تحسينات مؤشر التحميل */
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* تحسينات الجدول المثبت */
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+</style>
+{% endblock %}

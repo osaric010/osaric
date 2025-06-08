@@ -1,0 +1,346 @@
+{% load static %}
+{% load currency_tags %}
+
+<div class="currency-rates-widget" id="currencyRatesWidget">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-gradient-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>
+                        أسعار العملات - البنوك المصرية
+                    </h6>
+                    <small class="opacity-75">آخر تحديث: {{ last_update|date:"H:i" }}</small>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-light" onclick="updateCurrencyRates()" id="updateBtn">
+                        <i class="fas fa-sync-alt" id="updateIcon"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-light" onclick="toggleWidget()">
+                        <i class="fas fa-chevron-up" id="toggleIcon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body p-0" id="currencyContent">
+            {% if currencies %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center">العملة</th>
+                                <th class="text-center">متوسط الشراء</th>
+                                <th class="text-center">متوسط البيع</th>
+                                <th class="text-center">أفضل شراء</th>
+                                <th class="text-center">أفضل بيع</th>
+                                <th class="text-center">التحديث</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for currency in currencies %}
+                            <tr class="currency-row" data-currency="{{ currency.code }}">
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <span class="currency-flag me-2">
+                                            {% if currency.code == 'USD' %}🇺🇸
+                                            {% elif currency.code == 'EUR' %}🇪🇺
+                                            {% elif currency.code == 'GBP' %}🇬🇧
+                                            {% elif currency.code == 'SAR' %}🇸🇦
+                                            {% elif currency.code == 'AED' %}🇦🇪
+                                            {% else %}💱
+                                            {% endif %}
+                                        </span>
+                                        <div>
+                                            <strong>{{ currency.code }}</strong>
+                                            <br><small class="text-muted">{{ currency.symbol }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-bold text-success">{{ currency.avg_buy|floatformat:4 }}</span>
+                                    <br><small class="text-muted">ج.م</small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-bold text-danger">{{ currency.avg_sell|floatformat:4 }}</span>
+                                    <br><small class="text-muted">ج.م</small>
+                                </td>
+                                <td class="text-center">
+                                    {% if currency.best_buy %}
+                                        <span class="fw-bold text-success">{{ currency.best_buy.rate|floatformat:4 }}</span>
+                                        <br><small class="text-muted">{{ currency.best_buy.bank|truncatechars:15 }}</small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if currency.best_sell %}
+                                        <span class="fw-bold text-danger">{{ currency.best_sell.rate|floatformat:4 }}</span>
+                                        <br><small class="text-muted">{{ currency.best_sell.bank|truncatechars:15 }}</small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if currency.last_updated %}
+                                        <small class="text-muted">{{ currency.last_updated|date:"H:i" }}</small>
+                                    {% else %}
+                                        <small class="text-muted">-</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            
+                            <!-- تفاصيل البنوك (مخفية افتراضياً) -->
+                            <tr class="currency-details d-none" id="details-{{ currency.code }}">
+                                <td colspan="6" class="p-0">
+                                    <div class="bg-light p-3">
+                                        <h6 class="mb-2">تفاصيل البنوك - {{ currency.code }}</h6>
+                                        <div class="row">
+                                            {% for rate in currency.rates %}
+                                            <div class="col-md-6 col-lg-4 mb-2">
+                                                <div class="card card-sm">
+                                                    <div class="card-body p-2">
+                                                        <div class="d-flex justify-content-between">
+                                                            <small class="fw-bold">{{ rate.bank|truncatechars:20 }}</small>
+                                                            <small class="text-muted">{{ rate.last_updated }}</small>
+                                                        </div>
+                                                        <div class="d-flex justify-content-between mt-1">
+                                                            <span class="text-success">شراء: {{ rate.buy|floatformat:4 }}</span>
+                                                            <span class="text-danger">بيع: {{ rate.sell|floatformat:4 }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- معلومات إضافية -->
+                <div class="card-footer bg-light text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        يتم التحديث كل {{ update_frequency }} |
+                        <a href="{% url 'dashboard:currency_rates_full' %}" class="text-decoration-none" target="_blank">عرض التفاصيل الكاملة</a>
+                    </small>
+                </div>
+            {% else %}
+                <div class="text-center p-4">
+                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                    <h6>لا توجد أسعار متاحة</h6>
+                    <p class="text-muted mb-3">لم يتم تحديث أسعار العملات بعد</p>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="updateCurrencyRates()">
+                        <i class="fas fa-sync-alt me-1"></i>
+                        تحديث الأسعار
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.currency-rates-widget {
+    margin-bottom: 1rem;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.currency-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.currency-row:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.currency-flag {
+    font-size: 1.2rem;
+}
+
+.card-sm {
+    border: 1px solid #e9ecef;
+}
+
+.card-sm .card-body {
+    font-size: 0.875rem;
+}
+
+.table th {
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table td {
+    font-size: 0.875rem;
+    vertical-align: middle;
+}
+
+.currency-details {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.update-animation {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+let isWidgetCollapsed = false;
+let autoUpdateInterval;
+
+// تحديث أسعار العملات
+function updateCurrencyRates() {
+    const updateBtn = document.getElementById('updateBtn');
+    const updateIcon = document.getElementById('updateIcon');
+    
+    // إظهار مؤشر التحميل
+    updateIcon.classList.add('update-animation');
+    updateBtn.disabled = true;
+    
+    fetch('/dashboard/update-currency-rates/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // إعادة تحميل البيانات
+            loadCurrencyRates();
+            showNotification('تم تحديث أسعار العملات بنجاح', 'success');
+        } else {
+            showNotification('فشل في تحديث الأسعار: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('حدث خطأ أثناء التحديث', 'error');
+    })
+    .finally(() => {
+        // إخفاء مؤشر التحميل
+        updateIcon.classList.remove('update-animation');
+        updateBtn.disabled = false;
+    });
+}
+
+// تحميل أسعار العملات
+function loadCurrencyRates() {
+    fetch('/dashboard/currency-rates/', {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        // تحديث محتوى الويدجت
+        updateWidgetContent(data);
+    })
+    .catch(error => {
+        console.error('Error loading currency rates:', error);
+    });
+}
+
+// تحديث محتوى الويدجت
+function updateWidgetContent(data) {
+    // هنا يمكن تحديث المحتوى ديناميكياً
+    // للبساطة، سنعيد تحميل الصفحة
+    location.reload();
+}
+
+// طي/فتح الويدجت
+function toggleWidget() {
+    const content = document.getElementById('currencyContent');
+    const icon = document.getElementById('toggleIcon');
+    
+    if (isWidgetCollapsed) {
+        content.style.display = 'block';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+        isWidgetCollapsed = false;
+    } else {
+        content.style.display = 'none';
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+        isWidgetCollapsed = true;
+    }
+}
+
+// عرض تفاصيل البنوك
+function toggleCurrencyDetails(currencyCode) {
+    const detailsRow = document.getElementById('details-' + currencyCode);
+    if (detailsRow.classList.contains('d-none')) {
+        // إخفاء جميع التفاصيل الأخرى
+        document.querySelectorAll('.currency-details').forEach(row => {
+            row.classList.add('d-none');
+        });
+        // إظهار التفاصيل المطلوبة
+        detailsRow.classList.remove('d-none');
+    } else {
+        detailsRow.classList.add('d-none');
+    }
+}
+
+// إضافة event listeners للصفوف
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.currency-row').forEach(row => {
+        row.addEventListener('click', function() {
+            const currencyCode = this.dataset.currency;
+            toggleCurrencyDetails(currencyCode);
+        });
+    });
+    
+    // بدء التحديث التلقائي كل 15 دقيقة
+    autoUpdateInterval = setInterval(loadCurrencyRates, 15 * 60 * 1000);
+});
+
+// إظهار الإشعارات
+function showNotification(message, type) {
+    // يمكن استخدام مكتبة إشعارات مثل toastr أو إنشاء إشعار مخصص
+    if (typeof toastr !== 'undefined') {
+        toastr[type](message);
+    } else {
+        alert(message);
+    }
+}
+
+// عرض جميع البنوك
+function showAllBanks() {
+    // فتح صفحة منفصلة لعرض جميع البنوك
+    window.open('/services/financial-settings/', '_blank');
+}
+
+// تنظيف عند مغادرة الصفحة
+window.addEventListener('beforeunload', function() {
+    if (autoUpdateInterval) {
+        clearInterval(autoUpdateInterval);
+    }
+});
+</script>

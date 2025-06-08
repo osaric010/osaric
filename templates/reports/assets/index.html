@@ -1,0 +1,135 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-building text-danger me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'reports:dashboard' %}">التقارير</a></li>
+                            <li class="breadcrumb-item active">تقارير الأصول الثابتة</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Grid -->
+    <div class="row">
+        <div class="col-lg-6 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-bar fa-3x text-warning"></i>
+                    </div>
+                    <h5 class="card-title">إهلاك السنة الحالية</h5>
+                    <p class="card-text text-muted">تقرير إهلاك الأصول للسنة الحالية</p>
+                    <a href="{% url 'reports:current_year_depreciation_report' %}" class="btn btn-warning">
+                        <i class="fas fa-chart-line me-2"></i>
+                        عرض التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-list-alt fa-3x text-info"></i>
+                    </div>
+                    <h5 class="card-title">أصول تفصيلية</h5>
+                    <p class="card-text text-muted">تقرير تفصيلي لجميع الأصول الثابتة</p>
+                    <a href="{% url 'reports:assets_detailed_report' %}" class="btn btn-info">
+                        <i class="fas fa-list me-2"></i>
+                        عرض التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-pie fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title">أصول إجمالية</h5>
+                    <p class="card-text text-muted">تقرير إجمالي للأصول الثابتة</p>
+                    <a href="{% url 'reports:assets_summary_report' %}" class="btn btn-primary">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        عرض التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-hand-holding-usd fa-3x text-success"></i>
+                    </div>
+                    <h5 class="card-title">أرباح بيع أصول</h5>
+                    <p class="card-text text-muted">تقرير أرباح وخسائر بيع الأصول</p>
+                    <a href="{% url 'reports:assets_sale_profits_report' %}" class="btn btn-success">
+                        <i class="fas fa-dollar-sign me-2"></i>
+                        عرض التقرير
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        إحصائيات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-danger">-</h4>
+                                <p class="text-muted mb-0">إجمالي الأصول</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-primary">-</h4>
+                                <p class="text-muted mb-0">قيمة الشراء</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-warning">-</h4>
+                                <p class="text-muted mb-0">مجمع الإهلاك</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-success">-</h4>
+                            <p class="text-muted mb-0">القيمة الدفترية</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

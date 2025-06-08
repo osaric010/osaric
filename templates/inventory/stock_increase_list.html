@@ -1,0 +1,313 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-plus-circle text-success me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'inventory:stock_increase_create' %}" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i>
+                    إضافة إذن زيادة جديد
+                </a>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                                    <i class="fas fa-list fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ total_increases }}</h4>
+                            <p class="card-text text-muted">إجمالي الأذون</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                                    <i class="fas fa-clock fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ pending_increases }}</h4>
+                            <p class="card-text text-muted">في الانتظار</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                                    <i class="fas fa-check fa-2x text-info"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ approved_increases }}</h4>
+                            <p class="card-text text-muted">معتمدة</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="d-flex align-items-center justify-content-center mb-2">
+                                <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                                    <i class="fas fa-check-double fa-2x text-success"></i>
+                                </div>
+                            </div>
+                            <h4 class="card-title">{{ applied_increases }}</h4>
+                            <p class="card-text text-muted">مطبقة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- فلاتر البحث -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            {{ form.search.label_tag }}
+                            {{ form.search }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.warehouse.label_tag }}
+                            {{ form.warehouse }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.status.label_tag }}
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_from.label_tag }}
+                            {{ form.date_from }}
+                        </div>
+                        <div class="col-md-2">
+                            {{ form.date_to.label_tag }}
+                            {{ form.date_to }}
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <a href="{% url 'inventory:stock_increase_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- قائمة الأذون -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة أذون إضافة الزيادات
+                        <span class="badge bg-success ms-2">{{ page_obj.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم الإذن</th>
+                                        <th>التاريخ</th>
+                                        <th>المخزن</th>
+                                        <th>السبب</th>
+                                        <th>إجمالي المبلغ</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for increase in page_obj %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ increase.increase_number }}</strong>
+                                            </td>
+                                            <td>{{ increase.date|date:"d/m/Y" }}</td>
+                                            <td>{{ increase.warehouse.name }}</td>
+                                            <td>{{ increase.reason|truncatechars:50 }}</td>
+                                            <td>
+                                                <strong class="text-success">{{ increase.total_amount|floatformat:2 }} ر.س</strong>
+                                            </td>
+                                            <td>
+                                                {% if increase.status == 'DRAFT' %}
+                                                    <span class="badge bg-secondary">{{ increase.get_status_display }}</span>
+                                                {% elif increase.status == 'APPROVED' %}
+                                                    <span class="badge bg-info">{{ increase.get_status_display }}</span>
+                                                {% elif increase.status == 'APPLIED' %}
+                                                    <span class="badge bg-success">{{ increase.get_status_display }}</span>
+                                                {% elif increase.status == 'CANCELLED' %}
+                                                    <span class="badge bg-danger">{{ increase.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'inventory:stock_increase_detail' increase.pk %}" 
+                                                       class="btn btn-sm btn-outline-info" title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if increase.status == 'DRAFT' %}
+                                                        <a href="{% url 'inventory:stock_increase_edit' increase.pk %}" 
+                                                           class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                onclick="approveIncrease({{ increase.pk }})" title="اعتماد">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="deleteIncrease({{ increase.pk }}, '{{ increase.increase_number }}')" title="حذف">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% elif increase.status == 'APPROVED' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                                onclick="applyIncrease({{ increase.pk }})" title="تطبيق على المخزون">
+                                                            <i class="fas fa-play"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-plus-circle fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد أذون زيادات</h5>
+                            <p class="text-muted">ابدأ بإضافة إذن زيادة جديد</p>
+                            <a href="{% url 'inventory:stock_increase_create' %}" class="btn btn-success">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة إذن زيادة جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function approveIncrease(increaseId) {
+    if (confirm('هل تريد اعتماد هذا الإذن؟')) {
+        fetch(`/inventory/stock-increases/${increaseId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الاعتماد');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الاعتماد');
+        });
+    }
+}
+
+function applyIncrease(increaseId) {
+    if (confirm('هل تريد تطبيق هذا الإذن على المخزون؟ لا يمكن التراجع عن هذا الإجراء.')) {
+        fetch(`/inventory/stock-increases/${increaseId}/apply/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء التطبيق');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء التطبيق');
+        });
+    }
+}
+
+function deleteIncrease(increaseId, increaseNumber) {
+    if (confirm(`هل أنت متأكد من حذف إذن الزيادة "${increaseNumber}"؟`)) {
+        fetch(`/inventory/stock-increases/${increaseId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+</script>
+{% endblock %}

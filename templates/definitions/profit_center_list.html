@@ -1,0 +1,263 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-chart-pie text-purple me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'definitions:profit_center_create' %}" class="btn btn-purple">
+                    <i class="fas fa-plus me-1"></i>
+                    إضافة مركز جديد
+                </a>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">البحث</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   value="{{ search_query }}" placeholder="البحث في الكود أو الاسم">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="level" class="form-label">المستوى</label>
+                            <select class="form-select" id="level" name="level">
+                                <option value="">جميع المستويات</option>
+                                {% for level in levels %}
+                                    <option value="{{ level }}" {% if level_filter == level|stringformat:"s" %}selected{% endif %}>
+                                        المستوى {{ level }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="parent" class="form-label">مركز الربحية الأب</label>
+                            <select class="form-select" id="parent" name="parent">
+                                <option value="">جميع المراكز</option>
+                                {% for parent in parents %}
+                                    <option value="{{ parent.id }}" {% if parent_filter == parent.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ parent.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search me-1"></i>
+                                بحث
+                            </button>
+                            <a href="{% url 'definitions:profit_center_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                مسح
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة مراكز الربحية
+                        <span class="badge bg-purple ms-2">{{ page_obj.paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>المستوى</th>
+                                        <th>الكود</th>
+                                        <th>اسم المركز</th>
+                                        <th>مركز الربحية الأب</th>
+                                        <th>المدير المسؤول</th>
+                                        <th>هدف الإيرادات</th>
+                                        <th>هدف الربح</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for center in page_obj %}
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ center.level }}</span>
+                                            </td>
+                                            <td>
+                                                <strong>{{ center.code }}</strong>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'definitions:profit_center_detail' center.pk %}" 
+                                                   class="text-decoration-none">
+                                                    {{ center.name }}
+                                                </a>
+                                                {% if center.name_english %}
+                                                    <br><small class="text-muted">{{ center.name_english }}</small>
+                                                {% endif %}
+                                                {% if center.description %}
+                                                    <br><small class="text-muted">{{ center.description|truncatechars:50 }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if center.parent %}
+                                                    <a href="{% url 'definitions:profit_center_detail' center.parent.pk %}" 
+                                                       class="text-decoration-none">
+                                                        {{ center.parent.name }}
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-muted">مركز رئيسي</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if center.manager %}
+                                                    {{ center.manager.get_full_name|default:center.manager.username }}
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if center.target_revenue %}
+                                                    {{ center.target_revenue|floatformat:0 }} ر.س
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if center.target_profit %}
+                                                    {{ center.target_profit|floatformat:0 }} ر.س
+                                                {% else %}
+                                                    <span class="text-muted">غير محدد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if center.is_active_period %}
+                                                    <span class="badge bg-success">نشط</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">غير نشط</span>
+                                                {% endif %}
+                                                <br>
+                                                <small class="text-muted">{{ center.get_evaluation_period_display }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'definitions:profit_center_detail' center.pk %}" 
+                                                       class="btn btn-sm btn-outline-info" title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'definitions:profit_center_edit' center.pk %}" 
+                                                       class="btn btn-sm btn-outline-warning" title="تعديل">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                            onclick="deleteCenter({{ center.pk }}, '{{ center.name }}')" title="حذف">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if level_filter %}&level={{ level_filter }}{% endif %}{% if parent_filter %}&parent={{ parent_filter }}{% endif %}">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if level_filter %}&level={{ level_filter }}{% endif %}{% if parent_filter %}&parent={{ parent_filter }}{% endif %}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if level_filter %}&level={{ level_filter }}{% endif %}{% if parent_filter %}&parent={{ parent_filter }}{% endif %}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if level_filter %}&level={{ level_filter }}{% endif %}{% if parent_filter %}&parent={{ parent_filter }}{% endif %}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد مراكز ربحية</h5>
+                            <p class="text-muted">ابدأ بإضافة مركز ربحية جديد</p>
+                            <a href="{% url 'definitions:profit_center_create' %}" class="btn btn-purple">
+                                <i class="fas fa-plus me-1"></i>
+                                إضافة مركز جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn-purple {
+    color: #fff;
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+}
+.btn-purple:hover {
+    color: #fff;
+    background-color: #5a359a;
+    border-color: #5a359a;
+}
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+</style>
+
+<script>
+function deleteCenter(centerId, centerName) {
+    if (confirm(`هل أنت متأكد من حذف مركز الربحية "${centerName}"؟`)) {
+        fetch(`/definitions/profit-centers/${centerId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('حدث خطأ أثناء الحذف');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء الحذف');
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,846 @@
+{% extends 'base/base.html' %}
+
+{% block title %}التعريفات - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-cogs me-2"></i>
+            التعريفات الأساسية
+        </h1>
+        <p class="text-muted">إدارة البيانات الأساسية للنظام</p>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                        <i class="fas fa-coins fa-2x text-primary"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ currencies_count }}</h4>
+                <p class="card-text text-muted">العملات</p>
+                <a href="{% url 'definitions:currency_list' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                        <i class="fas fa-warehouse fa-2x text-success"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ warehouses_count }}</h4>
+                <p class="card-text text-muted">المخازن</p>
+                <a href="{% url 'definitions:warehouse_list' %}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                        <i class="fas fa-tags fa-2x text-info"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ categories_count }}</h4>
+                <p class="card-text text-muted">فئات الأصناف</p>
+                <a href="{% url 'definitions:category_list' %}" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                        <i class="fas fa-ruler fa-2x text-warning"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ units_count }}</h4>
+                <p class="card-text text-muted">وحدات القياس</p>
+                <a href="{% url 'definitions:unit_list' %}" class="btn btn-outline-warning btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Second Row -->
+<div class="row mb-4">
+    <div class="col-lg-4 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-secondary bg-opacity-10 p-3">
+                        <i class="fas fa-boxes fa-2x text-secondary"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ items_count }}</h4>
+                <p class="card-text text-muted">الأصناف</p>
+                <a href="{% url 'definitions:item_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                        <i class="fas fa-university fa-2x text-danger"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ banks_count }}</h4>
+                <p class="card-text text-muted">البنوك</p>
+                <a href="{% url 'definitions:bank_list' %}" class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-dark bg-opacity-10 p-3">
+                        <i class="fas fa-cash-register fa-2x text-dark"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ treasuries_count }}</h4>
+                <p class="card-text text-muted">الخزائن</p>
+                <a href="{% url 'definitions:treasury_list' %}" class="btn btn-outline-dark btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- مناطق المخازن -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-purple bg-opacity-10 p-3">
+                        <i class="fas fa-map-marked-alt fa-2x text-purple"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ zones_count }}</h4>
+                <p class="card-text text-muted">مناطق المخازن</p>
+                <a href="{% url 'definitions:zone_list' %}" class="btn btn-outline-purple btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- مواقع المخازن -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-secondary bg-opacity-10 p-3">
+                        <i class="fas fa-map-pin fa-2x text-secondary"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ locations_count }}</h4>
+                <p class="card-text text-muted">مواقع المخازن</p>
+                <a href="{% url 'definitions:location_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- مواقع الأصناف -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-indigo bg-opacity-10 p-3">
+                        <i class="fas fa-sitemap fa-2x text-indigo"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ item_locations_count }}</h4>
+                <p class="card-text text-muted">مواقع الأصناف</p>
+                <a href="{% url 'definitions:item_location_list' %}" class="btn btn-outline-indigo btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- مجموعات الأصول -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-teal bg-opacity-10 p-3">
+                        <i class="fas fa-layer-group fa-2x text-teal"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ asset_groups_count }}</h4>
+                <p class="card-text text-muted">مجموعات الأصول</p>
+                <a href="{% url 'definitions:asset_group_list' %}" class="btn btn-outline-teal btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- الأشخاص والجهات -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-orange bg-opacity-10 p-3">
+                        <i class="fas fa-users fa-2x text-orange"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ persons_count }}</h4>
+                <p class="card-text text-muted">الأشخاص والجهات</p>
+                <a href="{% url 'definitions:person_list' %}" class="btn btn-outline-orange btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- العملاء -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                        <i class="fas fa-user-tie fa-2x text-success"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ customers_count }}</h4>
+                <p class="card-text text-muted">العملاء</p>
+                <a href="{% url 'definitions:person_list' %}?person_type=CUSTOMER" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- الموردين -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                        <i class="fas fa-truck fa-2x text-warning"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ suppliers_count }}</h4>
+                <p class="card-text text-muted">الموردين</p>
+                <a href="{% url 'definitions:person_list' %}?person_type=SUPPLIER" class="btn btn-outline-warning btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- فئات المصروفات -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                        <i class="fas fa-money-bill-wave fa-2x text-danger"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ expense_categories_count }}</h4>
+                <p class="card-text text-muted">فئات المصروفات</p>
+                <a href="{% url 'definitions:expense_category_list' %}" class="btn btn-outline-danger btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- بنود المصروفات -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                        <i class="fas fa-receipt fa-2x text-warning"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ expense_items_count }}</h4>
+                <p class="card-text text-muted">بنود المصروفات</p>
+                <a href="{% url 'definitions:expense_item_list' %}" class="btn btn-outline-warning btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- فئات الإيرادات -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                        <i class="fas fa-coins fa-2x text-success"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ revenue_categories_count }}</h4>
+                <p class="card-text text-muted">فئات الإيرادات</p>
+                <a href="{% url 'definitions:revenue_category_list' %}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- بنود الإيرادات -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                        <i class="fas fa-hand-holding-usd fa-2x text-info"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ revenue_items_count }}</h4>
+                <p class="card-text text-muted">بنود الإيرادات</p>
+                <a href="{% url 'definitions:revenue_item_list' %}" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- مراحل الإنتاج -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                        <i class="fas fa-cogs fa-2x text-primary"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ production_stages_count }}</h4>
+                <p class="card-text text-muted">مراحل الإنتاج</p>
+                <a href="{% url 'definitions:production_stage_list' %}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- المنتجات التامة -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                        <i class="fas fa-box fa-2x text-success"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ finished_products_count }}</h4>
+                <p class="card-text text-muted">المنتجات التامة</p>
+                <a href="{% url 'definitions:finished_product_list' %}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائية إضافية -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                        <i class="fas fa-chart-line fa-2x text-info"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ production_stages_count|add:finished_products_count }}</h4>
+                <p class="card-text text-muted">إجمالي عناصر الإنتاج</p>
+                <a href="#" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    تقارير
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائية إضافية -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                        <i class="fas fa-industry fa-2x text-warning"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ finished_products_count }}</h4>
+                <p class="card-text text-muted">منتجات جاهزة للإنتاج</p>
+                <a href="{% url 'definitions:finished_product_list' %}" class="btn btn-outline-warning btn-sm">
+                    <i class="fas fa-play me-1"></i>
+                    بدء الإنتاج
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- مراكز الربحية -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-purple bg-opacity-10 p-3">
+                        <i class="fas fa-chart-pie fa-2x text-purple"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ profit_centers_count }}</h4>
+                <p class="card-text text-muted">مراكز الربحية</p>
+                <a href="{% url 'definitions:profit_center_list' %}" class="btn btn-outline-purple btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائية إضافية -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-indigo bg-opacity-10 p-3">
+                        <i class="fas fa-bullseye fa-2x text-indigo"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ profit_centers_count }}</h4>
+                <p class="card-text text-muted">مراكز نشطة</p>
+                <a href="{% url 'definitions:profit_center_list' %}" class="btn btn-outline-indigo btn-sm">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    تقارير الأداء
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائية إضافية -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-teal bg-opacity-10 p-3">
+                        <i class="fas fa-target fa-2x text-teal"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">0</h4>
+                <p class="card-text text-muted">أهداف محققة</p>
+                <a href="#" class="btn btn-outline-teal btn-sm">
+                    <i class="fas fa-trophy me-1"></i>
+                    الإنجازات
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائية إضافية -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-orange bg-opacity-10 p-3">
+                        <i class="fas fa-percentage fa-2x text-orange"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">0%</h4>
+                <p class="card-text text-muted">متوسط هامش الربح</p>
+                <a href="#" class="btn btn-outline-orange btn-sm">
+                    <i class="fas fa-calculator me-1"></i>
+                    حساب الهوامش
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- الطابعات -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-dark bg-opacity-10 p-3">
+                        <i class="fas fa-print fa-2x text-dark"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ printers_count }}</h4>
+                <p class="card-text text-muted">الطابعات</p>
+                <a href="{% url 'definitions:printer_list' %}" class="btn btn-outline-dark btn-sm">
+                    <i class="fas fa-eye me-1"></i>
+                    عرض
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- طابعات نشطة -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                        <i class="fas fa-check-circle fa-2x text-success"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">{{ printers_count }}</h4>
+                <p class="card-text text-muted">طابعات نشطة</p>
+                <a href="{% url 'definitions:printer_list' %}" class="btn btn-outline-success btn-sm">
+                    <i class="fas fa-list me-1"></i>
+                    إدارة الطابعات
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- طابعات شبكية -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-info bg-opacity-10 p-3">
+                        <i class="fas fa-network-wired fa-2x text-info"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">0</h4>
+                <p class="card-text text-muted">طابعات شبكية</p>
+                <a href="{% url 'definitions:printer_list' %}" class="btn btn-outline-info btn-sm">
+                    <i class="fas fa-wifi me-1"></i>
+                    الطابعات الشبكية
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- إحصائيات الطباعة -->
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body text-center">
+                <div class="d-flex align-items-center justify-content-center mb-3">
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-3">
+                        <i class="fas fa-chart-bar fa-2x text-warning"></i>
+                    </div>
+                </div>
+                <h4 class="card-title">0</h4>
+                <p class="card-text text-muted">صفحات مطبوعة اليوم</p>
+                <a href="#" class="btn btn-outline-warning btn-sm">
+                    <i class="fas fa-chart-line me-1"></i>
+                    إحصائيات الطباعة
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    إضافة سريعة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{% url 'definitions:currency_create' %}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-coins me-2"></i>
+                            إضافة عملة
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{% url 'definitions:warehouse_create' %}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-warehouse me-2"></i>
+                            إضافة مخزن
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{% url 'definitions:category_create' %}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-tags me-2"></i>
+                            إضافة فئة
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{% url 'definitions:unit_create' %}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-ruler me-2"></i>
+                            إضافة وحدة
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:item_create' %}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-boxes me-2"></i>
+                            إضافة صنف
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:bank_create' %}" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-university me-2"></i>
+                            إضافة بنك
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:treasury_create' %}" class="btn btn-outline-dark w-100">
+                            <i class="fas fa-cash-register me-2"></i>
+                            إضافة خزينة
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:zone_create' %}" class="btn btn-outline-purple w-100">
+                            <i class="fas fa-map-marked-alt me-2"></i>
+                            إضافة منطقة مخزن
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:location_create' %}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-map-pin me-2"></i>
+                            إضافة موقع مخزن
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:item_location_create' %}" class="btn btn-outline-indigo w-100">
+                            <i class="fas fa-sitemap me-2"></i>
+                            إضافة موقع صنف
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:asset_group_create' %}" class="btn btn-outline-teal w-100">
+                            <i class="fas fa-layer-group me-2"></i>
+                            إضافة مجموعة أصول
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:person_create' %}" class="btn btn-outline-orange w-100">
+                            <i class="fas fa-users me-2"></i>
+                            إضافة شخص/جهة
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:expense_category_create' %}" class="btn btn-outline-danger w-100">
+                            <i class="fas fa-money-bill-wave me-2"></i>
+                            إضافة فئة مصروف
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:revenue_category_create' %}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-coins me-2"></i>
+                            إضافة فئة إيراد
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:expense_item_create' %}" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-receipt me-2"></i>
+                            إضافة بند مصروف
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:revenue_item_create' %}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-hand-holding-usd me-2"></i>
+                            إضافة بند إيراد
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:production_stage_create' %}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-cogs me-2"></i>
+                            إضافة مرحلة إنتاج
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:finished_product_create' %}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-box me-2"></i>
+                            إضافة منتج تام
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:production_stage_list' %}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-list me-2"></i>
+                            عرض مراحل الإنتاج
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:profit_center_create' %}" class="btn btn-outline-purple w-100">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            إضافة مركز ربحية
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:profit_center_list' %}" class="btn btn-outline-indigo w-100">
+                            <i class="fas fa-list me-2"></i>
+                            عرض مراكز الربحية
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="#" class="btn btn-outline-teal w-100">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            تقارير الربحية
+                        </a>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:printer_create' %}" class="btn btn-outline-dark w-100">
+                            <i class="fas fa-print me-2"></i>
+                            إضافة طابعة
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="{% url 'definitions:printer_list' %}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-list me-2"></i>
+                            عرض الطابعات
+                        </a>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <a href="#" class="btn btn-outline-info w-100">
+                            <i class="fas fa-cog me-2"></i>
+                            إعدادات الطباعة
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+}
+
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+/* ألوان مخصصة */
+.text-purple { color: #6f42c1 !important; }
+.bg-purple { background-color: #6f42c1 !important; }
+.btn-outline-purple {
+    color: #6f42c1;
+    border-color: #6f42c1;
+}
+.btn-outline-purple:hover {
+    color: #fff;
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+}
+
+.text-indigo { color: #6610f2 !important; }
+.bg-indigo { background-color: #6610f2 !important; }
+.btn-outline-indigo {
+    color: #6610f2;
+    border-color: #6610f2;
+}
+.btn-outline-indigo:hover {
+    color: #fff;
+    background-color: #6610f2;
+    border-color: #6610f2;
+}
+
+.text-teal { color: #20c997 !important; }
+.bg-teal { background-color: #20c997 !important; }
+.btn-outline-teal {
+    color: #20c997;
+    border-color: #20c997;
+}
+.btn-outline-teal:hover {
+    color: #fff;
+    background-color: #20c997;
+    border-color: #20c997;
+}
+
+.text-orange { color: #fd7e14 !important; }
+.bg-orange { background-color: #fd7e14 !important; }
+.btn-outline-orange {
+    color: #fd7e14;
+    border-color: #fd7e14;
+}
+.btn-outline-orange:hover {
+    color: #fff;
+    background-color: #fd7e14;
+    border-color: #fd7e14;
+}
+</style>
+{% endblock %}

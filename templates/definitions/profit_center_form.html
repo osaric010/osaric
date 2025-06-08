@@ -1,0 +1,328 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-chart-pie text-purple me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'definitions:profit_center_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        بيانات مركز الربحية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- المعلومات الأساسية -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-purple border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    المعلومات الأساسية
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.code.id_for_label }}" class="form-label">{{ form.code.label }}</label>
+                                {{ form.code }}
+                                {% if form.code.errors %}
+                                    <div class="text-danger small">{{ form.code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.name_english.id_for_label }}" class="form-label">{{ form.name_english.label }}</label>
+                                {{ form.name_english }}
+                                {% if form.name_english.errors %}
+                                    <div class="text-danger small">{{ form.name_english.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.parent.id_for_label }}" class="form-label">{{ form.parent.label }}</label>
+                                {{ form.parent }}
+                                {% if form.parent.errors %}
+                                    <div class="text-danger small">{{ form.parent.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- المسؤوليات -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-purple border-bottom pb-2 mb-3">
+                                    <i class="fas fa-user-tie me-1"></i>
+                                    المسؤوليات
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.manager.id_for_label }}" class="form-label">{{ form.manager.label }}</label>
+                                {{ form.manager }}
+                                {% if form.manager.errors %}
+                                    <div class="text-danger small">{{ form.manager.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- معلومات الاتصال -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-purple border-bottom pb-2 mb-3">
+                                    <i class="fas fa-address-book me-1"></i>
+                                    معلومات الاتصال
+                                </h6>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.location.id_for_label }}" class="form-label">{{ form.location.label }}</label>
+                                {{ form.location }}
+                                {% if form.location.errors %}
+                                    <div class="text-danger small">{{ form.location.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}
+                                    <div class="text-danger small">{{ form.phone.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- الأهداف المالية -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-purple border-bottom pb-2 mb-3">
+                                    <i class="fas fa-bullseye me-1"></i>
+                                    الأهداف المالية
+                                </h6>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.target_revenue.id_for_label }}" class="form-label">{{ form.target_revenue.label }}</label>
+                                {{ form.target_revenue }}
+                                {% if form.target_revenue.errors %}
+                                    <div class="text-danger small">{{ form.target_revenue.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.target_profit.id_for_label }}" class="form-label">{{ form.target_profit.label }}</label>
+                                {{ form.target_profit }}
+                                {% if form.target_profit.errors %}
+                                    <div class="text-danger small">{{ form.target_profit.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.target_profit_margin.id_for_label }}" class="form-label">{{ form.target_profit_margin.label }}</label>
+                                {{ form.target_profit_margin }}
+                                {% if form.target_profit_margin.errors %}
+                                    <div class="text-danger small">{{ form.target_profit_margin.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.evaluation_period.id_for_label }}" class="form-label">{{ form.evaluation_period.label }}</label>
+                                {{ form.evaluation_period }}
+                                {% if form.evaluation_period.errors %}
+                                    <div class="text-danger small">{{ form.evaluation_period.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- الحسابات المحاسبية -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-purple border-bottom pb-2 mb-3">
+                                    <i class="fas fa-calculator me-1"></i>
+                                    الحسابات المحاسبية
+                                </h6>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.revenue_account.id_for_label }}" class="form-label">{{ form.revenue_account.label }}</label>
+                                {{ form.revenue_account }}
+                                {% if form.revenue_account.errors %}
+                                    <div class="text-danger small">{{ form.revenue_account.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.expense_account.id_for_label }}" class="form-label">{{ form.expense_account.label }}</label>
+                                {{ form.expense_account }}
+                                {% if form.expense_account.errors %}
+                                    <div class="text-danger small">{{ form.expense_account.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.asset_account.id_for_label }}" class="form-label">{{ form.asset_account.label }}</label>
+                                {{ form.asset_account }}
+                                {% if form.asset_account.errors %}
+                                    <div class="text-danger small">{{ form.asset_account.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- إعدادات التكلفة -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-purple border-bottom pb-2 mb-3">
+                                    <i class="fas fa-cog me-1"></i>
+                                    إعدادات التكلفة
+                                </h6>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="form-check">
+                                    {{ form.allocate_overhead }}
+                                    <label class="form-check-label" for="{{ form.allocate_overhead.id_for_label }}">
+                                        {{ form.allocate_overhead.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.overhead_allocation_method.id_for_label }}" class="form-label">{{ form.overhead_allocation_method.label }}</label>
+                                {{ form.overhead_allocation_method }}
+                                {% if form.overhead_allocation_method.errors %}
+                                    <div class="text-danger small">{{ form.overhead_allocation_method.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.overhead_percentage.id_for_label }}" class="form-label">{{ form.overhead_percentage.label }}</label>
+                                {{ form.overhead_percentage }}
+                                {% if form.overhead_percentage.errors %}
+                                    <div class="text-danger small">{{ form.overhead_percentage.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- إعدادات التقارير -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-purple border-bottom pb-2 mb-3">
+                                    <i class="fas fa-chart-bar me-1"></i>
+                                    إعدادات التقارير
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    {{ form.include_in_reports }}
+                                    <label class="form-check-label" for="{{ form.include_in_reports.id_for_label }}">
+                                        {{ form.include_in_reports.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    {{ form.consolidate_children }}
+                                    <label class="form-check-label" for="{{ form.consolidate_children.id_for_label }}">
+                                        {{ form.consolidate_children.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- الفترة الزمنية -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-purple border-bottom pb-2 mb-3">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    الفترة الزمنية
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.start_date.id_for_label }}" class="form-label">{{ form.start_date.label }}</label>
+                                {{ form.start_date }}
+                                {% if form.start_date.errors %}
+                                    <div class="text-danger small">{{ form.start_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.end_date.id_for_label }}" class="form-label">{{ form.end_date.label }}</label>
+                                {{ form.end_date }}
+                                {% if form.end_date.errors %}
+                                    <div class="text-danger small">{{ form.end_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- ملاحظات -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-purple border-bottom pb-2 mb-3">
+                                    <i class="fas fa-sticky-note me-1"></i>
+                                    ملاحظات
+                                </h6>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">{{ form.notes.label }}</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- أزرار الحفظ -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'definitions:profit_center_list' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i>
+                                        إلغاء
+                                    </a>
+                                    <button type="submit" class="btn btn-purple">
+                                        <i class="fas fa-save me-1"></i>
+                                        {{ action }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.text-purple { color: #6f42c1 !important; }
+.btn-purple {
+    color: #fff;
+    background-color: #6f42c1;
+    border-color: #6f42c1;
+}
+.btn-purple:hover {
+    color: #fff;
+    background-color: #5a359a;
+    border-color: #5a359a;
+}
+</style>
+{% endblock %}

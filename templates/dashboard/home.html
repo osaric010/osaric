@@ -1,0 +1,389 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load system_tags %}
+
+{% company_info 'name' as company_name %}
+{% block title %}لوحة التحكم - {{ company_name|default:"أوساريك للحسابات" }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-tachometer-alt me-2"></i>
+            لوحة التحكم
+        </h1>
+        {% company_info 'name' as company_name %}
+        <p class="text-muted">مرحباً بك في نظام {{ company_name|default:"أوساريك للحسابات" }}</p>
+        {% company_info 'address' as company_address %}
+        {% company_info 'phone' as company_phone %}
+        {% if company_address or company_phone %}
+        <div class="mt-2">
+            {% if company_address %}
+                <small class="text-muted me-3">
+                    <i class="fas fa-map-marker-alt me-1"></i>
+                    {{ company_address }}
+                </small>
+            {% endif %}
+            {% if company_phone %}
+                <small class="text-muted">
+                    <i class="fas fa-phone me-1"></i>
+                    {{ company_phone }}
+                </small>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Currency Rates Widget -->
+<div class="row mb-4">
+    <div class="col-12">
+        {% include 'dashboard/currency_rates_widget.html' %}
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <!-- Sales Today -->
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stats-number">{{ sales_today|floatformat:2 }}</div>
+            <div class="stats-label">مبيعات اليوم</div>
+        </div>
+    </div>
+    
+    <!-- Sales This Month -->
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon" style="background: linear-gradient(135deg, #007bff, #6610f2);">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stats-number">{{ sales_this_month|floatformat:2 }}</div>
+            <div class="stats-label">مبيعات الشهر</div>
+        </div>
+    </div>
+    
+    <!-- Treasury Balance -->
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
+                <i class="fas fa-cash-register"></i>
+            </div>
+            <div class="stats-number">{{ treasury_balance|floatformat:2 }}</div>
+            <div class="stats-label">رصيد الخزينة</div>
+        </div>
+    </div>
+    
+    <!-- Bank Balance -->
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card">
+            <div class="stats-icon" style="background: linear-gradient(135deg, #17a2b8, #6f42c1);">
+                <i class="fas fa-university"></i>
+            </div>
+            <div class="stats-number">{{ bank_balance|floatformat:2 }}</div>
+            <div class="stats-label">رصيد البنوك</div>
+        </div>
+    </div>
+</div>
+
+<!-- Secondary Statistics -->
+<div class="row mb-4">
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-boxes fa-2x text-primary mb-2"></i>
+                <h4 class="card-title">{{ total_items }}</h4>
+                <p class="card-text text-muted">إجمالي الأصناف</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                <h4 class="card-title">{{ low_stock_items }}</h4>
+                <p class="card-text text-muted">أصناف منخفضة</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-users fa-2x text-success mb-2"></i>
+                <h4 class="card-title">{{ total_customers }}</h4>
+                <p class="card-text text-muted">العملاء</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-truck fa-2x text-info mb-2"></i>
+                <h4 class="card-title">{{ total_suppliers }}</h4>
+                <p class="card-text text-muted">الموردين</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-shopping-bag fa-2x text-secondary mb-2"></i>
+                <h4 class="card-title">{{ purchases_this_month|floatformat:2 }}</h4>
+                <p class="card-text text-muted">مشتريات الشهر</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-chart-pie fa-2x text-danger mb-2"></i>
+                <h4 class="card-title">{{ sales_this_year|floatformat:2 }}</h4>
+                <p class="card-text text-muted">مبيعات السنة</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="mb-3">
+            <i class="fas fa-bolt text-warning me-2"></i>
+            الإجراءات السريعة
+        </h4>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <a href="{% url 'multilevel_dropdowns_demo' %}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center p-3">
+            <i class="fas fa-mouse-pointer fa-2x mb-2"></i>
+            <span>القوائم المنبثقة</span>
+            <small class="text-muted mt-1">سهلة الاستخدام</small>
+        </a>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <a href="{% url 'branches:cash_treasury_demo' %}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center p-3">
+            <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
+            <span>النقدية - الخزائن</span>
+            <small class="text-muted mt-1">عرض توضيحي</small>
+        </a>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <a href="{% url 'reports:dashboard' %}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center p-3">
+            <i class="fas fa-chart-bar fa-2x mb-2"></i>
+            <span>التقارير</span>
+            <small class="text-muted mt-1">جميع التقارير</small>
+        </a>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <a href="{% url 'branches:home' %}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center p-3">
+            <i class="fas fa-building fa-2x mb-2"></i>
+            <span>الفروع</span>
+            <small class="text-muted mt-1">إدارة الفروع</small>
+        </a>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <!-- Sales Trend Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    اتجاه المبيعات (آخر 7 أيام)
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="salesTrendChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Monthly Comparison Chart -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    مقارنة شهرية
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyComparisonChart" height="150"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="row">
+    <!-- Recent Sales -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-shopping-cart me-2"></i>
+                    آخر المبيعات
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_sales %}
+                    <div class="list-group list-group-flush">
+                        {% for sale in recent_sales %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ sale.invoice_number }}</h6>
+                                <p class="mb-1 text-muted">{{ sale.customer.name }}</p>
+                                <small class="text-muted">{{ sale.date }}</small>
+                            </div>
+                            <span class="badge bg-success rounded-pill">{{ sale.total_amount|floatformat:2 }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">لا توجد مبيعات حديثة</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Purchases -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-truck me-2"></i>
+                    آخر المشتريات
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_purchases %}
+                    <div class="list-group list-group-flush">
+                        {% for purchase in recent_purchases %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ purchase.invoice_number }}</h6>
+                                <p class="mb-1 text-muted">{{ purchase.supplier.name }}</p>
+                                <small class="text-muted">{{ purchase.date }}</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ purchase.total_amount|floatformat:2 }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">لا توجد مشتريات حديثة</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Stock Movements -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-exchange-alt me-2"></i>
+                    آخر حركات المخازن
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_stock_movements %}
+                    <div class="list-group list-group-flush">
+                        {% for movement in recent_stock_movements %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ movement.reference_number }}</h6>
+                                <p class="mb-1 text-muted">{{ movement.warehouse.name }}</p>
+                                <small class="text-muted">{{ movement.date }}</small>
+                            </div>
+                            <span class="badge bg-info rounded-pill">{{ movement.get_movement_type_display }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">لا توجد حركات مخزون حديثة</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Sales Trend Chart
+const salesCtx = document.getElementById('salesTrendChart').getContext('2d');
+const salesTrendChart = new Chart(salesCtx, {
+    type: 'line',
+    data: {
+        labels: {{ sales_chart_labels|safe }},
+        datasets: [{
+            label: 'المبيعات',
+            data: {{ sales_chart_data|safe }},
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Monthly Comparison Chart
+const monthlyCtx = document.getElementById('monthlyComparisonChart').getContext('2d');
+const monthlyComparisonChart = new Chart(monthlyCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ monthly_labels|safe }},
+        datasets: [{
+            label: 'المبيعات',
+            data: {{ monthly_sales|safe }},
+            backgroundColor: 'rgba(40, 167, 69, 0.8)'
+        }, {
+            label: 'المشتريات',
+            data: {{ monthly_purchases|safe }},
+            backgroundColor: 'rgba(0, 123, 255, 0.8)'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

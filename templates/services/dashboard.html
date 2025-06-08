@@ -1,0 +1,644 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        transition: all 0.3s ease;
+        border-radius: 15px;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    
+    .service-card {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        border: 2px solid transparent;
+        text-decoration: none;
+        color: inherit;
+        background: #fff;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        min-height: 140px;
+    }
+
+    .service-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .service-card.border-danger:hover {
+        border-color: #dc3545;
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(220, 53, 69, 0.05) 100%);
+    }
+    
+    .service-card.border-info:hover {
+        border-color: #0dcaf0;
+        background: linear-gradient(135deg, rgba(13, 202, 240, 0.1) 0%, rgba(13, 202, 240, 0.05) 100%);
+    }
+    
+    .service-card.border-warning:hover {
+        border-color: #ffc107;
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+    }
+    
+    .service-card.border-success:hover {
+        border-color: #198754;
+        background: linear-gradient(135deg, rgba(25, 135, 84, 0.1) 0%, rgba(25, 135, 84, 0.05) 100%);
+    }
+    
+    .section-header {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    
+    .activity-item {
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .activity-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .activity-item.deleted {
+        border-left-color: #dc3545;
+    }
+    
+    .activity-item.edited {
+        border-left-color: #ffc107;
+    }
+    
+    .activity-item.backup {
+        border-left-color: #198754;
+    }
+    
+    .badge-large {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+    
+    .bg-gradient-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bg-gradient-info {
+        background: linear-gradient(135deg, #0dcaf0 0%, #0d6efd 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #198754 0%, #20c997 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .bg-gradient-danger::before,
+    .bg-gradient-info::before,
+    .bg-gradient-warning::before,
+    .bg-gradient-success::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        pointer-events: none;
+    }
+    
+    .text-secondary {
+        color: #6c757d;
+    }
+    
+    .system-status {
+        padding: 20px;
+        border-radius: 15px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+        backdrop-filter: blur(10px);
+    }
+
+    /* تحسين المسافات للوحة التحكم */
+    .dashboard-container {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .dashboard-container .container-fluid {
+        padding: 0 !important;
+    }
+
+    .dashboard-container .row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid dashboard-container p-0">
+    <!-- Header -->
+    <div class="row mb-4 mx-0">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0">
+                        <i class="fas fa-cogs text-secondary me-3"></i>
+                        {{ title }}
+                    </h1>
+                    <p class="text-muted mb-0 mt-2">مركز إدارة جميع خدمات النظام والأدوات الإدارية</p>
+                </div>
+                <div>
+                    {% if license %}
+                    <div class="badge {% if license.is_expired %}bg-danger{% else %}bg-success{% endif %} fs-6 p-3">
+                        <i class="fas fa-certificate me-2"></i>
+                        الترخيص: {{ license.get_license_type_display }}
+                        {% if not license.is_expired %}
+                        ({{ license.days_remaining }} يوم متبقي)
+                        {% else %}
+                        (منتهي الصلاحية)
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="badge bg-warning fs-6 p-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        لا توجد معلومات ترخيص
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4 mx-0">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-gradient-danger text-white dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-0 fw-bold">{{ total_deleted_records|default:0|floatformat:0 }}</h3>
+                            <p class="mb-0 opacity-75">البيانات المحذوفة</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-trash-alt fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="opacity-75">
+                            <i class="fas fa-recycle me-1"></i>
+                            قابلة للاسترداد
+                        </small>
+                    </div>
+                    {% if total_deleted_records > 0 %}
+                    <div class="progress mt-2" style="height: 4px;">
+                        <div class="progress-bar bg-white" role="progressbar" style="width: 70%" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-gradient-warning text-white dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-0 fw-bold">{{ total_edit_history|default:0|floatformat:0 }}</h3>
+                            <p class="mb-0 opacity-75">سجلات التعديل</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-history fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="opacity-75">
+                            <i class="fas fa-clock me-1"></i>
+                            تتبع التغييرات
+                        </small>
+                    </div>
+                    {% if total_edit_history > 0 %}
+                    <div class="progress mt-2" style="height: 4px;">
+                        <div class="progress-bar bg-white" role="progressbar" style="width: 85%" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-gradient-success text-white dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-0 fw-bold">{{ total_backups|default:0|floatformat:0 }}</h3>
+                            <p class="mb-0 opacity-75">النسخ الاحتياطية</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-download fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="opacity-75">
+                            <i class="fas fa-hdd me-1"></i>
+                            {% if total_backup_size and total_backup_size > 0 %}
+                                {{ total_backup_size|filesizeformat }}
+                            {% else %}
+                                0 MB
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-gradient-info text-white dashboard-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="mb-0 fw-bold">{{ total_settings|default:0|floatformat:0 }}</h3>
+                            <p class="mb-0 opacity-75">إعدادات النظام</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-cog fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="opacity-75">
+                            <i class="fas fa-users me-1"></i>
+                            {{ total_users }} مستخدم نشط
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="row mb-4 mx-0">
+        <div class="col-lg-6 mb-3">
+            <div class="card border-primary dashboard-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-server me-2"></i>
+                        حالة النظام
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-success">{{ total_users }}</h4>
+                            <p class="text-muted mb-0">إجمالي المستخدمين</p>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-primary">{{ total_staff }}</h4>
+                            <p class="text-muted mb-0">المديرين</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-12">
+                            <h6>إعدادات النظام حسب الفئة:</h6>
+                            {% if settings_by_category %}
+                                {% for category, count in settings_by_category.items %}
+                                <span class="badge bg-secondary me-1 mb-1">{{ category }}: {{ count }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">لا توجد إعدادات</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-3">
+            <div class="card border-warning dashboard-card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-cog me-2"></i>
+                        إعدادات المستخدم الحالي
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if taskbar_settings %}
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>شريط المهام:</strong><br>
+                            <span class="text-primary">{{ taskbar_settings.get_position_display }}</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>المظهر:</strong><br>
+                            <span class="text-success">{{ taskbar_settings.theme|title }}</span>
+                        </div>
+                        <div class="col-6 mt-2">
+                            <strong>الحجم:</strong><br>
+                            <span class="text-info">{{ taskbar_settings.size|title }}</span>
+                        </div>
+                        <div class="col-6 mt-2">
+                            <strong>آخر تحديث:</strong><br>
+                            <span class="text-muted">{{ taskbar_settings.updated_at|date:"Y-m-d" }}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-cog fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">لم يتم تخصيص إعدادات شريط المهام</p>
+                        <a href="{% url 'services:taskbar_settings' %}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-cog me-1"></i>
+                            إعداد شريط المهام
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Services -->
+    <div class="row mb-4 mx-0">
+        <div class="col-12">
+            <h4 class="text-secondary mb-3">
+                <i class="fas fa-th-large me-2"></i>
+                الخدمات الرئيسية
+            </h4>
+        </div>
+    </div>
+
+    <!-- إدارة البيانات -->
+    <div class="row mb-4 mx-0">
+        <div class="col-12">
+            <h6 class="text-danger border-bottom border-danger pb-2 mb-3 section-header">
+                <i class="fas fa-database me-2"></i>
+                إدارة البيانات
+            </h6>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-3">
+            <a href="{% url 'services:delete_data' %}" class="service-card card border-danger h-100 d-flex flex-column justify-content-center p-3">
+                <div class="text-center">
+                    <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+                    <h6 class="fw-bold">حذف البيانات المسجلة</h6>
+                    <small class="text-muted">حذف أنواع مختلفة من البيانات</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-3">
+            <a href="{% url 'services:recycle_bin' %}" class="service-card card border-danger h-100 d-flex flex-column justify-content-center p-3">
+                <div class="text-center">
+                    <i class="fas fa-recycle fa-3x text-danger mb-3"></i>
+                    <h6 class="fw-bold">سلة المحذوفات</h6>
+                    <small class="text-muted">استرداد البيانات المحذوفة</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-3">
+            <a href="{% url 'services:edit_history' %}" class="service-card card border-danger h-100 d-flex flex-column justify-content-center p-3">
+                <div class="text-center">
+                    <i class="fas fa-history fa-3x text-danger mb-3"></i>
+                    <h6 class="fw-bold">سلة التعديلات</h6>
+                    <small class="text-muted">تتبع تاريخ التعديلات</small>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- النسخ الاحتياطي والترخيص -->
+    <div class="row mb-4 mx-0">
+        <div class="col-12">
+            <h6 class="text-info border-bottom border-info pb-2 mb-3 section-header">
+                <i class="fas fa-shield-alt me-2"></i>
+                النسخ الاحتياطي والترخيص
+            </h6>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{% url 'services:backup' %}" class="service-card card border-info h-100 d-flex flex-column justify-content-center p-3">
+                <div class="text-center">
+                    <i class="fas fa-download fa-3x text-info mb-3"></i>
+                    <h6 class="fw-bold">النسخ الاحتياطي</h6>
+                    <small class="text-muted">إنشاء وإدارة النسخ الاحتياطية</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{% url 'services:license' %}" class="service-card card border-info h-100 d-flex flex-column justify-content-center p-3">
+                <div class="text-center">
+                    <i class="fas fa-certificate fa-3x text-info mb-3"></i>
+                    <h6 class="fw-bold">ترخيص النسخة</h6>
+                    <small class="text-muted">معلومات وحالة الترخيص</small>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- أدوات النظام -->
+    <div class="row mb-4 mx-0">
+        <div class="col-12">
+            <h6 class="text-warning border-bottom border-warning pb-2 mb-3 section-header">
+                <i class="fas fa-tools me-2"></i>
+                أدوات النظام
+            </h6>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{% url 'services:recalculate_costs' %}" class="service-card card border-warning h-100 d-flex flex-column justify-content-center p-3">
+                <div class="text-center">
+                    <i class="fas fa-calculator fa-3x text-warning mb-3"></i>
+                    <h6 class="fw-bold">إعادة حساب أسعار التكلفة</h6>
+                    <small class="text-muted">حساب تكلفة الأصناف</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-6 col-md-6 mb-3">
+            <a href="{% url 'services:taskbar_settings' %}" class="service-card card border-warning h-100 d-flex flex-column justify-content-center p-3">
+                <div class="text-center">
+                    <i class="fas fa-window-maximize fa-3x text-warning mb-3"></i>
+                    <h6 class="fw-bold">إعدادات شريط المهام</h6>
+                    <small class="text-muted">تخصيص شريط المهام</small>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- الإعدادات والأمان -->
+    <div class="row mb-4 mx-0">
+        <div class="col-12">
+            <h6 class="text-success border-bottom border-success pb-2 mb-3 section-header">
+                <i class="fas fa-user-shield me-2"></i>
+                الإعدادات والأمان
+            </h6>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'services:system_settings' %}" class="service-card card border-success h-100 d-flex flex-column justify-content-center p-3">
+                <div class="text-center">
+                    <i class="fas fa-cog fa-3x text-success mb-3"></i>
+                    <h6 class="fw-bold">كلمات السر وخيارات البرنامج</h6>
+                    <small class="text-muted">إعدادات النظام</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'services:print_design' %}" class="service-card card border-success h-100 d-flex flex-column justify-content-center p-3">
+                <div class="text-center">
+                    <i class="fas fa-print fa-3x text-success mb-3"></i>
+                    <h6 class="fw-bold">تصميم نماذج الطباعة</h6>
+                    <small class="text-muted">تخصيص النماذج</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'services:barcode_design' %}" class="service-card card border-success h-100 d-flex flex-column justify-content-center p-3">
+                <div class="text-center">
+                    <i class="fas fa-barcode fa-3x text-success mb-3"></i>
+                    <h6 class="fw-bold">تصميم نماذج الباركود</h6>
+                    <small class="text-muted">إعدادات الباركود</small>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <a href="{% url 'services:relogin' %}" class="service-card card border-success h-100 d-flex flex-column justify-content-center p-3">
+                <div class="text-center">
+                    <i class="fas fa-sign-in-alt fa-3x text-success mb-3"></i>
+                    <h6 class="fw-bold">إعادة الدخول كمستخدم</h6>
+                    <small class="text-muted">تبديل المستخدم</small>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        آخر البيانات المحذوفة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_deleted %}
+                        {% for record in recent_deleted %}
+                        <div class="activity-item deleted d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 text-danger">{{ record.content_type.name }}</h6>
+                                <p class="mb-1 fw-bold">{{ record.object_repr|truncatechars:30 }}</p>
+                                <small class="text-muted">{{ record.deleted_at|date:"Y-m-d H:i" }}</small>
+                            </div>
+                            <span class="badge bg-danger badge-large">محذوف</span>
+                        </div>
+                        {% endfor %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'services:recycle_bin' %}" class="btn btn-outline-danger btn-sm">
+                                عرض الكل
+                            </a>
+                        </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-trash-alt fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">لا توجد بيانات محذوفة</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        آخر التعديلات
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_edits %}
+                        {% for edit in recent_edits %}
+                        <div class="activity-item edited d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 text-warning">{{ edit.content_type.name }}</h6>
+                                <p class="mb-1 fw-bold">{{ edit.field_name }}</p>
+                                <small class="text-muted">{{ edit.edited_at|date:"Y-m-d H:i" }}</small>
+                            </div>
+                            <span class="badge bg-warning badge-large">تعديل</span>
+                        </div>
+                        {% endfor %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'services:edit_history' %}" class="btn btn-outline-warning btn-sm">
+                                عرض الكل
+                            </a>
+                        </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-history fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">لا توجد تعديلات مسجلة</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        آخر النسخ الاحتياطية
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if recent_backups %}
+                        {% for backup in recent_backups %}
+                        <div class="activity-item backup d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 text-success">{{ backup.backup_name }}</h6>
+                                <p class="mb-1 fw-bold">{{ backup.get_backup_type_display }}</p>
+                                <small class="text-muted">{{ backup.created_at|date:"Y-m-d H:i" }}</small>
+                            </div>
+                            <span class="badge bg-success badge-large">
+                                {% if backup.file_size %}
+                                    {{ backup.file_size|filesizeformat }}
+                                {% else %}
+                                    غير محدد
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endfor %}
+                        <div class="text-center mt-3">
+                            <a href="{% url 'services:backup' %}" class="btn btn-outline-success btn-sm">
+                                عرض الكل
+                            </a>
+                        </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-download fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">لا توجد نسخ احتياطية</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

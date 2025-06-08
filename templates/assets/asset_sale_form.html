@@ -1,0 +1,371 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-hand-holding-usd text-warning me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'assets:asset_sale_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <!-- معلومات البيع الأساسية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات البيع الأساسية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">رقم البيع</label>
+                                <input type="text" class="form-control" name="sale_number" 
+                                       placeholder="سيتم إنشاؤه تلقائياً" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">تاريخ البيع</label>
+                                <input type="date" class="form-control" name="sale_date" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الأصل المباع</label>
+                                <select class="form-select" name="asset" id="asset-select" required>
+                                    <option value="">اختر الأصل</option>
+                                    <!-- سيتم ملؤها من الـ view -->
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">المشتري</label>
+                                <input type="text" class="form-control" name="buyer" 
+                                       placeholder="اسم المشتري" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">سعر البيع</label>
+                                <input type="number" class="form-control" name="sale_price" id="sale-price"
+                                       step="0.01" min="0.01" placeholder="0.00" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الخزينة</label>
+                                <select class="form-select" name="treasury" required>
+                                    <option value="">اختر الخزينة</option>
+                                    <!-- سيتم ملؤها من الـ view -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات الأصل المحددة -->
+                <div class="card mb-4" id="asset-info" style="display: none;">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-building me-2"></i>
+                            معلومات الأصل المحدد
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">كود الأصل</label>
+                                <input type="text" class="form-control" id="asset-code" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">اسم الأصل</label>
+                                <input type="text" class="form-control" id="asset-name" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">تاريخ الشراء</label>
+                                <input type="text" class="form-control" id="purchase-date" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">تكلفة الشراء</label>
+                                <input type="text" class="form-control" id="purchase-cost" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">مجمع الإهلاك</label>
+                                <input type="text" class="form-control" id="accumulated-depreciation" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">القيمة الدفترية الحالية</label>
+                                <input type="text" class="form-control" id="book-value" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- حساب ربح/خسارة البيع -->
+                <div class="card mb-4" id="sale-calculation" style="display: none;">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calculator me-2"></i>
+                            حساب ربح/خسارة البيع
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h6>سعر البيع</h6>
+                                        <h4 id="display-sale-price">0.00 ر.س</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h6>القيمة الدفترية</h6>
+                                        <h4 id="display-book-value">0.00 ر.س</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card" id="gain-loss-card">
+                                    <div class="card-body text-center">
+                                        <h6>ربح/خسارة البيع</h6>
+                                        <h4 id="display-gain-loss">0.00 ر.س</h4>
+                                        <small id="gain-loss-type"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- تفاصيل إضافية -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-alt me-2"></i>
+                            تفاصيل إضافية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">رقم عقد البيع</label>
+                                <input type="text" class="form-control" name="contract_number" 
+                                       placeholder="رقم عقد البيع (اختياري)">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">طريقة الدفع</label>
+                                <select class="form-select" name="payment_method">
+                                    <option value="CASH">نقداً</option>
+                                    <option value="BANK_TRANSFER">تحويل بنكي</option>
+                                    <option value="CHECK">شيك</option>
+                                    <option value="INSTALLMENTS">أقساط</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">ملاحظات البيع</label>
+                                <textarea class="form-control" name="notes" rows="3" 
+                                          placeholder="ملاحظات إضافية حول عملية البيع"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات مهمة -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            معلومات مهمة حول بيع الأصول
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        تأثير البيع
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>سيتم تغيير حالة الأصل إلى "مباع"</li>
+                                        <li>سيتم إضافة مبلغ البيع للخزينة</li>
+                                        <li>سيتم حساب ربح/خسارة البيع تلقائياً</li>
+                                        <li>لن يتم حساب إهلاك للأصل بعد البيع</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-warning">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        نصائح مهمة
+                                    </h6>
+                                    <ul class="mb-0">
+                                        <li>تأكد من صحة سعر البيع</li>
+                                        <li>احتفظ بعقد البيع وجميع المستندات</li>
+                                        <li>راجع القيمة الدفترية قبل البيع</li>
+                                        <li>لا يمكن التراجع عن البيع بعد التأكيد</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أزرار الحفظ -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'assets:asset_sale_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-warning" id="submit-btn" disabled>
+                                <i class="fas fa-hand-holding-usd me-1"></i>
+                                {{ action }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديد تاريخ اليوم افتراضياً
+    const dateField = document.querySelector('input[name="sale_date"]');
+    if (dateField && !dateField.value) {
+        dateField.value = new Date().toISOString().split('T')[0];
+    }
+    
+    const assetSelect = document.getElementById('asset-select');
+    const salePriceInput = document.getElementById('sale-price');
+    const assetInfo = document.getElementById('asset-info');
+    const saleCalculation = document.getElementById('sale-calculation');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    // بيانات الأصول (سيتم تمريرها من الـ view)
+    const assetsData = {
+        // سيتم ملؤها من الـ view
+    };
+    
+    // عند تغيير الأصل المحدد
+    assetSelect.addEventListener('change', function() {
+        const assetId = this.value;
+        if (assetId && assetsData[assetId]) {
+            const asset = assetsData[assetId];
+            showAssetInfo(asset);
+            calculateGainLoss();
+        } else {
+            hideAssetInfo();
+        }
+    });
+    
+    // عند تغيير سعر البيع
+    salePriceInput.addEventListener('input', function() {
+        calculateGainLoss();
+    });
+    
+    function showAssetInfo(asset) {
+        document.getElementById('asset-code').value = asset.asset_code;
+        document.getElementById('asset-name').value = asset.name;
+        document.getElementById('purchase-date').value = asset.purchase_date;
+        document.getElementById('purchase-cost').value = asset.purchase_cost + ' ر.س';
+        document.getElementById('accumulated-depreciation').value = asset.accumulated_depreciation + ' ر.س';
+        document.getElementById('book-value').value = asset.book_value + ' ر.س';
+        
+        assetInfo.style.display = 'block';
+        saleCalculation.style.display = 'block';
+        submitBtn.disabled = false;
+    }
+    
+    function hideAssetInfo() {
+        assetInfo.style.display = 'none';
+        saleCalculation.style.display = 'none';
+        submitBtn.disabled = true;
+    }
+    
+    function calculateGainLoss() {
+        const assetId = assetSelect.value;
+        const salePrice = parseFloat(salePriceInput.value) || 0;
+        
+        if (assetId && assetsData[assetId] && salePrice > 0) {
+            const asset = assetsData[assetId];
+            const bookValue = parseFloat(asset.book_value);
+            const gainLoss = salePrice - bookValue;
+            
+            document.getElementById('display-sale-price').textContent = salePrice.toFixed(2) + ' ر.س';
+            document.getElementById('display-book-value').textContent = bookValue.toFixed(2) + ' ر.س';
+            document.getElementById('display-gain-loss').textContent = Math.abs(gainLoss).toFixed(2) + ' ر.س';
+            
+            const gainLossCard = document.getElementById('gain-loss-card');
+            const gainLossType = document.getElementById('gain-loss-type');
+            
+            if (gainLoss > 0) {
+                gainLossCard.className = 'card bg-success text-white';
+                gainLossType.textContent = 'ربح من البيع';
+            } else if (gainLoss < 0) {
+                gainLossCard.className = 'card bg-danger text-white';
+                gainLossType.textContent = 'خسارة من البيع';
+            } else {
+                gainLossCard.className = 'card bg-secondary text-white';
+                gainLossType.textContent = 'بيع متعادل';
+            }
+        }
+    }
+    
+    // تحقق من صحة النموذج
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const asset = document.querySelector('select[name="asset"]').value;
+            const buyer = document.querySelector('input[name="buyer"]').value.trim();
+            const salePrice = parseFloat(document.querySelector('input[name="sale_price"]').value);
+            const treasury = document.querySelector('select[name="treasury"]').value;
+            
+            if (!asset) {
+                e.preventDefault();
+                alert('يجب اختيار الأصل المراد بيعه');
+                return false;
+            }
+            
+            if (!buyer) {
+                e.preventDefault();
+                alert('يجب إدخال اسم المشتري');
+                return false;
+            }
+            
+            if (!salePrice || salePrice <= 0) {
+                e.preventDefault();
+                alert('يجب إدخال سعر بيع صحيح');
+                return false;
+            }
+            
+            if (!treasury) {
+                e.preventDefault();
+                alert('يجب اختيار الخزينة');
+                return false;
+            }
+            
+            // تأكيد البيع
+            const confirmMessage = `هل أنت متأكد من بيع الأصل "${document.getElementById('asset-name').value}" بمبلغ ${salePrice.toFixed(2)} ر.س؟\n\nتحذير: لا يمكن التراجع عن هذه العملية.`;
+            
+            if (!confirm(confirmMessage)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

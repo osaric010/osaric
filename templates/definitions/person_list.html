@@ -1,0 +1,321 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-users me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item active">{{ title }}</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{% url 'definitions:person_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            إضافة شخص/جهة جديدة
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" 
+                           class="form-control" 
+                           name="search" 
+                           value="{{ search_query }}"
+                           placeholder="البحث في الأشخاص والجهات">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="person_type" class="form-select">
+                    <option value="">جميع الأنواع</option>
+                    <option value="CUSTOMER" {% if person_type_filter == 'CUSTOMER' %}selected{% endif %}>عميل</option>
+                    <option value="SUPPLIER" {% if person_type_filter == 'SUPPLIER' %}selected{% endif %}>مورد</option>
+                    <option value="EMPLOYEE" {% if person_type_filter == 'EMPLOYEE' %}selected{% endif %}>موظف</option>
+                    <option value="BOTH" {% if person_type_filter == 'BOTH' %}selected{% endif %}>عميل ومورد</option>
+                    <option value="BANK" {% if person_type_filter == 'BANK' %}selected{% endif %}>بنك</option>
+                    <option value="GOVERNMENT" {% if person_type_filter == 'GOVERNMENT' %}selected{% endif %}>جهة حكومية</option>
+                    <option value="PARTNER" {% if person_type_filter == 'PARTNER' %}selected{% endif %}>شريك</option>
+                    <option value="OTHER" {% if person_type_filter == 'OTHER' %}selected{% endif %}>أخرى</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="entity_type" class="form-select">
+                    <option value="">جميع الكيانات</option>
+                    <option value="INDIVIDUAL" {% if entity_type_filter == 'INDIVIDUAL' %}selected{% endif %}>فرد</option>
+                    <option value="COMPANY" {% if entity_type_filter == 'COMPANY' %}selected{% endif %}>شركة</option>
+                    <option value="INSTITUTION" {% if entity_type_filter == 'INSTITUTION' %}selected{% endif %}>مؤسسة</option>
+                    <option value="GOVERNMENT" {% if entity_type_filter == 'GOVERNMENT' %}selected{% endif %}>جهة حكومية</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="d-flex gap-1">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <a href="{% url 'definitions:person_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Persons Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            قائمة الأشخاص والجهات
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الكود</th>
+                            <th>الاسم</th>
+                            <th>النوع</th>
+                            <th>الكيان</th>
+                            <th>الهاتف</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for person in page_obj %}
+                        <tr>
+                            <td><strong>{{ person.code }}</strong></td>
+                            <td>
+                                <div>
+                                    <a href="{% url 'definitions:person_detail' person.pk %}" class="text-decoration-none">
+                                        {{ person.name }}
+                                    </a>
+                                    {% if person.name_english %}
+                                        <br>
+                                        <small class="text-muted">{{ person.name_english }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if person.person_type == 'CUSTOMER' %}
+                                    <span class="badge bg-success">عميل</span>
+                                {% elif person.person_type == 'SUPPLIER' %}
+                                    <span class="badge bg-warning">مورد</span>
+                                {% elif person.person_type == 'EMPLOYEE' %}
+                                    <span class="badge bg-info">موظف</span>
+                                {% elif person.person_type == 'BOTH' %}
+                                    <span class="badge bg-primary">عميل ومورد</span>
+                                {% elif person.person_type == 'BANK' %}
+                                    <span class="badge bg-dark">بنك</span>
+                                {% elif person.person_type == 'GOVERNMENT' %}
+                                    <span class="badge bg-secondary">جهة حكومية</span>
+                                {% elif person.person_type == 'PARTNER' %}
+                                    <span class="badge bg-purple">شريك</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark">أخرى</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if person.entity_type == 'INDIVIDUAL' %}
+                                    <i class="fas fa-user text-primary" title="فرد"></i>
+                                {% elif person.entity_type == 'COMPANY' %}
+                                    <i class="fas fa-building text-success" title="شركة"></i>
+                                {% elif person.entity_type == 'INSTITUTION' %}
+                                    <i class="fas fa-university text-info" title="مؤسسة"></i>
+                                {% else %}
+                                    <i class="fas fa-landmark text-warning" title="جهة حكومية"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if person.phone %}
+                                    {{ person.phone }}
+                                {% elif person.mobile %}
+                                    {{ person.mobile }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if person.email %}
+                                    <a href="mailto:{{ person.email }}" class="text-decoration-none">
+                                        {{ person.email|truncatechars:25 }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    {% if person.is_active_customer %}
+                                        <span class="badge bg-success" title="عميل نشط">ع</span>
+                                    {% endif %}
+                                    {% if person.is_active_supplier %}
+                                        <span class="badge bg-warning" title="مورد نشط">م</span>
+                                    {% endif %}
+                                    {% if not person.is_active_customer and not person.is_active_supplier %}
+                                        <span class="badge bg-secondary">غير نشط</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'definitions:person_detail' person.pk %}" 
+                                       class="btn btn-outline-info" 
+                                       title="عرض">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'definitions:person_edit' person.pk %}" 
+                                       class="btn btn-outline-primary" 
+                                       title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-outline-danger delete-btn" 
+                                            data-id="{{ person.pk }}"
+                                            data-name="{{ person.name }}"
+                                            title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if person_type_filter %}&person_type={{ person_type_filter }}{% endif %}{% if entity_type_filter %}&entity_type={{ entity_type_filter }}{% endif %}">الأولى</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if person_type_filter %}&person_type={{ person_type_filter }}{% endif %}{% if entity_type_filter %}&entity_type={{ entity_type_filter }}{% endif %}">السابقة</a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="page-item active">
+                            <span class="page-link">
+                                صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if person_type_filter %}&person_type={{ person_type_filter }}{% endif %}{% if entity_type_filter %}&entity_type={{ entity_type_filter }}{% endif %}">التالية</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if person_type_filter %}&person_type={{ person_type_filter }}{% endif %}{% if entity_type_filter %}&entity_type={{ entity_type_filter }}{% endif %}">الأخيرة</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">لا توجد أشخاص أو جهات</h5>
+                <p class="text-muted">لم يتم العثور على أي أشخاص أو جهات مطابقة لمعايير البحث</p>
+                <a href="{% url 'definitions:person_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>
+                    إضافة شخص/جهة جديدة
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف الشخص/الجهة: <strong id="delete-item-name"></strong>؟</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    لا يمكن التراجع عن هذا الإجراء
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    const deleteItemName = document.getElementById('delete-item-name');
+    let deleteId = null;
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            deleteId = this.dataset.id;
+            deleteItemName.textContent = this.dataset.name;
+            deleteModal.show();
+        });
+    });
+
+    confirmDeleteBtn.addEventListener('click', function() {
+        if (deleteId) {
+            fetch(`/definitions/persons/${deleteId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'حدث خطأ أثناء الحذف');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الحذف');
+            });
+        }
+        deleteModal.hide();
+    });
+});
+</script>
+
+<style>
+.bg-purple { background-color: #6f42c1 !important; }
+</style>
+{% endblock %}

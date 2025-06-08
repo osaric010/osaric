@@ -1,0 +1,314 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}تفاصيل المنصب - {{ position.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-user-tie text-success me-2"></i>
+                        تفاصيل المنصب
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'hr:dashboard' %}">شؤون العاملين</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'hr:position_list' %}">المناصب</a></li>
+                            <li class="breadcrumb-item active">{{ position.name }}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <a href="{% url 'hr:position_edit' position.pk %}" class="btn btn-primary me-2">
+                        <i class="fas fa-edit me-2"></i>
+                        تعديل
+                    </a>
+                    <a href="{% url 'hr:position_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- معلومات المنصب -->
+        <div class="col-lg-8">
+            <!-- المعلومات الأساسية -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        معلومات المنصب
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">كود المنصب</label>
+                            <div class="fw-bold text-primary fs-5">{{ position.code }}</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">اسم المنصب</label>
+                            <div class="fw-bold">{{ position.name }}</div>
+                        </div>
+                        {% if position.name_english %}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">الاسم بالإنجليزية</label>
+                            <div>{{ position.name_english }}</div>
+                        </div>
+                        {% endif %}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">القسم</label>
+                            <div>
+                                <a href="{% url 'hr:department_detail' position.department.pk %}" class="text-decoration-none">
+                                    <strong>{{ position.department.name }}</strong>
+                                </a>
+                                <small class="text-muted d-block">{{ position.department.code }}</small>
+                            </div>
+                        </div>
+                        {% if position.description %}
+                        <div class="col-12 mb-3">
+                            <label class="form-label text-muted">الوصف</label>
+                            <div>{{ position.description }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- الموظفين في هذا المنصب -->
+            {% if employees %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        الموظفين في هذا المنصب
+                        <span class="badge bg-warning">{{ employees.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>رقم الموظف</th>
+                                    <th>الاسم</th>
+                                    <th>المرتب</th>
+                                    <th>تاريخ التعيين</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for employee in employees %}
+                                <tr>
+                                    <td><strong>{{ employee.employee_number }}</strong></td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ employee.full_name }}</strong>
+                                            {% if employee.person.email %}
+                                            <small class="text-muted d-block">{{ employee.person.email }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">{{ employee.current_salary|floatformat:2 }}</strong>
+                                        <small class="text-muted d-block">{{ employee.salary_system.currency.code }}</small>
+                                    </td>
+                                    <td>{{ employee.hire_date|date:"Y-m-d" }}</td>
+                                    <td>
+                                        {% if employee.status == 'ACTIVE' %}
+                                        <span class="badge bg-success">{{ employee.get_status_display }}</span>
+                                        {% elif employee.status == 'INACTIVE' %}
+                                        <span class="badge bg-warning">{{ employee.get_status_display }}</span>
+                                        {% elif employee.status == 'TERMINATED' %}
+                                        <span class="badge bg-danger">{{ employee.get_status_display }}</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ employee.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'hr:employee_detail' employee.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">لا يوجد موظفين في هذا المنصب</h5>
+                    <p class="text-muted">لم يتم تعيين أي موظف في هذا المنصب بعد</p>
+                    <a href="{% url 'hr:employee_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>إضافة موظف جديد
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- معلومات إضافية -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        إحصائيات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>عدد الموظفين:</span>
+                            <strong class="text-primary">{{ employees.count }}</strong>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>الموظفين النشطين:</span>
+                            <strong class="text-success">
+                                {{ employees|length }}
+                                {% comment %}
+                                {% for emp in employees %}
+                                    {% if emp.status == 'ACTIVE' %}{{ forloop.counter }}{% endif %}
+                                {% endfor %}
+                                {% endcomment %}
+                            </strong>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>تاريخ الإنشاء:</span>
+                            <small>{{ position.created_at|date:"Y-m-d" }}</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>آخر تحديث:</span>
+                            <small>{{ position.updated_at|date:"Y-m-d" }}</small>
+                        </div>
+                    </div>
+                    {% if position.created_by %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>أنشئ بواسطة:</span>
+                            <small>{{ position.created_by.get_full_name|default:position.created_by.username }}</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>
+                        إجراءات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'hr:position_edit' position.pk %}" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>
+                            تعديل المنصب
+                        </a>
+                        <a href="{% url 'hr:department_detail' position.department.pk %}" class="btn btn-outline-info">
+                            <i class="fas fa-sitemap me-2"></i>
+                            عرض القسم
+                        </a>
+                        <a href="{% url 'hr:employee_create' %}" class="btn btn-outline-success">
+                            <i class="fas fa-user-plus me-2"></i>
+                            إضافة موظف جديد
+                        </a>
+                        <button type="button" class="btn btn-outline-danger delete-btn" 
+                                data-id="{{ position.pk }}"
+                                data-name="{{ position.name }}">
+                            <i class="fas fa-trash me-2"></i>
+                            حذف المنصب
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف المنصب: <strong id="itemName"></strong>؟</p>
+                <p class="text-danger"><small>لا يمكن التراجع عن هذا الإجراء.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">حذف</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButton = document.querySelector('.delete-btn');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const confirmDeleteBtn = document.getElementById('confirmDelete');
+    const itemNameSpan = document.getElementById('itemName');
+    let currentItemId = null;
+
+    if (deleteButton) {
+        deleteButton.addEventListener('click', function() {
+            currentItemId = this.dataset.id;
+            itemNameSpan.textContent = this.dataset.name;
+            deleteModal.show();
+        });
+    }
+
+    confirmDeleteBtn.addEventListener('click', function() {
+        if (currentItemId) {
+            fetch(`/hr/positions/${currentItemId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '{% url "hr:position_list" %}';
+                } else {
+                    alert(data.message);
+                }
+                deleteModal.hide();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الحذف');
+                deleteModal.hide();
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

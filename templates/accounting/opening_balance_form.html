@@ -1,0 +1,339 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-play-circle text-warning me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">إضافة قيد افتتاحي جديد</p>
+                </div>
+                <div>
+                    <a href="{% url 'accounting:opening_balance' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-right me-2"></i>
+                        العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>
+                        بيانات القيد الافتتاحي
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>نوع القيد:</strong> {{ balance_type_display }}
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="balance_type" value="{{ balance_type }}">
+                        
+                        <!-- Basic Info -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label for="balance_number" class="form-label">رقم القيد <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="balance_number" name="balance_number" 
+                                       value="{% if opening_balance %}{{ opening_balance.balance_number }}{% else %}{{ form_data.balance_number|default:'' }}{% endif %}" required>
+                                <div class="form-text">رقم فريد للقيد الافتتاحي</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="balance_date" class="form-label">تاريخ القيد <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="balance_date" name="balance_date" 
+                                       value="{% if opening_balance %}{{ opening_balance.balance_date|date:'Y-m-d' }}{% else %}{{ form_data.balance_date|default:'' }}{% endif %}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="description" class="form-label">وصف القيد <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="description" name="description" 
+                                       value="{% if opening_balance %}{{ opening_balance.description }}{% else %}{{ form_data.description|default:'' }}{% endif %}" required
+                                       placeholder="وصف القيد الافتتاحي">
+                            </div>
+                        </div>
+
+                        <!-- Balance Type Specific Fields -->
+                        {% if balance_type == 'INVENTORY' %}
+                        <!-- Inventory Opening Balance -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-boxes me-2"></i>
+                                    قيد افتتاحي للمخزون
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label for="warehouse" class="form-label">المخزن <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="warehouse" name="warehouse" required>
+                                            <option value="">اختر المخزن</option>
+                                            {% for warehouse in warehouses %}
+                                            <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="item" class="form-label">الصنف <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="item" name="item" required>
+                                            <option value="">اختر الصنف</option>
+                                            {% for item in items %}
+                                            <option value="{{ item.id }}">{{ item.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="quantity" class="form-label">الكمية <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="quantity" name="quantity" 
+                                               step="0.01" min="0" required placeholder="0.00">
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <label for="unit_cost" class="form-label">تكلفة الوحدة <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="unit_cost" name="unit_cost" 
+                                                   step="0.01" min="0" required placeholder="0.00">
+                                            <span class="input-group-text">ريال</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="total_value" class="form-label">القيمة الإجمالية</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="total_value" name="total_value" 
+                                                   step="0.01" readonly>
+                                            <span class="input-group-text">ريال</span>
+                                        </div>
+                                        <div class="form-text">يتم حسابها تلقائياً</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% elif balance_type == 'BALANCES' %}
+                        <!-- Account Balances -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-balance-scale me-2"></i>
+                                    أرصدة الحسابات
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="account" class="form-label">الحساب <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="account" name="account" required>
+                                            <option value="">اختر الحساب</option>
+                                            {% for account in accounts %}
+                                            <option value="{{ account.id }}">{{ account.code }} - {{ account.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="person" class="form-label">الشخص</label>
+                                        <select class="form-select" id="person" name="person">
+                                            <option value="">اختر الشخص (اختياري)</option>
+                                            {% for person in persons %}
+                                            <option value="{{ person.id }}">{{ person.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <label for="debit_amount" class="form-label">مدين</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control balance-amount" id="debit_amount" name="debit_amount" 
+                                                   step="0.01" min="0" placeholder="0.00">
+                                            <span class="input-group-text">ريال</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="credit_amount" class="form-label">دائن</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control balance-amount" id="credit_amount" name="credit_amount" 
+                                                   step="0.01" min="0" placeholder="0.00">
+                                            <span class="input-group-text">ريال</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-warning mt-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    يجب إدخال قيمة في أحد الحقلين (مدين أو دائن) وليس كلاهما
+                                </div>
+                            </div>
+                        </div>
+
+                        {% elif balance_type == 'BANKS' %}
+                        <!-- Bank Balances -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-university me-2"></i>
+                                    أرصدة البنوك
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="bank" class="form-label">البنك <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="bank" name="bank" required>
+                                            <option value="">اختر البنك</option>
+                                            {% for bank in banks %}
+                                            <option value="{{ bank.id }}">{{ bank.name }} - {{ bank.account_number }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="bank_balance" class="form-label">الرصيد <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="bank_balance" name="bank_balance" 
+                                                   step="0.01" required placeholder="0.00">
+                                            <span class="input-group-text">ريال</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% elif balance_type == 'TREASURY' %}
+                        <!-- Treasury Balances -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-money-bill-wave me-2"></i>
+                                    أرصدة الخزائن
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="treasury" class="form-label">الخزينة <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="treasury" name="treasury" required>
+                                            <option value="">اختر الخزينة</option>
+                                            {% for treasury in treasuries %}
+                                            <option value="{{ treasury.id }}">{{ treasury.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="treasury_balance" class="form-label">الرصيد <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="treasury_balance" name="treasury_balance" 
+                                                   step="0.01" required placeholder="0.00">
+                                            <span class="input-group-text">ريال</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                      placeholder="ملاحظات إضافية (اختياري)">{% if opening_balance %}{{ opening_balance.notes }}{% else %}{{ form_data.notes|default:'' }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'accounting:opening_balance' %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ القيد الافتتاحي
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-generate balance number if empty
+    const balanceNumberInput = document.getElementById('balance_number');
+    if (!balanceNumberInput.value) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const time = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+        const balanceType = '{{ balance_type }}';
+        balanceNumberInput.value = `OB-${balanceType}-${year}${month}${day}-${time}`;
+    }
+
+    // Set today's date if empty
+    const dateInput = document.getElementById('balance_date');
+    if (!dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+
+    // Calculate total value for inventory
+    const quantityInput = document.getElementById('quantity');
+    const unitCostInput = document.getElementById('unit_cost');
+    const totalValueInput = document.getElementById('total_value');
+    
+    if (quantityInput && unitCostInput && totalValueInput) {
+        function calculateTotal() {
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const unitCost = parseFloat(unitCostInput.value) || 0;
+            const total = quantity * unitCost;
+            totalValueInput.value = total.toFixed(2);
+        }
+        
+        quantityInput.addEventListener('input', calculateTotal);
+        unitCostInput.addEventListener('input', calculateTotal);
+    }
+
+    // Validate balance amounts (only one should be filled)
+    const debitInput = document.getElementById('debit_amount');
+    const creditInput = document.getElementById('credit_amount');
+    
+    if (debitInput && creditInput) {
+        function validateBalanceAmounts() {
+            const debitValue = parseFloat(debitInput.value) || 0;
+            const creditValue = parseFloat(creditInput.value) || 0;
+            
+            if (debitValue > 0 && creditValue > 0) {
+                alert('لا يمكن إدخال قيم في كلا من المدين والدائن في نفس الوقت');
+                creditInput.value = '';
+            }
+        }
+        
+        debitInput.addEventListener('change', function() {
+            if (parseFloat(this.value) > 0) {
+                creditInput.value = '';
+            }
+        });
+        
+        creditInput.addEventListener('change', function() {
+            if (parseFloat(this.value) > 0) {
+                debitInput.value = '';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

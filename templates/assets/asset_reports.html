@@ -1,0 +1,420 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-chart-bar text-purple me-2"></i>
+                    {{ title }}
+                </h2>
+                <a href="{% url 'assets:home' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للأصول
+                </a>
+            </div>
+
+            <!-- تقارير سريعة -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card bg-primary text-white shadow">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-uppercase mb-1">
+                                        تقرير الأصول
+                                    </div>
+                                    <div class="text-white-50 small">قائمة شاملة بجميع الأصول</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-building fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{% url 'assets:asset_list' %}" class="btn btn-light btn-sm">
+                                    <i class="fas fa-eye me-1"></i>
+                                    عرض التقرير
+                                </a>
+                                <button class="btn btn-outline-light btn-sm ms-2" onclick="printReport('assets')">
+                                    <i class="fas fa-print me-1"></i>
+                                    طباعة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card bg-success text-white shadow">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-uppercase mb-1">
+                                        تقرير المشتريات
+                                    </div>
+                                    <div class="text-white-50 small">جميع عمليات شراء الأصول</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{% url 'assets:asset_purchase_list' %}" class="btn btn-light btn-sm">
+                                    <i class="fas fa-eye me-1"></i>
+                                    عرض التقرير
+                                </a>
+                                <button class="btn btn-outline-light btn-sm ms-2" onclick="printReport('purchases')">
+                                    <i class="fas fa-print me-1"></i>
+                                    طباعة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card bg-warning text-white shadow">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-uppercase mb-1">
+                                        تقرير المبيعات
+                                    </div>
+                                    <div class="text-white-50 small">جميع عمليات بيع الأصول</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-hand-holding-usd fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{% url 'assets:asset_sale_list' %}" class="btn btn-light btn-sm">
+                                    <i class="fas fa-eye me-1"></i>
+                                    عرض التقرير
+                                </a>
+                                <button class="btn btn-outline-light btn-sm ms-2" onclick="printReport('sales')">
+                                    <i class="fas fa-print me-1"></i>
+                                    طباعة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="card bg-danger text-white shadow">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-uppercase mb-1">
+                                        تقرير الإهلاك
+                                    </div>
+                                    <div class="text-white-50 small">حساب وقيود الإهلاك</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="fas fa-calculator fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{% url 'assets:depreciation_list' %}" class="btn btn-light btn-sm">
+                                    <i class="fas fa-eye me-1"></i>
+                                    عرض التقرير
+                                </a>
+                                <button class="btn btn-outline-light btn-sm ms-2" onclick="printReport('depreciation')">
+                                    <i class="fas fa-print me-1"></i>
+                                    طباعة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تقارير مخصصة -->
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-primary">
+                                <i class="fas fa-filter me-2"></i>
+                                تقرير مخصص للأصول
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="get" action="{% url 'assets:asset_list' %}" target="_blank">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">حالة الأصل</label>
+                                        <select class="form-select" name="status">
+                                            <option value="">جميع الحالات</option>
+                                            <option value="ACTIVE">نشط</option>
+                                            <option value="UNDER_MAINTENANCE">تحت الصيانة</option>
+                                            <option value="DISPOSED">مستبعد</option>
+                                            <option value="SOLD">مباع</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">مجموعة الأصل</label>
+                                        <select class="form-select" name="group">
+                                            <option value="">جميع المجموعات</option>
+                                            <!-- سيتم ملؤها من الـ view -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">من تاريخ</label>
+                                        <input type="date" class="form-control" name="date_from">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">إلى تاريخ</label>
+                                        <input type="date" class="form-control" name="date_to">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i>
+                                    إنشاء التقرير
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-success">
+                                <i class="fas fa-chart-pie me-2"></i>
+                                تقرير مالي للأصول
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="get" action="{% url 'assets:asset_reports' %}" target="_blank">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">نوع التقرير</label>
+                                        <select class="form-select" name="report_type">
+                                            <option value="summary">ملخص مالي</option>
+                                            <option value="detailed">تفصيلي</option>
+                                            <option value="depreciation">الإهلاك</option>
+                                            <option value="gains_losses">أرباح وخسائر البيع</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">الفترة</label>
+                                        <select class="form-select" name="period">
+                                            <option value="current_month">الشهر الحالي</option>
+                                            <option value="current_year">السنة الحالية</option>
+                                            <option value="last_year">السنة الماضية</option>
+                                            <option value="custom">فترة مخصصة</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">من تاريخ</label>
+                                        <input type="date" class="form-control" name="start_date">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">إلى تاريخ</label>
+                                        <input type="date" class="form-control" name="end_date">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-chart-line me-1"></i>
+                                    إنشاء التقرير المالي
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تقارير إضافية -->
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-info">
+                                <i class="fas fa-sync-alt me-2"></i>
+                                تقرير التجديدات
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">تقرير شامل بجميع عمليات تجديد وصيانة الأصول</p>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'assets:asset_renewal_list' %}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye me-1"></i>
+                                    عرض
+                                </a>
+                                <button class="btn btn-outline-info btn-sm" onclick="printReport('renewals')">
+                                    <i class="fas fa-print me-1"></i>
+                                    طباعة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-warning">
+                                <i class="fas fa-tools me-2"></i>
+                                تقرير الصيانة
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">تقرير بجميع عمليات الصيانة والجدولة المطلوبة</p>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'assets:asset_maintenance_list' %}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-eye me-1"></i>
+                                    عرض
+                                </a>
+                                <button class="btn btn-outline-warning btn-sm" onclick="printReport('maintenance')">
+                                    <i class="fas fa-print me-1"></i>
+                                    طباعة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h6 class="m-0 font-weight-bold text-secondary">
+                                <i class="fas fa-file-invoice me-2"></i>
+                                تقرير قيود الإهلاك
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">تقرير بجميع قيود الإهلاك المسجلة في النظام</p>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'assets:depreciation_entry_list' %}" class="btn btn-secondary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>
+                                    عرض
+                                </a>
+                                <button class="btn btn-outline-secondary btn-sm" onclick="printReport('entries')">
+                                    <i class="fas fa-print me-1"></i>
+                                    طباعة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- معلومات إضافية -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-purple text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>
+                                معلومات حول تقارير الأصول الثابتة
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="alert alert-info">
+                                        <h6 class="alert-heading">
+                                            <i class="fas fa-chart-bar me-2"></i>
+                                            أنواع التقارير
+                                        </h6>
+                                        <ul class="mb-0">
+                                            <li><strong>تقرير الأصول:</strong> قائمة شاملة بجميع الأصول وحالاتها</li>
+                                            <li><strong>تقرير المشتريات:</strong> جميع عمليات شراء الأصول</li>
+                                            <li><strong>تقرير المبيعات:</strong> جميع عمليات بيع الأصول</li>
+                                            <li><strong>تقرير الإهلاك:</strong> حساب وقيود الإهلاك</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="alert alert-success">
+                                        <h6 class="alert-heading">
+                                            <i class="fas fa-download me-2"></i>
+                                            خيارات التصدير
+                                        </h6>
+                                        <ul class="mb-0">
+                                            <li>طباعة مباشرة من المتصفح</li>
+                                            <li>تصدير إلى PDF (قريباً)</li>
+                                            <li>تصدير إلى Excel (قريباً)</li>
+                                            <li>إرسال بالبريد الإلكتروني (قريباً)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function printReport(reportType) {
+    let url = '';
+    
+    switch(reportType) {
+        case 'assets':
+            url = '{% url "assets:asset_list" %}';
+            break;
+        case 'purchases':
+            url = '{% url "assets:asset_purchase_list" %}';
+            break;
+        case 'sales':
+            url = '{% url "assets:asset_sale_list" %}';
+            break;
+        case 'depreciation':
+            url = '{% url "assets:depreciation_list" %}';
+            break;
+        case 'renewals':
+            url = '{% url "assets:asset_renewal_list" %}';
+            break;
+        case 'maintenance':
+            url = '{% url "assets:asset_maintenance_list" %}';
+            break;
+        case 'entries':
+            url = '{% url "assets:depreciation_entry_list" %}';
+            break;
+        default:
+            alert('نوع التقرير غير محدد');
+            return;
+    }
+    
+    // فتح التقرير في نافذة جديدة للطباعة
+    const printWindow = window.open(url + '?print=1', '_blank');
+    
+    // انتظار تحميل الصفحة ثم طباعة
+    printWindow.onload = function() {
+        setTimeout(() => {
+            printWindow.print();
+        }, 1000);
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديد التواريخ الافتراضية
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    // تحديد تاريخ بداية الشهر كافتراضي
+    const dateFromFields = document.querySelectorAll('input[name="date_from"], input[name="start_date"]');
+    dateFromFields.forEach(field => {
+        if (!field.value) {
+            field.value = firstDayOfMonth.toISOString().split('T')[0];
+        }
+    });
+    
+    // تحديد تاريخ اليوم كافتراضي
+    const dateToFields = document.querySelectorAll('input[name="date_to"], input[name="end_date"]');
+    dateToFields.forEach(field => {
+        if (!field.value) {
+            field.value = today.toISOString().split('T')[0];
+        }
+    });
+});
+</script>
+{% endblock %}

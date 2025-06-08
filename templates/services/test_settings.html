@@ -1,0 +1,319 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load system_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .test-card {
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    
+    .test-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .setting-value {
+        background: #f8f9fa;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-family: monospace;
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .test-section {
+        margin-bottom: 30px;
+    }
+    
+    .color-preview {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: inline-block;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0">
+                        <i class="fas fa-vial text-primary me-3"></i>
+                        {{ title }}
+                    </h1>
+                    <p class="text-muted mb-0 mt-2">اختبار تطبيق إعدادات النظام</p>
+                </div>
+                <div>
+                    <a href="{% url 'services:system_settings' %}" class="btn btn-primary">
+                        <i class="fas fa-cog me-2"></i>
+                        إعدادات النظام
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Company Information Test -->
+    <div class="test-section">
+        <div class="row">
+            <div class="col-12">
+                <div class="card test-card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-building me-2"></i>
+                            معلومات الشركة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>اسم الشركة:</h6>
+                                <div class="setting-value">{{ company_data.name|default:"غير محدد" }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>العنوان:</h6>
+                                <div class="setting-value">{{ company_data.address|default:"غير محدد" }}</div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h6>الهاتف:</h6>
+                                <div class="setting-value">{{ company_data.phone|default:"غير محدد" }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>البريد الإلكتروني:</h6>
+                                <div class="setting-value">{{ company_data.email|default:"غير محدد" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Settings Test -->
+    <div class="test-section">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card test-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-money-bill-wave me-2"></i>
+                            الإعدادات المالية
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>رمز العملة:</h6>
+                            <div class="setting-value">{{ test_data.currency_symbol }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>عدد الخانات العشرية:</h6>
+                            <div class="setting-value">{{ test_data.decimal_places }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>معدل الضريبة:</h6>
+                            <div class="setting-value">{{ test_data.tax_rate }}%</div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>اختبار تنسيق العملة:</h6>
+                            <div class="alert alert-info">
+                                <strong>المبلغ الأصلي:</strong> {{ test_amount }}<br>
+                                <strong>المبلغ المنسق:</strong> {{ formatted_amount }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card test-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-palette me-2"></i>
+                            إعدادات الواجهة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>المظهر:</h6>
+                            <div class="setting-value">{{ test_data.ui_theme }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>اللون الأساسي:</h6>
+                            <div class="d-flex align-items-center">
+                                <div class="color-preview me-2" style="background-color: {{ test_data.ui_primary_color }};"></div>
+                                <div class="setting-value flex-grow-1">{{ test_data.ui_primary_color }}</div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>الوضع الليلي:</h6>
+                            <div class="setting-value">
+                                {% if test_data.enable_dark_mode %}
+                                    <i class="fas fa-check text-success me-2"></i>مفعل
+                                {% else %}
+                                    <i class="fas fa-times text-danger me-2"></i>غير مفعل
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>عدد السجلات في الصفحة:</h6>
+                            <div class="setting-value">{{ test_data.records_per_page }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Tags Test -->
+    <div class="test-section">
+        <div class="row">
+            <div class="col-12">
+                <div class="card test-card">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tags me-2"></i>
+                            اختبار Template Tags
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6>تنسيق العملة:</h6>
+                                <div class="alert alert-light">
+                                    {% format_currency 1500.75 as formatted_price %}
+                                    <strong>1500.75</strong> → <strong>{{ formatted_price }}</strong>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>حساب الضريبة:</h6>
+                                <div class="alert alert-light">
+                                    {% tax_amount 1000 as tax %}
+                                    <strong>ضريبة 1000:</strong> {% format_currency tax %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>المجموع مع الضريبة:</h6>
+                                <div class="alert alert-light">
+                                    {% total_with_tax 1000 as total %}
+                                    <strong>المجموع:</strong> {% format_currency total %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h6>حالة الميزات:</h6>
+                                <ul class="list-unstyled">
+                                    <li>
+                                        {% is_feature_enabled 'dark_mode' as dark_mode_enabled %}
+                                        <i class="fas fa-{% if dark_mode_enabled %}check text-success{% else %}times text-danger{% endif %} me-2"></i>
+                                        الوضع الليلي
+                                    </li>
+                                    <li>
+                                        {% is_feature_enabled 'animations' as animations_enabled %}
+                                        <i class="fas fa-{% if animations_enabled %}check text-success{% else %}times text-danger{% endif %} me-2"></i>
+                                        الحركات والانتقالات
+                                    </li>
+                                    <li>
+                                        {% is_feature_enabled 'notifications' as notifications_enabled %}
+                                        <i class="fas fa-{% if notifications_enabled %}check text-success{% else %}times text-danger{% endif %} me-2"></i>
+                                        الإشعارات
+                                    </li>
+                                    <li>
+                                        {% is_feature_enabled 'tooltips' as tooltips_enabled %}
+                                        <i class="fas fa-{% if tooltips_enabled %}check text-success{% else %}times text-danger{% endif %} me-2"></i>
+                                        التلميحات
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>ألوان المظهر:</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% get_theme_color 'primary' as primary_color %}
+                                    {% get_theme_color 'success' as success_color %}
+                                    {% get_theme_color 'warning' as warning_color %}
+                                    {% get_theme_color 'danger' as danger_color %}
+                                    
+                                    <div class="color-preview" style="background-color: {{ primary_color }};" title="Primary: {{ primary_color }}"></div>
+                                    <div class="color-preview" style="background-color: {{ success_color }};" title="Success: {{ success_color }}"></div>
+                                    <div class="color-preview" style="background-color: {{ warning_color }};" title="Warning: {{ warning_color }}"></div>
+                                    <div class="color-preview" style="background-color: {{ danger_color }};" title="Danger: {{ danger_color }}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="test-section">
+        <div class="row">
+            <div class="col-12">
+                <div class="card test-card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            حالة النظام
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% system_status as status %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6>إجمالي الإعدادات:</h6>
+                                <div class="setting-value">{{ status.total_settings }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>الإعدادات النشطة:</h6>
+                                <div class="setting-value">{{ status.active_settings }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>إصدار النظام:</h6>
+                                <div class="setting-value">{{ status.system_version }}</div>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>حجم الصفحة:</h6>
+                                <div class="setting-value">{% pagination_size %}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Company Header Preview -->
+    <div class="test-section">
+        <div class="row">
+            <div class="col-12">
+                <div class="card test-card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-eye me-2"></i>
+                            معاينة رأس الشركة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% company_header %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

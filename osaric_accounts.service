@@ -1,0 +1,55 @@
+[Unit]
+Description=Osaric Accounts Django Application
+Documentation=https://docs.osaric.com
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/osaric_accounts
+Environment="PATH=/opt/osaric_accounts_env/bin"
+Environment="DJANGO_SETTINGS_MODULE=osaric_accounts.settings_production_secure"
+ExecStart=/opt/osaric_accounts_env/bin/gunicorn \
+    --bind unix:/opt/osaric_accounts/osaric.sock \
+    --workers 3 \
+    --worker-class gevent \
+    --worker-connections 1000 \
+    --max-requests 1000 \
+    --max-requests-jitter 100 \
+    --timeout 120 \
+    --keep-alive 5 \
+    --user www-data \
+    --group www-data \
+    --log-level info \
+    --log-file /var/log/osaric/gunicorn.log \
+    --access-logfile /var/log/osaric/access.log \
+    --error-logfile /var/log/osaric/error.log \
+    --capture-output \
+    --enable-stdio-inheritance \
+    osaric_accounts.wsgi:application
+
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=on-failure
+RestartSec=10
+
+# إعدادات الأمان
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/osaric_accounts /var/log/osaric /tmp
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+# حدود الموارد
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target

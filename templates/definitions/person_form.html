@@ -1,0 +1,699 @@
+{% extends 'base/base.html' %}
+
+{% block title %}{{ title }} - حسابات أوساريك{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-users me-2"></i>
+            {{ title }}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'definitions:home' %}">التعريفات</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'definitions:person_list' %}">الأشخاص والجهات</a></li>
+                <li class="breadcrumb-item active">{{ action }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if person %}edit{% else %}plus{% endif %} me-2"></i>
+                    {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Basic Information -->
+                    <h6 class="mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        المعلومات الأساسية
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.code.id_for_label }}" class="form-label">
+                                {{ form.code.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.code.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                {{ form.name.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-5 mb-3">
+                            <label for="{{ form.name_english.id_for_label }}" class="form-label">
+                                {{ form.name_english.label }}
+                            </label>
+                            {{ form.name_english }}
+                            {% if form.name_english.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name_english.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.person_type.id_for_label }}" class="form-label">
+                                {{ form.person_type.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.person_type }}
+                            {% if form.person_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.person_type.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div id="person-type-help" class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                اختر نوع الشخص/الجهة لتفعيل الخيارات المناسبة تلقائياً
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.entity_type.id_for_label }}" class="form-label">
+                                {{ form.entity_type.label }}
+                            </label>
+                            {{ form.entity_type }}
+                            {% if form.entity_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.entity_type.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Identity Information -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-id-card me-2"></i>
+                        معلومات الهوية
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.national_id.id_for_label }}" class="form-label">
+                                {{ form.national_id.label }}
+                            </label>
+                            {{ form.national_id }}
+                            {% if form.national_id.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.national_id.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.tax_number.id_for_label }}" class="form-label">
+                                {{ form.tax_number.label }}
+                            </label>
+                            {{ form.tax_number }}
+                            {% if form.tax_number.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.tax_number.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.commercial_register.id_for_label }}" class="form-label">
+                                {{ form.commercial_register.label }}
+                            </label>
+                            {{ form.commercial_register }}
+                            {% if form.commercial_register.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.commercial_register.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-phone me-2"></i>
+                        معلومات الاتصال
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.phone.id_for_label }}" class="form-label">
+                                {{ form.phone.label }}
+                            </label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.phone.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.mobile.id_for_label }}" class="form-label">
+                                {{ form.mobile.label }}
+                            </label>
+                            {{ form.mobile }}
+                            {% if form.mobile.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.mobile.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                {{ form.email.label }}
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.email.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-3 mb-3">
+                            <label for="{{ form.website.id_for_label }}" class="form-label">
+                                {{ form.website.label }}
+                            </label>
+                            {{ form.website }}
+                            {% if form.website.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.website.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Address -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        العنوان
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.address.id_for_label }}" class="form-label">
+                                {{ form.address.label }}
+                            </label>
+                            {{ form.address }}
+                            {% if form.address.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.address.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.city.id_for_label }}" class="form-label">
+                                        {{ form.city.label }}
+                                    </label>
+                                    {{ form.city }}
+                                    {% if form.city.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.city.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.state.id_for_label }}" class="form-label">
+                                        {{ form.state.label }}
+                                    </label>
+                                    {{ form.state }}
+                                    {% if form.state.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.state.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.country.id_for_label }}" class="form-label">
+                                        {{ form.country.label }}
+                                    </label>
+                                    {{ form.country }}
+                                    {% if form.country.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.country.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.postal_code.id_for_label }}" class="form-label">
+                                        {{ form.postal_code.label }}
+                                    </label>
+                                    {{ form.postal_code }}
+                                    {% if form.postal_code.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.postal_code.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Financial Information -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-dollar-sign me-2"></i>
+                        المعلومات المالية
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.credit_limit.id_for_label }}" class="form-label">
+                                {{ form.credit_limit.label }}
+                            </label>
+                            {{ form.credit_limit }}
+                            {% if form.credit_limit.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.credit_limit.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.payment_terms.id_for_label }}" class="form-label">
+                                {{ form.payment_terms.label }}
+                            </label>
+                            {{ form.payment_terms }}
+                            {% if form.payment_terms.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.payment_terms.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.currency.id_for_label }}" class="form-label">
+                                {{ form.currency.label }}
+                                <i class="fas fa-coins text-warning ms-1" title="العملة الافتراضية للتعاملات"></i>
+                            </label>
+                            {{ form.currency }}
+                            {% if form.currency.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.currency.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                العملة الافتراضية: الجنيه المصري (ج.م)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accounting Information -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-calculator me-2"></i>
+                        المعلومات المحاسبية
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.account_receivable.id_for_label }}" class="form-label">
+                                {{ form.account_receivable.label }}
+                            </label>
+                            {{ form.account_receivable }}
+                            {% if form.account_receivable.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.account_receivable.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.account_payable.id_for_label }}" class="form-label">
+                                {{ form.account_payable.label }}
+                            </label>
+                            {{ form.account_payable }}
+                            {% if form.account_payable.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.account_payable.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Contact Person Information -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-user-tie me-2"></i>
+                        معلومات الشخص المسؤول
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.contact_person.id_for_label }}" class="form-label">
+                                {{ form.contact_person.label }}
+                            </label>
+                            {{ form.contact_person }}
+                            {% if form.contact_person.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.contact_person.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.contact_title.id_for_label }}" class="form-label">
+                                {{ form.contact_title.label }}
+                            </label>
+                            {{ form.contact_title }}
+                            {% if form.contact_title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.contact_title.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Settings and Status -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-cogs me-2"></i>
+                        الإعدادات والحالة
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-success" style="border-width: 2px;">
+                                <div class="card-body p-3">
+                                    <div class="form-check form-switch">
+                                        {{ form.is_active_customer }}
+                                        <label class="form-check-label fw-bold" for="{{ form.is_active_customer.id_for_label }}">
+                                            <i class="fas fa-user-friends text-success me-2"></i>
+                                            {{ form.is_active_customer.label }}
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">فعل هذا الخيار إذا كان عميلاً</small>
+                                </div>
+                            </div>
+                            {% if form.is_active_customer.errors %}
+                                <div class="invalid-feedback d-block mt-2">
+                                    {{ form.is_active_customer.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-warning" style="border-width: 2px;">
+                                <div class="card-body p-3">
+                                    <div class="form-check form-switch">
+                                        {{ form.is_active_supplier }}
+                                        <label class="form-check-label fw-bold" for="{{ form.is_active_supplier.id_for_label }}">
+                                            <i class="fas fa-truck text-warning me-2"></i>
+                                            {{ form.is_active_supplier.label }}
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">فعل هذا الخيار إذا كان مورداً</small>
+                                </div>
+                            </div>
+                            {% if form.is_active_supplier.errors %}
+                                <div class="invalid-feedback d-block mt-2">
+                                    {{ form.is_active_supplier.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-info" style="border-width: 2px;">
+                                <div class="card-body p-3">
+                                    <div class="form-check form-switch">
+                                        {{ form.allow_credit }}
+                                        <label class="form-check-label fw-bold" for="{{ form.allow_credit.id_for_label }}">
+                                            <i class="fas fa-credit-card text-info me-2"></i>
+                                            {{ form.allow_credit.label }}
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">السماح بالبيع بالآجل</small>
+                                </div>
+                            </div>
+                            {% if form.allow_credit.errors %}
+                                <div class="invalid-feedback d-block mt-2">
+                                    {{ form.allow_credit.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Additional Information -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-sticky-note me-2"></i>
+                        معلومات إضافية
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.registration_date.id_for_label }}" class="form-label">
+                                {{ form.registration_date.label }}
+                            </label>
+                            {{ form.registration_date }}
+                            {% if form.registration_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.registration_date.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                {{ form.notes.label }}
+                            </label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.notes.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {{ action }}
+                            </button>
+                            <a href="{% url 'definitions:person_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                        {% if person %}
+                            <button type="button" 
+                                    class="btn btn-outline-danger delete-btn" 
+                                    data-id="{{ person.pk }}"
+                                    data-name="{{ person.name }}">
+                                <i class="fas fa-trash me-2"></i>
+                                حذف
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-uppercase person code
+    const codeField = document.getElementById('{{ form.code.id_for_label }}');
+    if (codeField) {
+        codeField.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+
+    // Handle person type changes
+    const personTypeField = document.getElementById('{{ form.person_type.id_for_label }}');
+    const isActiveCustomerField = document.getElementById('{{ form.is_active_customer.id_for_label }}');
+    const isActiveSupplierField = document.getElementById('{{ form.is_active_supplier.id_for_label }}');
+
+    if (personTypeField && isActiveCustomerField && isActiveSupplierField) {
+        function updateActiveFields() {
+            const personType = personTypeField.value;
+            const previousCustomer = isActiveCustomerField.checked;
+            const previousSupplier = isActiveSupplierField.checked;
+
+            // Reset both fields
+            isActiveCustomerField.checked = false;
+            isActiveSupplierField.checked = false;
+
+            // Set appropriate field based on person type
+            switch(personType) {
+                case 'CUSTOMER':
+                    isActiveCustomerField.checked = true;
+                    showTypeChangeNotification('تم تفعيل "عميل نشط" تلقائياً', 'success');
+                    break;
+                case 'SUPPLIER':
+                    isActiveSupplierField.checked = true;
+                    showTypeChangeNotification('تم تفعيل "مورد نشط" تلقائياً', 'warning');
+                    break;
+                case 'BOTH':
+                    isActiveCustomerField.checked = true;
+                    isActiveSupplierField.checked = true;
+                    showTypeChangeNotification('تم تفعيل "عميل نشط" و "مورد نشط" تلقائياً', 'info');
+                    break;
+                case 'EMPLOYEE':
+                    showTypeChangeNotification('الموظفون ليسوا عملاء أو موردين افتراضياً', 'secondary');
+                    break;
+                case 'BANK':
+                case 'GOVERNMENT':
+                case 'PARTNER':
+                case 'OTHER':
+                    showTypeChangeNotification('يمكنك تفعيل الخيارات المناسبة يدوياً', 'info');
+                    break;
+            }
+
+            // Update visual styling
+            updateSwitchStyling();
+        }
+
+        function showTypeChangeNotification(message, type) {
+            // Remove existing notification
+            const existingNotification = document.querySelector('.type-change-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // Create new notification
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} alert-dismissible fade show type-change-notification mt-2`;
+            notification.innerHTML = `
+                <i class="fas fa-info-circle me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            // Insert after person type field
+            const personTypeContainer = personTypeField.closest('.col-md-6');
+            personTypeContainer.appendChild(notification);
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.remove();
+                        }
+                    }, 150);
+                }
+            }, 5000);
+        }
+
+        function updateSwitchStyling() {
+            // Update customer switch styling
+            const customerCard = isActiveCustomerField.closest('.card');
+            const supplierCard = isActiveSupplierField.closest('.card');
+
+            if (isActiveCustomerField.checked) {
+                customerCard.classList.add('border-success');
+                customerCard.classList.remove('border-light');
+                customerCard.style.backgroundColor = 'rgba(25, 135, 84, 0.05)';
+            } else {
+                customerCard.classList.remove('border-success');
+                customerCard.classList.add('border-light');
+                customerCard.style.backgroundColor = '';
+            }
+
+            if (isActiveSupplierField.checked) {
+                supplierCard.classList.add('border-warning');
+                supplierCard.classList.remove('border-light');
+                supplierCard.style.backgroundColor = 'rgba(255, 193, 7, 0.05)';
+            } else {
+                supplierCard.classList.remove('border-warning');
+                supplierCard.classList.add('border-light');
+                supplierCard.style.backgroundColor = '';
+            }
+        }
+
+        // Update on page load (only for new records)
+        const isNewRecord = !document.querySelector('input[name="id"]') || document.querySelector('input[name="id"]').value === '';
+        if (isNewRecord) {
+            updateActiveFields();
+        } else {
+            updateSwitchStyling();
+        }
+
+        // Update when person type changes
+        personTypeField.addEventListener('change', function() {
+            if (confirm('تغيير نوع الشخص/الجهة سيؤثر على إعدادات التفعيل. هل تريد المتابعة؟')) {
+                updateActiveFields();
+            } else {
+                // Revert to previous value
+                this.value = this.dataset.previousValue || 'CUSTOMER';
+            }
+            this.dataset.previousValue = this.value;
+        });
+
+        // Store initial value
+        personTypeField.dataset.previousValue = personTypeField.value;
+    }
+
+    // Add visual feedback for active switches
+    const switches = document.querySelectorAll('.form-check-input[type="checkbox"]');
+    switches.forEach(function(switchEl) {
+        switchEl.addEventListener('change', function() {
+            if (this.id.includes('is_active_customer') || this.id.includes('is_active_supplier')) {
+                updateSwitchStyling();
+            }
+        });
+    });
+
+    // Delete functionality
+    const deleteBtn = document.querySelector('.delete-btn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            const personId = this.dataset.id;
+            const personName = this.dataset.name;
+
+            if (confirm(`هل أنت متأكد من حذف "${personName}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) {
+                // Create and submit delete form
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `{% url 'definitions:person_delete' 0 %}`.replace('0', personId);
+
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = csrfToken;
+
+                form.appendChild(csrfInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

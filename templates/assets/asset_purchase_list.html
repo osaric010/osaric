@@ -1,0 +1,274 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-shopping-cart text-primary me-2"></i>
+                    {{ title }}
+                </h2>
+                <div>
+                    <a href="{% url 'assets:home' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        العودة للأصول
+                    </a>
+                    <a href="{% url 'assets:asset_purchase_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        شراء أصل جديد
+                    </a>
+                </div>
+            </div>
+
+            <!-- فلاتر البحث -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="search" 
+                                       value="{{ search_query }}"
+                                       placeholder="البحث في مشتريات الأصول (رقم الشراء، المورد)">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search me-1"></i>
+                                    بحث
+                                </button>
+                                <a href="{% url 'assets:asset_purchase_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-1"></i>
+                                    مسح
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- قائمة مشتريات الأصول -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        قائمة مشتريات الأصول الثابتة
+                        {% if page_obj %}
+                            <span class="badge bg-primary ms-2">{{ page_obj.paginator.count }}</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>رقم الشراء</th>
+                                        <th>تاريخ الشراء</th>
+                                        <th>المورد</th>
+                                        <th>رقم الفاتورة</th>
+                                        <th>إجمالي المبلغ</th>
+                                        <th>الخزينة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for purchase in page_obj %}
+                                        <tr>
+                                            <td><strong>{{ purchase.purchase_number }}</strong></td>
+                                            <td>{{ purchase.purchase_date|date:"d/m/Y" }}</td>
+                                            <td>{{ purchase.supplier }}</td>
+                                            <td>
+                                                {% if purchase.invoice_number %}
+                                                    {{ purchase.invoice_number }}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="text-primary fw-bold">
+                                                    {{ purchase.total_amount|floatformat:2 }} ر.س
+                                                </span>
+                                            </td>
+                                            <td>{{ purchase.treasury.name }}</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'assets:asset_purchase_detail' purchase.pk %}" 
+                                                       class="btn btn-outline-info" 
+                                                       title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'assets:asset_purchase_edit' purchase.pk %}" 
+                                                       class="btn btn-outline-primary" 
+                                                       title="تعديل">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" 
+                                                            class="btn btn-outline-danger delete-btn" 
+                                                            data-id="{{ purchase.pk }}"
+                                                            data-name="{{ purchase.purchase_number }}"
+                                                            title="حذف">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    <button type="button" 
+                                                            class="btn btn-outline-secondary print-btn" 
+                                                            data-id="{{ purchase.pk }}"
+                                                            title="طباعة">
+                                                        <i class="fas fa-print"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">الأولى</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">السابقة</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">
+                                            صفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                                        </span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">التالية</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد مشتريات أصول</h5>
+                            <p class="text-muted">لم يتم العثور على أي مشتريات أصول مطابقة لمعايير البحث</p>
+                            <a href="{% url 'assets:asset_purchase_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                شراء أصل جديد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- معلومات إضافية -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات حول شراء الأصول الثابتة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                عملية الشراء
+                            </h6>
+                            <ul class="mb-0">
+                                <li>تسجيل تفاصيل شراء الأصول الثابتة</li>
+                                <li>ربط الشراء بالخزينة المناسبة</li>
+                                <li>تسجيل معلومات المورد والفاتورة</li>
+                                <li>إنشاء سجل للأصل في النظام</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                نصائح مهمة
+                            </h6>
+                            <ul class="mb-0">
+                                <li>احتفظ بجميع فواتير الشراء</li>
+                                <li>حدد مجموعة الأصل بدقة</li>
+                                <li>سجل تاريخ الشراء الصحيح</li>
+                                <li>تأكد من صحة المبالغ المدخلة</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// حذف شراء أصل
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const purchaseId = this.getAttribute('data-id');
+            const purchaseNumber = this.getAttribute('data-name');
+            
+            if (confirm(`هل أنت متأكد من حذف شراء الأصل "${purchaseNumber}"؟`)) {
+                fetch(`/assets/purchases/${purchaseId}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || 'حدث خطأ أثناء الحذف');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('حدث خطأ أثناء الحذف');
+                });
+            }
+        });
+    });
+
+    // طباعة شراء أصل
+    const printButtons = document.querySelectorAll('.print-btn');
+    printButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const purchaseId = this.getAttribute('data-id');
+            // يمكن إضافة رابط الطباعة هنا
+            alert('سيتم إضافة وظيفة الطباعة قريباً');
+        });
+    });
+});
+</script>
+{% endblock %}

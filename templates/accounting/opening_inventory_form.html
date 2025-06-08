@@ -1,0 +1,853 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.formset-row {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+}
+.formset-row.to-delete {
+    opacity: 0.5;
+    background: #f8d7da;
+}
+.delete-row {
+    color: #dc3545;
+    cursor: pointer;
+}
+.add-row {
+    color: #198754;
+    cursor: pointer;
+}
+.total-value {
+    font-weight: bold;
+    color: #0d6efd;
+}
+.required-field {
+    color: #dc3545;
+}
+
+/* تنسيق البحث عن الأصناف */
+.item-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.item-dropdown-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    transition: all 0.15s ease-in-out;
+}
+
+.item-dropdown-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(-2px);
+}
+
+.item-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.item-dropdown-item.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.item-dropdown-item .item-code {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.item-dropdown-item .item-name {
+    color: #495057;
+}
+
+.item-dropdown-item .item-unit {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.item-dropdown-item .item-price {
+    font-size: 0.875rem;
+    color: #28a745;
+    font-weight: 500;
+}
+
+.no-results {
+    padding: 1rem;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.loading-results {
+    padding: 1rem;
+    text-align: center;
+    color: #007bff;
+}
+
+.loading-results i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-0">
+                <i class="fas fa-clipboard-list text-primary me-2"></i>
+                {{ title }}
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="/accounting/">الحسابات العامة</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'accounting:opening_balance' %}">القيد الافتتاحي</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'accounting:opening_inventory_list' %}">جرد أول المدة</a>
+                    </li>
+                    <li class="breadcrumb-item active">{{ title }}</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'accounting:opening_inventory_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                العودة للقائمة
+            </a>
+        </div>
+    </div>
+
+    <form method="post" id="opening-inventory-form">
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Main Form -->
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات جرد أول المدة
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        رقم الجرد <span class="required-field">*</span>
+                                    </label>
+                                    {{ form.inventory_number }}
+                                    {% if form.inventory_number.errors %}
+                                        <div class="text-danger small">{{ form.inventory_number.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        التاريخ <span class="required-field">*</span>
+                                    </label>
+                                    {{ form.date }}
+                                    {% if form.date.errors %}
+                                        <div class="text-danger small">{{ form.date.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        المخزن <span class="required-field">*</span>
+                                    </label>
+                                    {{ form.warehouse }}
+                                    {% if form.warehouse.errors %}
+                                        <div class="text-danger small">{{ form.warehouse.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        السنة المالية <span class="required-field">*</span>
+                                    </label>
+                                    {{ form.fiscal_year }}
+                                    {% if form.fiscal_year.errors %}
+                                        <div class="text-danger small">{{ form.fiscal_year.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label class="form-label">اسم الفترة</label>
+                                    {{ form.period_name }}
+                                    {% if form.period_name.errors %}
+                                        <div class="text-danger small">{{ form.period_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">العملة</label>
+                                    {{ form.currency }}
+                                    {% if form.currency.errors %}
+                                        <div class="text-danger small">{{ form.currency.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">سعر الصرف</label>
+                                    {{ form.exchange_rate }}
+                                    {% if form.exchange_rate.errors %}
+                                        <div class="text-danger small">{{ form.exchange_rate.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">ملاحظات</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Formset -->
+                <div class="card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-boxes me-2"></i>
+                            أصناف الجرد
+                            <span class="badge bg-primary ms-2" id="items-count">{{ formset.total_form_count }}</span>
+                        </h5>
+                        <button type="button" class="btn btn-sm btn-success add-row">
+                            <i class="fas fa-plus me-1"></i>
+                            إضافة صنف
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        {{ formset.management_form }}
+                        
+                        <div id="formset-container">
+                            {% for form in formset %}
+                                <div class="formset-row" data-form-index="{{ forloop.counter0 }}">
+                                    {% if form.non_field_errors %}
+                                        <div class="alert alert-danger">
+                                            {{ form.non_field_errors }}
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label class="form-label">الصنف</label>
+                                            <div class="position-relative">
+                                                <input type="text"
+                                                       class="form-control item-search-input pe-5"
+                                                       placeholder="ابحث عن الصنف..."
+                                                       autocomplete="off"
+                                                       data-form-prefix="{{ form.prefix }}">
+                                                <i class="fas fa-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                                                <input type="hidden"
+                                                       name="{{ form.item.html_name }}"
+                                                       class="item-id-input"
+                                                       value="{{ form.item.value|default:'' }}">
+                                                <div class="dropdown-menu item-dropdown" style="display: none; max-height: 200px; overflow-y: auto; width: 100%;">
+                                                    <!-- نتائج البحث ستظهر هنا -->
+                                                </div>
+                                            </div>
+                                            {% if form.item.errors %}
+                                                <div class="text-danger small">{{ form.item.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">الكمية</label>
+                                            <input type="number"
+                                                   name="{{ form.opening_quantity.html_name }}"
+                                                   class="form-control quantity-input"
+                                                   step="0.001"
+                                                   min="0"
+                                                   value="{{ form.opening_quantity.value|default:'' }}"
+                                                   placeholder="0.000">
+                                            {% if form.opening_quantity.errors %}
+                                                <div class="text-danger small">{{ form.opening_quantity.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">تكلفة الوحدة</label>
+                                            <input type="number"
+                                                   name="{{ form.unit_cost.html_name }}"
+                                                   class="form-control cost-input"
+                                                   step="0.01"
+                                                   min="0"
+                                                   value="{{ form.unit_cost.value|default:'' }}"
+                                                   placeholder="0.00">
+                                            {% if form.unit_cost.errors %}
+                                                <div class="text-danger small">{{ form.unit_cost.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">إجمالي القيمة</label>
+                                            <input type="text" class="form-control total-value" readonly>
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end">
+                                            <button type="button" class="btn btn-sm btn-outline-danger delete-row me-2">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mt-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">تاريخ الانتهاء</label>
+                                            {{ form.expiry_date }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">رقم الدفعة</label>
+                                            {{ form.batch_number }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">الحالة</label>
+                                            {{ form.condition }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">درجة الجودة</label>
+                                            {{ form.quality_grade }}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mt-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">الرقم التسلسلي</label>
+                                            {{ form.serial_number }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">الموقع</label>
+                                            {{ form.location }}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row mt-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label">ملاحظات</label>
+                                            {{ form.notes }}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Hidden fields -->
+                                    {% for hidden in form.hidden_fields %}
+                                        {{ hidden }}
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if formset.non_form_errors %}
+                            <div class="alert alert-danger mt-3">
+                                {{ formset.non_form_errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Sidebar -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calculator me-2"></i>
+                            ملخص الجرد
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-12 mb-3">
+                                <div class="border rounded p-3">
+                                    <h6 class="text-muted mb-1">عدد الأصناف</h6>
+                                    <h4 class="mb-0 text-primary" id="total-items">0</h4>
+                                </div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <div class="border rounded p-3">
+                                    <h6 class="text-muted mb-1">إجمالي الكميات</h6>
+                                    <h4 class="mb-0 text-info" id="total-quantity">0.000</h4>
+                                </div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <div class="border rounded p-3">
+                                    <h6 class="text-muted mb-1">إجمالي القيمة</h6>
+                                    <h4 class="mb-0 text-success" id="total-value">0.00</h4>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ الجرد
+                            </button>
+                            <a href="{% url 'accounting:opening_inventory_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Empty form template for adding new items -->
+<div id="empty-form" style="display: none;">
+    <div class="formset-row border rounded p-3 mb-3" data-form-index="__prefix__">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <label class="form-label">الصنف <span class="required-field">*</span></label>
+                <div class="position-relative">
+                    <input type="text"
+                           class="form-control item-search-input pe-5"
+                           placeholder="ابحث عن الصنف..."
+                           autocomplete="off">
+                    <i class="fas fa-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                    <input type="hidden"
+                           name="items-__prefix__-item"
+                           class="item-id-input">
+                    <div class="dropdown-menu item-dropdown" style="display: none; max-height: 200px; overflow-y: auto; width: 100%;">
+                        <!-- نتائج البحث ستظهر هنا -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">الكمية <span class="required-field">*</span></label>
+                <input type="number"
+                       name="items-__prefix__-opening_quantity"
+                       class="form-control quantity-input"
+                       step="0.001"
+                       min="0"
+                       placeholder="0.000">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">سعر التكلفة <span class="required-field">*</span></label>
+                <input type="number"
+                       name="items-__prefix__-unit_cost"
+                       class="form-control cost-input"
+                       step="0.01"
+                       min="0"
+                       placeholder="0.00">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">إجمالي القيمة</label>
+                <input type="number"
+                       name="items-__prefix__-total_value"
+                       class="form-control total-value"
+                       readonly
+                       placeholder="0.00">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">&nbsp;</label>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-danger btn-sm delete-row">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" name="items-__prefix__-DELETE" class="delete-input">
+        <input type="hidden" name="items-__prefix__-id">
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let formIndex = {{ formset.total_form_count }};
+    
+    // Calculate totals
+    function calculateTotals() {
+        let totalItems = 0;
+        let totalQuantity = 0;
+        let totalValue = 0;
+        
+        document.querySelectorAll('.formset-row:not(.to-delete)').forEach(row => {
+            const quantityInput = row.querySelector('.quantity-input');
+            const costInput = row.querySelector('.cost-input');
+            const totalValueInput = row.querySelector('.total-value');
+            
+            if (quantityInput && costInput && quantityInput.value && costInput.value) {
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const cost = parseFloat(costInput.value) || 0;
+                const itemTotal = quantity * cost;
+                
+                totalValueInput.value = itemTotal.toFixed(2);
+                
+                totalItems++;
+                totalQuantity += quantity;
+                totalValue += itemTotal;
+            }
+        });
+        
+        document.getElementById('total-items').textContent = totalItems;
+        document.getElementById('total-quantity').textContent = totalQuantity.toFixed(3);
+        document.getElementById('total-value').textContent = totalValue.toFixed(2);
+
+        // تحديث عداد الأصناف في العنوان
+        const itemsCountElement = document.getElementById('items-count');
+        if (itemsCountElement) {
+            itemsCountElement.textContent = totalItems;
+        }
+    }
+    
+    // Add new form
+    document.querySelector('.add-row').addEventListener('click', function() {
+        const container = document.getElementById('formset-container');
+        const emptyForm = document.querySelector('#empty-form .formset-row').cloneNode(true);
+
+        // Update form index
+        emptyForm.dataset.formIndex = formIndex;
+        emptyForm.innerHTML = emptyForm.innerHTML.replace(/__prefix__/g, formIndex);
+
+        container.appendChild(emptyForm);
+        formIndex++;
+
+        // Update management form
+        document.getElementById('id_items-TOTAL_FORMS').value = formIndex;
+
+        // إضافة مستمعي الأحداث للصف الجديد
+        initializeRowEvents(emptyForm);
+
+        calculateTotals();
+    });
+
+    // دالة لإضافة مستمعي الأحداث لصف واحد
+    function initializeRowEvents(row) {
+        // البحث عن الأصناف
+        const searchInput = row.querySelector('.item-search-input');
+        const itemIdInput = row.querySelector('.item-id-input');
+        const itemDropdown = row.querySelector('.item-dropdown');
+        const costInput = row.querySelector('.cost-input');
+        const quantityInput = row.querySelector('.quantity-input');
+
+        if (searchInput && itemIdInput && itemDropdown) {
+            // البحث عند الكتابة
+            searchInput.addEventListener('input', function() {
+                const query = this.value.trim();
+
+                clearTimeout(searchTimeout);
+
+                if (query.length < 2) {
+                    hideDropdown(itemDropdown);
+                    itemIdInput.value = '';
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    searchItems(query, itemDropdown, searchInput, itemIdInput, costInput);
+                }, 300);
+            });
+
+            // التنقل بالكيبورد
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const activeItem = itemDropdown.querySelector('.item-dropdown-item.active');
+                    if (activeItem) {
+                        activeItem.click();
+                    } else {
+                        const query = this.value.trim();
+                        if (query.length >= 2) {
+                            searchItems(query, itemDropdown, searchInput, itemIdInput, costInput);
+                        }
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    navigateDropdown(itemDropdown, 'down');
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    navigateDropdown(itemDropdown, 'up');
+                } else if (e.key === 'Escape') {
+                    hideDropdown(itemDropdown);
+                }
+            });
+
+            // إخفاء القائمة عند فقدان التركيز
+            searchInput.addEventListener('blur', function() {
+                setTimeout(() => {
+                    hideDropdown(itemDropdown);
+                }, 200);
+            });
+
+            // إظهار القائمة عند التركيز
+            searchInput.addEventListener('focus', function() {
+                if (this.value.trim().length >= 2) {
+                    searchItems(this.value.trim(), itemDropdown, searchInput, itemIdInput, costInput);
+                }
+            });
+        }
+
+        // حساب الإجمالي عند تغيير الكمية أو التكلفة
+        if (quantityInput) {
+            quantityInput.addEventListener('input', calculateTotals);
+        }
+        if (costInput) {
+            costInput.addEventListener('input', calculateTotals);
+        }
+    }
+    
+    // Delete form
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.delete-row')) {
+            const row = e.target.closest('.formset-row');
+            const deleteInput = row.querySelector('input[name$="-DELETE"]');
+            
+            if (deleteInput) {
+                deleteInput.checked = true;
+                row.classList.add('to-delete');
+            } else {
+                row.remove();
+            }
+            
+            calculateTotals();
+        }
+    });
+    
+    // Item selection change
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('item-select')) {
+            const itemId = e.target.value;
+            if (itemId) {
+                // Get item cost via AJAX
+                fetch(`/accounting/ajax/get-item-cost/?item_id=${itemId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const row = e.target.closest('.formset-row');
+                            const costInput = row.querySelector('.cost-input');
+                            if (costInput && !costInput.value) {
+                                costInput.value = data.cost_price;
+                                calculateTotals();
+                            }
+                        }
+                    });
+            }
+        }
+    });
+    
+    // Quantity or cost change
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('quantity-input') || e.target.classList.contains('cost-input')) {
+            calculateTotals();
+        }
+    });
+    
+    // Initial calculation
+    calculateTotals();
+
+    // البحث عن الأصناف
+    let searchTimeout;
+
+    function initializeItemSearch() {
+        document.querySelectorAll('.formset-row').forEach(row => {
+            initializeRowEvents(row);
+
+            // تحميل اسم الصنف المحدد مسبقاً
+            const itemIdInput = row.querySelector('.item-id-input');
+            const searchInput = row.querySelector('.item-search-input');
+            if (itemIdInput && itemIdInput.value && searchInput) {
+                loadSelectedItem(itemIdInput.value, searchInput);
+            }
+        });
+    }
+
+    function searchItems(query, dropdown, searchInput, idInput, costInput) {
+        showLoading(dropdown);
+
+        fetch(`/accounting/ajax/items/search/?q=${encodeURIComponent(query)}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Search results:', data);
+                showResults(data.items || [], dropdown, searchInput, idInput, costInput);
+            })
+            .catch(error => {
+                console.error('Error searching items:', error);
+                showError(dropdown, `خطأ في البحث: ${error.message}`);
+            });
+    }
+
+    function showLoading(dropdown) {
+        dropdown.innerHTML = '<div class="loading-results"><i class="fas fa-spinner fa-spin text-primary me-2"></i>جاري البحث عن الأصناف...</div>';
+        dropdown.style.display = 'block';
+    }
+
+    function showResults(items, dropdown, searchInput, idInput, costInput) {
+        if (items.length === 0) {
+            dropdown.innerHTML = '<div class="no-results"><i class="fas fa-search text-muted me-2"></i>لا توجد أصناف مطابقة للبحث</div>';
+        } else {
+            let html = '';
+            items.forEach(item => {
+                html += `
+                    <div class="item-dropdown-item" data-id="${item.id}" data-cost="${item.cost_price || 0}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="item-code text-primary fw-bold">${item.code}</div>
+                                <div class="item-name">${item.name}</div>
+                                ${item.description ? `<div class="item-description text-muted small">${item.description}</div>` : ''}
+                            </div>
+                            <div class="text-end">
+                                <div class="item-price text-success fw-bold">${item.cost_price || 0} ج.م</div>
+                                <div class="item-unit text-muted small">${item.unit || 'وحدة'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            dropdown.innerHTML = html;
+
+            // إضافة مستمعي النقر
+            dropdown.querySelectorAll('.item-dropdown-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const itemId = this.getAttribute('data-id');
+                    const itemCost = this.getAttribute('data-cost');
+                    const itemName = this.querySelector('.item-name').textContent;
+                    const itemCode = this.querySelector('.item-code').textContent;
+
+                    // تعيين القيم
+                    searchInput.value = `${itemCode} - ${itemName}`;
+                    idInput.value = itemId;
+
+                    // تعيين التكلفة إذا لم تكن محددة
+                    if (costInput && !costInput.value) {
+                        costInput.value = itemCost;
+                        calculateTotals();
+                    }
+
+                    hideDropdown(dropdown);
+                });
+            });
+        }
+        dropdown.style.display = 'block';
+    }
+
+    function showError(dropdown, message = 'حدث خطأ في البحث') {
+        dropdown.innerHTML = `<div class="no-results text-danger">${message}</div>`;
+        dropdown.style.display = 'block';
+    }
+
+    function hideDropdown(dropdown) {
+        dropdown.style.display = 'none';
+        // إزالة التحديد النشط
+        dropdown.querySelectorAll('.item-dropdown-item').forEach(item => {
+            item.classList.remove('active');
+        });
+    }
+
+    function navigateDropdown(dropdown, direction) {
+        const items = dropdown.querySelectorAll('.item-dropdown-item');
+        if (items.length === 0) return;
+
+        let activeIndex = -1;
+        items.forEach((item, index) => {
+            if (item.classList.contains('active')) {
+                activeIndex = index;
+            }
+            item.classList.remove('active');
+        });
+
+        if (direction === 'down') {
+            activeIndex = activeIndex < items.length - 1 ? activeIndex + 1 : 0;
+        } else if (direction === 'up') {
+            activeIndex = activeIndex > 0 ? activeIndex - 1 : items.length - 1;
+        }
+
+        if (activeIndex >= 0 && activeIndex < items.length) {
+            items[activeIndex].classList.add('active');
+            items[activeIndex].scrollIntoView({ block: 'nearest' });
+        }
+    }
+
+    function loadSelectedItem(itemId, searchInput) {
+        if (!itemId) return;
+
+        fetch(`/accounting/ajax/items/${itemId}/detail/`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.item) {
+                    searchInput.value = `${data.item.code} - ${data.item.name}`;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading item:', error);
+            });
+    }
+
+    // تهيئة البحث عن الأصناف
+    initializeItemSearch();
+
+    // إضافة CSRF token للطلبات
+    function getCsrfToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+    }
+});
+</script>
+{% endblock %}

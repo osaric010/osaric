@@ -1,0 +1,179 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-truck text-success me-2"></i>
+                    {{ title|default:"أمر توريد" }}
+                </h2>
+                <a href="{% url 'purchases:supplier_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        بيانات أمر التوريد
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- المعلومات الأساسية -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-success border-bottom pb-2 mb-3">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    المعلومات الأساسية
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="order_number" class="form-label">رقم أمر التوريد</label>
+                                <input type="text" class="form-control" id="order_number" name="order_number"
+                                       value="{{ form.order_number.value|default:'TO-001' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="order_date" class="form-label">تاريخ الأمر</label>
+                                <input type="date" class="form-control" id="order_date" name="order_date"
+                                       value="{{ form.order_date.value|default:'2025-01-01' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="supplier_name" class="form-label">اسم المورد</label>
+                                <input type="text" class="form-control" id="supplier_name" name="supplier_name"
+                                       value="{{ form.supplier_name.value|default:'مورد افتراضي' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="contact_person" class="form-label">الشخص المسؤول</label>
+                                <input type="text" class="form-control" id="contact_person" name="contact_person"
+                                       value="{{ form.contact_person.value|default:'' }}">
+                            </div>
+                        </div>
+
+                        <!-- تفاصيل الأمر -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-success border-bottom pb-2 mb-3">
+                                    <i class="fas fa-clipboard-list me-1"></i>
+                                    تفاصيل الأمر
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="total_amount" class="form-label">إجمالي المبلغ (ر.س)</label>
+                                <input type="number" class="form-control" id="total_amount" name="total_amount"
+                                       value="{{ form.total_amount.value|default:'15000' }}" step="0.01" min="0" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">حالة الأمر</label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="PENDING">في الانتظار</option>
+                                    <option value="APPROVED">معتمد</option>
+                                    <option value="IN_PROGRESS">قيد التنفيذ</option>
+                                    <option value="COMPLETED">مكتمل</option>
+                                    <option value="CANCELLED">ملغي</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="description" class="form-label">وصف الأمر</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"
+                                          placeholder="أدخل وصف تفصيلي لأمر التوريد">{{ form.description.value|default:'أمر توريد مواد خام' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- معلومات التسليم والدفع -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-success border-bottom pb-2 mb-3">
+                                    <i class="fas fa-truck me-1"></i>
+                                    معلومات التسليم والدفع
+                                </h6>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="delivery_date" class="form-label">تاريخ التسليم المطلوب</label>
+                                <input type="date" class="form-control" id="delivery_date" name="delivery_date"
+                                       value="{{ form.delivery_date.value|default:'2025-01-15' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="payment_terms" class="form-label">شروط الدفع (أيام)</label>
+                                <input type="number" class="form-control" id="payment_terms" name="payment_terms"
+                                       value="{{ form.payment_terms.value|default:'30' }}" min="0">
+                                <small class="text-muted">عدد الأيام المسموح بها للدفع</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="priority" class="form-label">أولوية الأمر</label>
+                                <select class="form-select" id="priority" name="priority">
+                                    <option value="LOW">منخفضة</option>
+                                    <option value="MEDIUM" selected>متوسطة</option>
+                                    <option value="HIGH">عالية</option>
+                                    <option value="URGENT">عاجل</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="delivery_address" class="form-label">عنوان التسليم</label>
+                                <textarea class="form-control" id="delivery_address" name="delivery_address" rows="2"
+                                          placeholder="أدخل عنوان التسليم">{{ form.delivery_address.value|default:'المكتب الرئيسي - الرياض' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- أزرار الحفظ -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'purchases:supplier_list' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i>
+                                        إلغاء
+                                    </a>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save me-1"></i>
+                                        {{ action }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// تحديد تاريخ اليوم افتراضياً
+document.addEventListener('DOMContentLoaded', function() {
+    const orderDateField = document.getElementById('order_date');
+    if (!orderDateField.value) {
+        const today = new Date().toISOString().split('T')[0];
+        orderDateField.value = today;
+    }
+
+    // تحديد تاريخ التسليم (أسبوعين من اليوم)
+    const deliveryDateField = document.getElementById('delivery_date');
+    if (!deliveryDateField.value) {
+        const twoWeeksLater = new Date();
+        twoWeeksLater.setDate(twoWeeksLater.getDate() + 14);
+        deliveryDateField.value = twoWeeksLater.toISOString().split('T')[0];
+    }
+
+    // تحديد رقم الأمر التلقائي
+    const orderNumberField = document.getElementById('order_number');
+    if (!orderNumberField.value || orderNumberField.value === 'TO-001') {
+        const timestamp = Date.now().toString().slice(-6);
+        orderNumberField.value = `TO-${timestamp}`;
+    }
+});
+
+// حساب إجمالي المبلغ تلقائياً (يمكن تطويره لاحقاً)
+function calculateTotal() {
+    // سيتم تطوير هذه الوظيفة عند إضافة جدول الأصناف
+    console.log('حساب الإجمالي...');
+}
+</script>
+{% endblock %}

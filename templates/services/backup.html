@@ -1,0 +1,78 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-0">
+                <i class="fas fa-download text-primary me-2"></i>
+                {{ title }}
+            </h2>
+            <p class="text-muted mb-0">إنشاء وإدارة النسخ الاحتياطية</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>
+                        إنشاء نسخة احتياطية جديدة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="backup_name" class="form-label">اسم النسخة:</label>
+                            <input type="text" class="form-control" id="backup_name" name="backup_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="backup_type" class="form-label">نوع النسخة:</label>
+                            <select class="form-select" id="backup_type" name="backup_type">
+                                <option value="FULL">نسخة كاملة</option>
+                                <option value="PARTIAL">نسخة جزئية</option>
+                                <option value="INCREMENTAL">نسخة تزايدية</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="include_media" id="include_media" checked>
+                                <label class="form-check-label" for="include_media">
+                                    تضمين ملفات الوسائط
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i>
+                            إنشاء النسخة
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        النسخ الاحتياطية الموجودة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-5">
+                        <i class="fas fa-download fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد نسخ احتياطية</h5>
+                        <p class="text-muted">لم يتم إنشاء أي نسخ احتياطية بعد</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
